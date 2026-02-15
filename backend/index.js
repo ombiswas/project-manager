@@ -11,8 +11,9 @@ dotenv.config()
 const app = express()
 app.use(cors({
     origin:process.env.FRONTEND_URL,
-    method : ["GET" ,"POST" ,"DELETE","PUT"],
+    methods : ["GET" ,"POST" ,"DELETE","PUT"],
     allowedHeaders:["Content-Type" , "Authorization"],
+    credentials: true 
 }))
 app.use(morgan("dev"))
 
