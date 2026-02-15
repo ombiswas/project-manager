@@ -8,8 +8,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router';
+import { useSignUpMutation } from '@/hooks/use-auth';
+import { toast } from 'sonner';
 
-type SignupFormData = z.infer<typeof signUpSchema>;
+export type SignupFormData = z.infer<typeof signUpSchema>;
 
 const SignUp = () => {
     const form = useForm<SignupFormData>({
@@ -22,8 +24,18 @@ const SignUp = () => {
         }
     });
 
+    const {mutate , isPending} = useSignUpMutation()
+
     const handleOnSubmit = (values: SignupFormData) => {
-        console.log(values);
+        mutate(values , {
+            onSuccess: () =>{
+                toast.success("Account created Successfully")
+            },onError : (error:any) =>{
+                const errorMessage = error.response?.data?.message || "An error occurred" 
+                console.log(error)
+                toast.error(errorMessage)
+            }
+        })
     }
 
     return <div className='min-h-screen flex items-center flex-col justify-center bg-muted/40 p-4'>
