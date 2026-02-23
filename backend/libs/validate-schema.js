@@ -1,14 +1,17 @@
-import {z} from "zod"
+import { z } from "zod"
 
 const registerSchema = z.object({
-    name : z.string().min(3,"Name is required"),
-    email : z.string().email("Invalid email address"),
-    password : z.string().min(8, "Password must be atleast 8 characters long")
-})
+    name: z.string().min(3, "Name is required"),
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(8, "Password must be atleast 8 characters long")
+});
 const loginSchema = z.object({
-    
-    email : z.string().email("Invalid email address"),
-    password : z.string().min(8, "Password must be atleast 8 characters long")
-})
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(1, "Password is required")
+});
 
-export {registerSchema  , loginSchema}
+const verifyEmailSchema = z.object({
+    token: z.string().min(1, "Token is required")
+});
+
+export { registerSchema, loginSchema, verifyEmailSchema };
