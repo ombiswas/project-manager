@@ -1,30 +1,50 @@
 import express from "express"
 import { z } from "zod"
 import { validateRequest } from "zod-express-middleware"
-import { loginSchema, registerSchema, verifyEmailSchema } from "../libs/validate-schema.js"
-import { registerUser, loginUser, verifyEmail } from "../controllers/auth-controller.js"
+import { emailSchema, loginSchema, registerSchema, resetPasswordSchema, verifyEmailSchema } from "../libs/validate-schema.js"
+import { registerUser, loginUser, verifyEmail, resetPasswordRequest, verifyResetPasswordTokenAndResetPassword } from "../controllers/auth-controller.js"
 
 
 const router = express.Router();
 
-router.post("/register", validateRequest({
-    body: registerSchema
-}),
+router.post(
+    "/register",
+    validateRequest({
+        body: registerSchema
+    }),
     registerUser
 );
 
-router.post("/login", validateRequest({
-    body: loginSchema
-}),
+router.post(
+    "/login",
+    validateRequest({
+        body: loginSchema
+    }),
     loginUser
 );
 
-router.post("/verify-email",
+router.post(
+    "/verify-email",
     validateRequest({
         body: verifyEmailSchema
     }),
     verifyEmail
 );
 
-export default router;
+router.post(
+    "reset-password-request",
+    ValidateRequest({
+        body: emailSchema,
+    }),
+    resetPasswordRequest
+);
 
+router.post(
+    "/reset-password",
+    validateRequest({
+        body: resetPasswordSchema,
+    }),
+    verifyResetPasswordTokenAndResetPassword
+);
+
+export default router;
