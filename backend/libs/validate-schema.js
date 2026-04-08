@@ -24,4 +24,10 @@ export const emailSchema = z.object({
     email: z.string().email("Invalid email address")
 });
 
-export { registerSchema, loginSchema, verifyEmailSchema, resetPasswordSchema, emailSchema};
+const workspaceSchema = z.object({
+    name: z.string().min(1, "Name is required"),
+    description: z.string().optional(),
+    color: z.string().min(1, "Color is required"),
+});
+
+export { registerSchema, loginSchema, verifyEmailSchema, resetPasswordSchema, emailSchema, workspaceSchema };

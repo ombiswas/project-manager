@@ -1,0 +1,143 @@
+import { worspaceSchema } from "@/lib/schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { use } from "react";
+import { useForm } from "react-hook-form";
+import type z from "zod";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
+import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
+import { cn } from "@/lib/utils";
+import { Button } from "../ui/button";
+import { useCreateWorkspace } from "@/hooks/use-worspace";
+import { set } from "zod";
+import { toast } from "sonner";
+import { useNavigate } from "react-router";
+
+interface CreateWorkspaceProps {
+    isCreatingWorkspace: boolean;
+    setIsCreatingWorkspace: (isCreating: boolean) => void;
+}
+
+export const colorOptions = [
+    '#FF5733', // Red
+    '#28A745', // Green
+    '#33C1FF', // Blue
+    '#FFC300', // Yellow
+    '#8E44AD', // Purple
+    '#E67E22', // Orange
+    '#2ECC71', // Emerald
+    '#34495E', // Midnight Blue
+];
+
+export type WorkspaceForm = z.infer<typeof worspaceSchema>;
+
+export const CreateWorkspace = ({
+    isCreatingWorkspace,
+    setIsCreatingWorkspace,
+}: CreateWorkspaceProps) => {
+
+    const form = useForm<WorkspaceForm>({
+        resolver: zodResolver(worspaceSchema),
+        defaultValues: {
+            name: '',
+            color: colorOptions[0],
+            description: '',
+
+        }
+    });
+    const navigate = useNavigate();
+    const { mutate, isPending } = useCreateWorkspace();
+
+    const onSubmit = (data: WorkspaceForm) => {
+        mutate(data, {
+            onSuccess: (data: any) => {
+                setIsCreatingWorkspace(false);
+                form.reset();
+                setIsCreatingWorkspace(false);
+                toast.success("Workspace created successfully!");
+                navigate(`workspaces/${data._id}`);
+            },
+            onError: (error: any) => {
+                const errorMessage = error.reponse.data.message;
+                toast.error(errorMessage);
+                console.log(error);
+            },
+        });
+    };
+
+    return <Dialog open={isCreatingWorkspace} onOpenChange={setIsCreatingWorkspace} modal={true}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+                <DialogTitle>Create Workspace</DialogTitle>
+            </DialogHeader>
+
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)}>
+                    <div className="space-y-4 py-4">
+                        <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Name</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Enter workspace name" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Description</FormLabel>
+                                    <FormControl>
+                                        <Textarea
+                                            {...field}
+                                            placeholder="Worksapce Description"
+                                            rows={3} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="color"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Color</FormLabel>
+                                    <FormControl>
+                                        <div className="flex gap-3 flex-wrap">
+                                            {colorOptions.map((color) => (
+                                                <div
+                                                    key={color}
+                                                    className={cn(
+                                                        "w-8 h-8 rounded-full cursor-pointer hover:opacity-80 transition-all duration-300",
+                                                        field.value === color &&
+                                                        "ring-2 ring-offset-2 ring-blue-500"
+                                                    )}
+                                                    style={{ backgroundColor: color }}
+                                                ></div>
+                                            ))}
+                                        </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+
+                    <DialogFooter>
+                        <Button type="submit" disabled={isPending}>
+                            {isPending ? "Creating..." : "Create"}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </Form>
+        </DialogContent>
+    </Dialog>
+};

@@ -1,12 +1,23 @@
 import { Header } from "@/components/layout/header";
 import { SidebarComponent } from "@/components/layout/sidebar-component";
 import { Loader } from "@/components/loader";
-import { Button } from "@/components/ui/button";
+import { CreateWorkspace } from "@/components/workspace/create-workspace";
+import { fetchData } from "@/lib/fetch-util";
 import { useAuth } from "@/provider/auth-context";
 import type { Workspace } from "@/types";
 import { useState } from "react";
-import { Navigate, Outlet, useNavigate } from "react-router";
-import { set } from "zod";
+import { Navigate, Outlet } from "react-router";
+
+export const clientLoader = async () => {
+    try {
+        const [workspaces] = await Promise.all([fetchData("/woerkspaces")]);
+        return { workspaces };
+
+    } catch (error) {
+        console.log(error);
+    }
+};
+
 
 const DashboardLayout = () => {
     const { isAuthenticated, isLoading } = useAuth();
@@ -43,6 +54,10 @@ const DashboardLayout = () => {
                 </main>
             </div>
 
+            <CreateWorkspace
+                isCreatingWorkspace={isCreatingWorkspace}
+                setIsCreatingWorkspace={setIsCreatingWorkspace}
+            />
         </div>
     );
 };
