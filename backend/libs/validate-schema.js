@@ -20,7 +20,7 @@ const resetPasswordSchema = z.object({
     confirmPassword: z.string().min(1, "Confirm password is required"),
 });
 
-export const emailSchema = z.object({
+const emailSchema = z.object({
     email: z.string().email("Invalid email address")
 });
 
