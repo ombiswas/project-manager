@@ -15,6 +15,7 @@ export const clientLoader = async () => {
 
     } catch (error) {
         console.log(error);
+    return { workspaces: [] }; 
     }
 };
 
