@@ -9,7 +9,7 @@ import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
-import { useCreateWorkspace } from "@/hooks/use-worspace";
+import { useCreateWorkspace } from "@/hooks/use-workspace";
 import { set } from "zod";
 import { toast } from "sonner";
 import { useNavigate } from "react-router";
