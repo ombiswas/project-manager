@@ -258,8 +258,8 @@ const TaskCard = ({ task, onClick }: { task: Task; onClick: () => void }) => {
               task.priority === "High"
                 ? "bg-red-500 text-white"
                 : task.priority === "Medium"
-                ? "bg-orange-500 text-white"
-                : "bg-slate-500 text-white"
+                  ? "bg-orange-500 text-white"
+                  : "bg-slate-500 text-white"
             }
           >
             {task.priority}

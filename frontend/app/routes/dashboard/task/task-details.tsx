@@ -154,8 +154,8 @@ const TaskDetails = () => {
                     task.priority === "High"
                       ? "destructive"
                       : task.priority === "Medium"
-                      ? "default"
-                      : "outline"
+                        ? "default"
+                        : "outline"
                   }
                   className="mb-2 capitalize"
                 >
@@ -178,7 +178,7 @@ const TaskDetails = () => {
                 <Button
                   variant={"destructive"}
                   size="sm"
-                  onClick={() => {}}
+                  onClick={() => { }}
                   className="hidden md:block"
                 >
                   Delete Task

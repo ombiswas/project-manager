@@ -9,7 +9,7 @@ const registerUser = async (req, res) => {
   try {
     const { email, name, password } = req.body;
 
-    const decision = await aj.protect(req, { email });
+    const decision = await aj.protect(req, { email, requested: 1 });
     console.log("Arcjet decision", decision.isDenied());
 
     if (decision.isDenied()) {

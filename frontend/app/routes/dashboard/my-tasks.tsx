@@ -71,21 +71,21 @@ const MyTasks = () => {
   const filteredTasks =
     myTasks?.length > 0
       ? myTasks
-          .filter((task) => {
-            if (filter === "all") return true;
-            if (filter === "todo") return task.status === "To Do";
-            if (filter === "inprogress") return task.status === "In Progress";
-            if (filter === "done") return task.status === "Done";
-            if (filter === "achieved") return task.isArchived === true;
-            if (filter === "high") return task.priority === "High";
+        .filter((task) => {
+          if (filter === "all") return true;
+          if (filter === "todo") return task.status === "To Do";
+          if (filter === "inprogress") return task.status === "In Progress";
+          if (filter === "done") return task.status === "Done";
+          if (filter === "achieved") return task.isArchived === true;
+          if (filter === "high") return task.priority === "High";
 
-            return true;
-          })
-          .filter(
-            (task) =>
-              task.title.toLowerCase().includes(search.toLowerCase()) ||
-              task.description?.toLowerCase().includes(search.toLowerCase())
-          )
+          return true;
+        })
+        .filter(
+          (task) =>
+            task.title.toLowerCase().includes(search.toLowerCase()) ||
+            task.description?.toLowerCase().includes(search.toLowerCase())
+        )
       : [];
 
   //   sort task

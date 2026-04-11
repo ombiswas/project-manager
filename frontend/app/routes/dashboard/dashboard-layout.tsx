@@ -10,12 +10,12 @@ import { Navigate, Outlet } from "react-router";
 
 export const clientLoader = async () => {
     try {
-        const [workspaces] = await Promise.all([fetchData("/woerkspaces")]);
+        const [workspaces] = await Promise.all([fetchData("/workspaces")]);
         return { workspaces };
 
     } catch (error) {
         console.log(error);
-    return { workspaces: [] }; 
+        return { workspaces: [] };
     }
 };
 

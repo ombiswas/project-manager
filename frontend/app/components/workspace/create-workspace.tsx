@@ -1,4 +1,4 @@
-import { worspaceSchema } from "@/lib/schema";
+import { workspaceSchema } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { use } from "react";
 import { useForm } from "react-hook-form";
@@ -30,7 +30,7 @@ export const colorOptions = [
     '#34495E', // Midnight Blue
 ];
 
-export type WorkspaceForm = z.infer<typeof worspaceSchema>;
+export type WorkspaceForm = z.infer<typeof workspaceSchema>;
 
 export const CreateWorkspace = ({
     isCreatingWorkspace,
@@ -38,7 +38,7 @@ export const CreateWorkspace = ({
 }: CreateWorkspaceProps) => {
 
     const form = useForm<WorkspaceForm>({
-        resolver: zodResolver(worspaceSchema),
+        resolver: zodResolver(workspaceSchema),
         defaultValues: {
             name: '',
             color: colorOptions[0],

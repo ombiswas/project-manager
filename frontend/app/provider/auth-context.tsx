@@ -1,6 +1,4 @@
 import type { User } from "@/types";
-
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { queryClient } from "./react-query-provider";
 import { useLocation, useNavigate } from "react-router";
@@ -12,14 +10,14 @@ interface AuthContextType {
     isLoading: boolean;
     login: (data: any) => Promise<void>;
     logout: () => Promise<void>;
-
 }
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     const navigate = useNavigate();
     const currentPath = useLocation().pathname;
@@ -29,18 +27,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         const checkAuth = async () => {
             setIsLoading(true);
+            try {
+                const storedUser = localStorage.getItem("user");
 
-            const userInfo = localStorage.getItem("user");
-            if (userInfo) {
-                setUser(JSON.parse(userInfo));
-                setIsAuthenticated(true);
-            } else {
-                setIsAuthenticated(false);
-                if (!isPublicRoute) {
-                    navigate("/sign-in");
+                if (storedUser) {
+                    setUser(JSON.parse(storedUser));
+                    setIsAuthenticated(true);
+                } else {
+                    setUser(null);
+                    setIsAuthenticated(false);
+                    if (!isPublicRoute) {
+                        navigate("/sign-in");
+                    }
                 }
+            } catch (error) {
+                console.error("Auth check failed:", error);
+            } finally {
+                setIsLoading(false);
             }
-            setIsLoading(false);
         };
 
         checkAuth();
@@ -69,20 +73,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         setUser(null);
         setIsAuthenticated(false);
+
         queryClient.clear();
     };
 
     const values = {
-        user, isAuthenticated, isLoading, login, logout
-    };;
+        user,
+        isAuthenticated,
+        isLoading,
+        login,
+        logout,
+    };
 
-    return <AuthContext.Provider value={values} >{children}</AuthContext.Provider>
+    return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
-    const context = useContext(AuthContext)
+    const context = useContext(AuthContext);
+
     if (!context) {
-        throw new Error("useAuth must be used within an AuthProvider")
+        throw new Error("useAuth must be used within an AuthProvider");
     }
     return context;
-}
+};
