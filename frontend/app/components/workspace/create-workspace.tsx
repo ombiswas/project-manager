@@ -10,7 +10,6 @@ import { Textarea } from "../ui/textarea";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { useCreateWorkspace } from "@/hooks/use-workspace";
-import { set } from "zod";
 import { toast } from "sonner";
 import { useNavigate } from "react-router";
 
@@ -36,7 +35,6 @@ export const CreateWorkspace = ({
     isCreatingWorkspace,
     setIsCreatingWorkspace,
 }: CreateWorkspaceProps) => {
-
     const form = useForm<WorkspaceForm>({
         resolver: zodResolver(workspaceSchema),
         defaultValues: {
@@ -52,7 +50,6 @@ export const CreateWorkspace = ({
     const onSubmit = (data: WorkspaceForm) => {
         mutate(data, {
             onSuccess: (data: any) => {
-                setIsCreatingWorkspace(false);
                 form.reset();
                 setIsCreatingWorkspace(false);
                 toast.success("Workspace created successfully!");
@@ -66,78 +63,81 @@ export const CreateWorkspace = ({
         });
     };
 
-    return <Dialog open={isCreatingWorkspace} onOpenChange={setIsCreatingWorkspace} modal={true}>
-        <DialogContent className="max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-                <DialogTitle>Create Workspace</DialogTitle>
-            </DialogHeader>
+    return (
+        <Dialog open={isCreatingWorkspace} onOpenChange={setIsCreatingWorkspace} modal={true}>
+            <DialogContent className="max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle>Create Workspace</DialogTitle>
+                </DialogHeader>
 
-            <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)}>
-                    <div className="space-y-4 py-4">
-                        <FormField
-                            control={form.control}
-                            name="name"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Name</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="Enter workspace name" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="description"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Description</FormLabel>
-                                    <FormControl>
-                                        <Textarea
-                                            {...field}
-                                            placeholder="Worksapce Description"
-                                            rows={3} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="color"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Color</FormLabel>
-                                    <FormControl>
-                                        <div className="flex gap-3 flex-wrap">
-                                            {colorOptions.map((color) => (
-                                                <div
-                                                    key={color}
-                                                    className={cn(
-                                                        "w-8 h-8 rounded-full cursor-pointer hover:opacity-80 transition-all duration-300",
-                                                        field.value === color &&
-                                                        "ring-2 ring-offset-2 ring-blue-500"
-                                                    )}
-                                                    style={{ backgroundColor: color }}
-                                                ></div>
-                                            ))}
-                                        </div>
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)}>
+                        <div className="space-y-4 py-4">
+                            <FormField
+                                control={form.control}
+                                name="name"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Name</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="Enter workspace name" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="description"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Description</FormLabel>
+                                        <FormControl>
+                                            <Textarea
+                                                {...field}
+                                                placeholder="Worksapce Description"
+                                                rows={3} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="color"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Color</FormLabel>
+                                        <FormControl>
+                                            <div className="flex gap-3 flex-wrap">
+                                                {colorOptions.map((color) => (
+                                                    <div
+                                                        key={color}
+                                                        onClick={() => field.onChange(color)}
+                                                        className={cn(
+                                                            "w-6 h-6 rounded-full cursor-pointer hover:opacity-80 transition-all duration-300",
+                                                            field.value === color &&
+                                                            "ring-2 ring-offset-2 ring-blue-500"
+                                                        )}
+                                                        style={{ backgroundColor: color }}
+                                                    ></div>
+                                                ))}
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
 
-                    <DialogFooter>
-                        <Button type="submit" disabled={isPending}>
-                            {isPending ? "Creating..." : "Create"}
-                        </Button>
-                    </DialogFooter>
-                </form>
-            </Form>
-        </DialogContent>
-    </Dialog>
+                        <DialogFooter>
+                            <Button type="submit" disabled={isPending}>
+                                {isPending ? "Creating..." : "Create"}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </Form>
+            </DialogContent>
+        </Dialog>
+    );
 };

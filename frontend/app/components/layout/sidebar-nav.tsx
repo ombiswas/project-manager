@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import type { Workspace } from "@/types";
-import { type LucideIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Button } from "../ui/button";
 import { useLocation, useNavigate } from "react-router";
 
@@ -32,7 +32,7 @@ export const SidebarNav = ({
                 const isActive = location.pathname === el.href;
 
                 const handleClick = () => {
-                    if (el.href === "/workspace") {
+                    if (el.href === "/workspaces") {
                         navigate(el.href);
                     } else if (currentWorkspace && currentWorkspace._id) {
                         navigate(`${el.href}?workspaceId=${currentWorkspace._id}`);
@@ -62,4 +62,4 @@ export const SidebarNav = ({
             })}
         </nav>
     );
-}
+};

@@ -24,7 +24,7 @@
       "./.react-router/types"
     ],
     "baseUrl": ".",
-    "ignoreDeprecations": "6.0", // Ignore deprecation warnings for TypeScript 6.0 and above
+    "ignoreDeprecations": "5.0", // Ignore deprecation warnings for TypeScript 5.0 deprecations
     "paths": {
       "@/*": [
         "./app/*"

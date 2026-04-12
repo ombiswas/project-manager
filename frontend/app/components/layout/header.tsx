@@ -4,7 +4,7 @@ import { Button } from "../ui/button";
 import { Bell, PlusCircle } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Link, useLoaderData } from "react-router";
+import { Link, useLoaderData, useLocation, useNavigate } from "react-router";
 import { WorkspaceAvatar } from "../workspace/workspace-avatar";
 
 interface HeaderProps {
@@ -18,8 +18,24 @@ export const Header = ({
     selectedWorkspace,
     onCreateWorkspace,
 }: HeaderProps) => {
+    const navigate = useNavigate();
+
     const { user, logout } = useAuth();
-    const {workspaces} = useLoaderData() as { workspaces: Workspace[] };
+    const { workspaces } = useLoaderData() as { workspaces: Workspace[] };
+    const isOnWorkspacePage = useLocation().pathname.includes("/workspace");
+
+    const handleOnClick = (workspace: Workspace) => {
+        onWorkspaceSelected(workspace);
+        const location = window.location;
+
+        if (isOnWorkspacePage) {
+            navigate(`/workspaces/${workspace._id}`);
+        } else {
+            const basePath = location.pathname;
+
+            navigate(`${basePath}?workspaceId=${workspace._id}`);
+        }
+    };
 
     return (
         <div className="bg-background sticky top-0 z-40 border-b">

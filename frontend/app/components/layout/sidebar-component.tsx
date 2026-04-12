@@ -3,7 +3,7 @@ import { useAuth } from "@/provider/auth-context";
 import type { Workspace } from "@/types";
 import { CheckCircle2, ChevronLeft, ChevronRight, LayoutDashboard, List, ListCheck, LogOut, Settings, Users, Wrench } from "lucide-react";
 import { useState } from "react";
-import { href, Link } from "react-router";
+import { Link } from "react-router";
 import { Button } from "../ui/button";
 import { ScrollArea } from "../ui/scroll-area";
 import { SidebarNav } from "./sidebar-nav";
@@ -21,19 +21,14 @@ export const SidebarComponent = ({
             icon: LayoutDashboard,
         },
         {
-            title: "Workspace",
-            href: "/workspace",
+            title: "Workspaces",
+            href: "/workspaces",
             icon: Users,
         },
         {
             title: "My Tasks",
             href: "/my-tasks",
             icon: ListCheck,
-        },
-        {
-            title: "Dashboard",
-            href: "/dashboard",
-            icon: LayoutDashboard,
         },
         {
             title: "Members",

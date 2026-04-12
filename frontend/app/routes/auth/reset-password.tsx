@@ -10,7 +10,7 @@ import React, { useState } from 'react'
 import { useForm } from 'react-hook-form';
 import { Link, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
-import { set, z } from 'zod';
+import { z } from 'zod';
 
 type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>
 
@@ -20,7 +20,6 @@ const ResetPassword = () => {
     const token = searchParams.get("token");
 
     const [isSucess, setIsSuccess] = useState(false);
-
     const { mutate: resetPassword, isPending } = useResetPasswordMutation();
 
     const form = useForm<ResetPasswordFormData>({
@@ -32,7 +31,6 @@ const ResetPassword = () => {
     });
 
     const onSubmit = (values: ResetPasswordFormData) => {
-
         if (!token) {
             toast.error("Invalid or missing token");
             return;
