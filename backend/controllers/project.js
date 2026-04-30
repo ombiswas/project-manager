@@ -123,4 +123,45 @@ const getProjectTasks = async (req, res) => {
   }
 };
 
-export { createProject, getProjectDetails, getProjectTasks };
+const deleteProject = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+
+    const project = await Project.findById(projectId);
+
+    if (!project) {
+      return res.status(404).json({
+        message: "Project not found",
+      });
+    }
+
+    // Check if user is the owner (creator) of the project
+    if (project.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        message: "Only the project owner can delete this project",
+      });
+    }
+
+    // Remove project from workspace
+    await Workspace.findByIdAndUpdate(project.workspace, {
+      $pull: { projects: projectId },
+    });
+
+    // Delete all tasks associated with the project
+    await Task.deleteMany({ project: projectId });
+
+    // Delete the project
+    await Project.findByIdAndDelete(projectId);
+
+    res.status(200).json({
+      message: "Project deleted successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
+export { createProject, getProjectDetails, getProjectTasks, deleteProject };

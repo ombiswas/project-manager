@@ -7,14 +7,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UseProjectQuery } from "@/hooks/use-project";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { UseProjectQuery, UseDeleteProject } from "@/hooks/use-project";
 import { getProjectProgress } from "@/lib";
 import { cn } from "@/lib/utils";
 import type { Project, Task, TaskStatus } from "@/types";
 import { format } from "date-fns";
-import { AlertCircle, Calendar, CheckCircle, Clock } from "lucide-react";
+import { AlertCircle, Calendar, CheckCircle, Clock, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
+import { toast } from "sonner";
 
 const ProjectDetails = () => {
   const { projectId, workspaceId } = useParams<{
@@ -25,6 +34,7 @@ const ProjectDetails = () => {
 
   const [isCreateTask, setIsCreateTask] = useState(false);
   const [taskFilter, setTaskFilter] = useState<TaskStatus | "All">("All");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const { data, isLoading } = UseProjectQuery(projectId!) as {
     data: {
@@ -33,6 +43,8 @@ const ProjectDetails = () => {
     };
     isLoading: boolean;
   };
+
+  const { mutate: deleteProject, isPending: isDeleting } = UseDeleteProject();
 
   if (isLoading)
     return (
@@ -48,6 +60,19 @@ const ProjectDetails = () => {
     navigate(
       `/workspaces/${workspaceId}/projects/${projectId}/tasks/${taskId}`
     );
+  };
+
+  const handleDeleteProject = () => {
+    deleteProject(projectId!, {
+      onSuccess: () => {
+        toast.success("Project deleted successfully");
+        navigate(`/workspaces/${workspaceId}`);
+      },
+      onError: (error: any) => {
+        const errorMessage = error?.response?.data?.message || "Failed to delete project";
+        toast.error(errorMessage);
+      },
+    });
   };
 
   return (
@@ -75,6 +100,13 @@ const ProjectDetails = () => {
           </div>
 
           <Button onClick={() => setIsCreateTask(true)}>Add Task</Button>
+          <Button
+            variant="destructive"
+            onClick={() => setIsDeleteDialogOpen(true)}
+            disabled={isDeleting}
+          >
+            {isDeleting ? "Deleting..." : "Delete Project"}
+          </Button>
         </div>
       </div>
 
@@ -173,13 +205,42 @@ const ProjectDetails = () => {
         </Tabs>
       </div>
 
-      {/* create    task dialog */}
+      {/* create task dialog */}
       <CreateTaskDialog
         open={isCreateTask}
         onOpenChange={setIsCreateTask}
         projectId={projectId!}
         projectMembers={project.members as any}
       />
+
+      {/* delete project dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Project?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. This will permanently delete the project
+              "{project.title}" and all its tasks.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteProject}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

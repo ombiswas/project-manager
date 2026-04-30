@@ -56,7 +56,7 @@ export const CreateWorkspace = ({
                 navigate(`workspaces/${data._id}`);
             },
             onError: (error: any) => {
-                const errorMessage = error.reponse.data.message;
+                const errorMessage = error?.response?.data?.message || "Failed to create workspace";
                 toast.error(errorMessage);
                 console.log(error);
             },
