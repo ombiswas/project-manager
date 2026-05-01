@@ -2,6 +2,7 @@ import Workspace from "../models/workspace.js";
 import Project from "../models/project.js";
 import User from "../models/user.js";
 import WorkspaceInvite from "../models/workspace-invite.js";
+import Task from "../models/task.js";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "../libs/send-email.js";
 import { recordActivity } from "../libs/index.js";
@@ -530,6 +531,54 @@ const acceptInviteByToken = async (req, res) => {
     });
   }
 };
+
+const deleteWorkspace = async (req, res) => {
+  try {
+    const { workspaceId } = req.params;
+
+    const workspace = await Workspace.findById(workspaceId);
+
+    if (!workspace) {
+      return res.status(404).json({
+        message: "Workspace not found",
+      });
+    }
+
+    if (workspace.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        message: "Only the workspace owner can delete this workspace",
+      });
+    }
+
+    // Find all projects in the workspace
+    const projects = await Project.find({ workspace: workspaceId });
+    const projectIds = projects.map((p) => p._id);
+
+    // Delete all tasks associated with these projects
+    if (projectIds.length > 0) {
+      await Task.deleteMany({ project: { $in: projectIds } });
+    }
+
+    // Delete all projects in the workspace
+    await Project.deleteMany({ workspace: workspaceId });
+
+    // Delete all pending invites for this workspace
+    await WorkspaceInvite.deleteMany({ workspaceId });
+
+    // Finally, delete the workspace itself
+    await Workspace.findByIdAndDelete(workspaceId);
+
+    res.status(200).json({
+      message: "Workspace deleted successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
 export {
   createWorkspace,
   getWorkspaces,
@@ -539,4 +588,5 @@ export {
   inviteUserToWorkspace,
   acceptGenerateInvite,
   acceptInviteByToken,
+  deleteWorkspace,
 };

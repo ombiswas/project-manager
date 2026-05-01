@@ -46,17 +46,18 @@ export const SidebarNav = ({
                         key={el.href}
                         variant={isActive ? "outline" : "ghost"}
                         className={cn(
-                            "justify-start",
+                            "h-10 w-10 p-0 justify-center", // mobile
+                            !isCollapsed && "md:w-full md:justify-start md:px-4 md:py-2", // desktop not collapsed
+                            isCollapsed && "md:w-10 md:justify-center md:p-0", // desktop collapsed
                             isActive && "bg-blue-800/20 text-blue-600 font-medium"
                         )}
+                        title={isCollapsed ? el.title : undefined}
                         onClick={handleClick}
                     >
-                        <Icon className="mr-2 size-4" />
-                        {isCollapsed ? (
-                            <span className="sr-only">{el.title}</span>
-                        ) : (
-                            el.title
-                        )}
+                        <Icon className={cn("size-4", !isCollapsed && "md:mr-2")} />
+                        <span className={cn("hidden", !isCollapsed && "md:block")}>
+                            {el.title}
+                        </span>
                     </Button>
                 );
             })}

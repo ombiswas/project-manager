@@ -53,30 +53,24 @@ export const SidebarComponent = ({
                 isCollapsed ? "w-16 md:w-[80px]" : "w-16 md:w-[240px]"
             )}
         >
-            <div className="flex h-14 items-center border-b mb-4 px-4">
-                <Link to="/dashboard" className="flex items-center ">
-                    {!isCollapsed && (
-                        <div className="flex items-center gap-2">
-                            <Wrench className="size-6 text-blue-600" />
-                            <span className="font-semibold text-lg hidden md:block">
-                                TaskHub
-                            </span>
-                        </div>
-                    )}
-
-                    {isCollapsed && <Wrench className="size-6 text-blue-600" />}
+            <div className={cn("flex h-14 items-center border-b mb-4 justify-center md:justify-between", isCollapsed ? "md:px-2" : "md:px-4")}>
+                <Link to="/dashboard" className="flex items-center gap-2">
+                    <Wrench className="size-6 text-blue-600 min-w-6" />
+                    <span className={cn("font-semibold text-lg hidden", !isCollapsed && "md:block")}>
+                        TaskHub
+                    </span>
                 </Link>
 
                 <Button
                     variant={"ghost"}
                     size="icon"
-                    className="ml-auto hidden md:block"
+                    className="hidden md:flex h-8 w-8"
                     onClick={() => setIsCollapsed(!isCollapsed)}
                 >
                     {isCollapsed ? (
                         <ChevronRight className="size-4" />
                     ) : (
-                        <ChevronLeft className="size-4 " />
+                        <ChevronLeft className="size-4" />
                     )}
                 </Button>
             </div>
@@ -88,10 +82,21 @@ export const SidebarComponent = ({
                     currentWorkspace={currentWorkspace}
                 />
             </ScrollArea>
-            <div>
-                <Button variant={"ghost"} size={isCollapsed ? "icon" : "default"} onClick={logout}>
-                    <LogOut className={cn("size-4", isCollapsed && "mr-2")} />
-                    <span className="hidden md:block">Logout</span>
+            <div className={cn("p-4 mt-auto border-t flex", isCollapsed ? "justify-center md:px-2" : "justify-center md:justify-start md:px-4")}>
+                <Button 
+                    variant={"ghost"} 
+                    className={cn(
+                        "h-10 w-10 p-0 justify-center", // mobile
+                        !isCollapsed && "md:w-full md:justify-start md:px-4 md:py-2", // desktop not collapsed
+                        isCollapsed && "md:w-10 md:justify-center md:p-0" // desktop collapsed
+                    )} 
+                    onClick={logout}
+                    title={isCollapsed ? "Logout" : undefined}
+                >
+                    <LogOut className={cn("size-5", !isCollapsed && "md:mr-2")} />
+                    <span className={cn("hidden", !isCollapsed && "md:block")}>
+                        Logout
+                    </span>
                 </Button>
             </div>
         </div>

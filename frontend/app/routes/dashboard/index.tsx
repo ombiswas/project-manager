@@ -34,8 +34,8 @@ const Dashboard = () => {
 
     if (isPending || !data) {
         return (
-            <div>
-                <Loader />
+            <div className="flex items-center justify-center min-h-[70vh] w-full">
+                <Loader label="Loading Workspace stats..." />
             </div>
         );
     }

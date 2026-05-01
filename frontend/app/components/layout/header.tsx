@@ -92,7 +92,7 @@ export const Header = ({
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <button className="rounded-full border p-1 w-8 h-8">
+                            <button className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                                 <Avatar className="w-8 h-8">
                                     <AvatarImage src={user?.profilePicture} alt={user?.name} />
                                     <AvatarFallback className="bg-primary text-primary-foreground">
