@@ -8,6 +8,7 @@ import {
   getProjectDetails,
   getProjectTasks,
   deleteProject,
+  updateProject,
 } from "../controllers/project.js";
 
 const router = express.Router();
@@ -38,6 +39,12 @@ router.get(
   authMiddleware,
   validateRequest({ params: z.object({ projectId: z.string() }) }),
   getProjectTasks
+);
+
+router.put(
+  "/:projectId",
+  authMiddleware,
+  updateProject
 );
 
 router.delete(

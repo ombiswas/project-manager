@@ -1,6 +1,7 @@
 import Workspace from "../models/workspace.js";
 import Project from "../models/project.js";
 import Task from "../models/task.js";
+import { projectSchema } from "../libs/validate-schema.js";
 
 const createProject = async (req, res) => {
   try {
@@ -95,7 +96,9 @@ const getProjectTasks = async (req, res) => {
     }
 
     const isMember = project.members.some(
-      (member) => member.user._id.toString() === req.user._id.toString()
+      (member) =>
+        member.user._id.toString() === req.user._id.toString() ||
+        member.user.toString() === req.user._id.toString()
     );
 
     if (!isMember) {
@@ -164,4 +167,59 @@ const deleteProject = async (req, res) => {
   }
 };
 
-export { createProject, getProjectDetails, getProjectTasks, deleteProject };
+const updateProject = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    
+    // Manual validation to catch specific errors
+    const validationResult = projectSchema.partial().safeParse(req.body);
+    if (!validationResult.success) {
+      const errorMessage = validationResult.error.errors.map(err => {
+        if (err.code === "invalid_enum_value") {
+          return `${err.path.join('.')} must be a valid option`;
+        }
+        return `${err.path.join('.')}: ${err.message}`;
+      }).join(', ');
+      return res.status(400).json({ message: errorMessage });
+    }
+
+    const { title, description, status, startDate, dueDate } = validationResult.data;
+
+    const project = await Project.findById(projectId);
+
+    if (!project) {
+      return res.status(404).json({
+        message: "Project not found",
+      });
+    }
+
+    if (project.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        message: "Only the project owner can update this project",
+      });
+    }
+
+    if (title !== undefined) project.title = title;
+    if (description !== undefined) project.description = description;
+    if (status !== undefined) project.status = status;
+    if (startDate !== undefined) project.startDate = startDate;
+    if (dueDate !== undefined) project.dueDate = dueDate;
+
+    await project.save();
+
+    res.status(200).json(project);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
+export {
+  createProject,
+  getProjectDetails,
+  getProjectTasks,
+  deleteProject,
+  updateProject,
+};

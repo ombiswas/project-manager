@@ -1,5 +1,5 @@
 import type { CreateTaskFormData } from "@/components/task/create-task-dialog";
-import { fetchData, postData, updateData } from "@/lib/fetch-util";
+import { fetchData, postData, updateData, deleteData } from "@/lib/fetch-util";
 import type { TaskPriority, TaskStatus } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -37,6 +37,9 @@ export const useUpdateTaskTitleMutation = () => {
       queryClient.invalidateQueries({
         queryKey: ["task-activity", data._id],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["project", data.project],
+      });
     },
   });
 };
@@ -53,6 +56,9 @@ export const useUpdateTaskStatusMutation = () => {
       });
       queryClient.invalidateQueries({
         queryKey: ["task-activity", data._id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["project", data.project],
       });
     },
   });
@@ -73,6 +79,9 @@ export const useUpdateTaskDescriptionMutation = () => {
       queryClient.invalidateQueries({
         queryKey: ["task-activity", data._id],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["project", data.project],
+      });
     },
   });
 };
@@ -92,6 +101,9 @@ export const useUpdateTaskAssigneesMutation = () => {
       queryClient.invalidateQueries({
         queryKey: ["task-activity", data._id],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["project", data.project],
+      });
     },
   });
 };
@@ -109,6 +121,9 @@ export const useUpdateTaskPriorityMutation = () => {
       queryClient.invalidateQueries({
         queryKey: ["task-activity", data._id],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["project", data.project],
+      });
     },
   });
 };
@@ -125,6 +140,9 @@ export const useAddSubTaskMutation = () => {
       });
       queryClient.invalidateQueries({
         queryKey: ["task-activity", data._id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["project", data.project],
       });
     },
   });
@@ -148,6 +166,9 @@ export const useUpdateSubTaskMutation = () => {
       });
       queryClient.invalidateQueries({
         queryKey: ["task-activity", data._id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["project", data.project],
       });
     },
   });
@@ -206,6 +227,22 @@ export const useAchievedTaskMutation = () => {
       });
       queryClient.invalidateQueries({
         queryKey: ["task-activity", data._id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["project", data.project],
+      });
+    },
+  });
+};
+
+export const useDeleteTaskMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (taskId: string) => deleteData(`/tasks/${taskId}`),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({
+        queryKey: ["project", data.projectId],
       });
     },
   });

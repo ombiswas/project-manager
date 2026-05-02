@@ -1,6 +1,7 @@
 import type { Project } from "@/types";
 import { NoDataFound } from "../no-data-found";
 import { ProjectCard } from "../project/projetc-card";
+import { getProjectProgress } from "@/lib";
 
 interface ProjectListProps {
     workspaceId: string;
@@ -27,7 +28,7 @@ export const ProjectList = ({
                     />
                 ) : (
                     projects.map((project) => {
-                        const projectProgress = 0;
+                        const projectProgress = getProjectProgress(project.tasks as any);
 
                         return (
                             <ProjectCard

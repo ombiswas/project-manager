@@ -26,47 +26,45 @@ export const ProjectCard = ({
 }: ProjectCardProps) => {
   return (
     <Link to={`/workspaces/${workspaceId}/projects/${project._id}`}>
-      <Card className="transition-all duration-300 hover:shadow-md hover:translate-y-1">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>{project.title}</CardTitle>
+      <Card className="transition-all duration-300 hover:shadow-md hover:translate-y-1 h-full flex flex-col">
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between gap-4">
+            <CardTitle className="text-lg font-bold line-clamp-1">{project.title}</CardTitle>
             <span
               className={cn(
-                "text-xs rounded-full",
+                "text-[10px] px-2 py-1 rounded-full font-bold whitespace-nowrap uppercase tracking-tight",
                 getTaskStatusColor(project.status)
               )}
             >
               {project.status}
             </span>
           </div>
-          <CardDescription className="line-clamp-2">
-            {project.description || "No description"}
+          <CardDescription className="line-clamp-2 min-h-[2.5rem]">
+            {project.description || "No description provided"}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs">
-                <span>Progress</span>
-                <span>{progress}%</span>
-              </div>
-
-              <Progress value={progress} className="h-2" />
+        <CardContent className="mt-auto space-y-4">
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              <span>Progress</span>
+              <span className="text-blue-600">{progress}%</span>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center text-sm gap-2 text-muted-foreground">
-                <span>{project.tasks.length}</span>
-                <span>Tasks</span>
-              </div>
+            <Progress value={progress} className="h-1.5" />
+          </div>
 
-              {project.dueDate && (
-                <div className="flex items-center text-xs text-muted-foreground">
-                  <CalendarDays className="w-4 h-4" />
-                  <span>{format(project.dueDate, "MMM d, yyyy")}</span>
-                </div>
-              )}
+          <div className="flex items-center justify-between pt-2 border-t">
+            <div className="flex items-center text-xs gap-1.5 text-muted-foreground font-medium">
+              <span className="text-foreground font-bold">{project.tasks.length}</span>
+              <span>Tasks</span>
             </div>
+
+            {project.dueDate && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium bg-muted/50 px-2 py-1 rounded-md">
+                <CalendarDays className="size-3.5" />
+                <span>{format(new Date(project.dueDate), "MMM d, yyyy")}</span>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

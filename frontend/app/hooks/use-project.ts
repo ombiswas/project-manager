@@ -1,5 +1,5 @@
 import type { CreateProjectFormData } from "@/components/project/create-project";
-import { fetchData, postData, deleteData } from "@/lib/fetch-util";
+import { fetchData, postData, deleteData, updateData } from "@/lib/fetch-util";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const UseCreateProject = () => {
@@ -29,7 +29,27 @@ export const UseProjectQuery = (projectId: string) => {
   });
 };
 
+export const UseUpdateProject = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: {
+      projectId: string;
+      projectData: Partial<CreateProjectFormData>;
+    }) => updateData(`/projects/${data.projectId}`, data.projectData),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({
+        queryKey: ["project", data._id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["workspaces"],
+      });
+    },
+  });
+};
+
 export const UseDeleteProject = () => {
+
   const queryClient = useQueryClient();
 
   return useMutation({

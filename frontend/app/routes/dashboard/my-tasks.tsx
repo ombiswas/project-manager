@@ -24,6 +24,7 @@ import { format } from "date-fns";
 import { ArrowUpRight, CheckCircle, Clock, FilterIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router";
+import { cn } from "@/lib/utils";
 
 const MyTasks = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -177,41 +178,55 @@ const MyTasks = () => {
 
         {/* LIST VIEW */}
         <TabsContent value="list">
-          <Card>
-            <CardHeader>
-              <CardTitle>My Tasks</CardTitle>
-              <CardDescription>
-                {sortedTasks?.length} tasks assigned to you
-              </CardDescription>
+          <Card className="border-none shadow-sm overflow-hidden">
+            <CardHeader className="pb-0">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>All Tasks</CardTitle>
+                  <CardDescription>
+                    {sortedTasks?.length} tasks assigned to you
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
 
-            <CardContent>
-              <div className="divide-y">
+            <CardContent className="p-0 mt-4">
+              <div className="divide-y divide-muted/50 border-t">
                 {sortedTasks?.map((task) => (
-                  <div key={task._id} className="p-4 hover:bg-muted/50">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-2 gap-3">
-                      <div className="flex">
-                        <div className="flex gap-2 mr-2">
+                  <div key={task._id} className="group p-4 hover:bg-muted/30 transition-colors">
+                    <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        <div className="mt-1 flex-shrink-0">
                           {task.status === "Done" ? (
-                            <CheckCircle className="size-4 text-green-500" />
+                            <div className="bg-green-100 dark:bg-green-900/30 p-1 rounded-full">
+                              <CheckCircle className="size-4 text-green-600 dark:text-green-400" />
+                            </div>
                           ) : (
-                            <Clock className="size-4 text-yellow-500" />
+                            <div className="bg-yellow-100 dark:bg-yellow-900/30 p-1 rounded-full">
+                              <Clock className="size-4 text-yellow-600 dark:text-yellow-400" />
+                            </div>
                           )}
                         </div>
 
-                        <div>
+                        <div className="space-y-1 min-w-0 flex-1">
                           <Link
                             to={`/workspaces/${task.project.workspace}/projects/${task.project._id}/tasks/${task._id}`}
-                            className="font-medium hover:text-primary hover:underline transition-colors flex items-center"
+                            className="font-bold text-base hover:text-primary hover:underline transition-colors flex items-center gap-1 group-hover:translate-x-0.5 transform duration-200"
                           >
-                            {task.title}
-                            <ArrowUpRight className="size-4 ml-1" />
+                            <span className="truncate">{task.title}</span>
+                            <ArrowUpRight className="size-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                           </Link>
-                          <div className="flex items-center space-x-2 mt-1">
+                          
+                          <p className="text-sm text-muted-foreground line-clamp-1 max-w-2xl">
+                            {task.description || "No description provided"}
+                          </p>
+
+                          <div className="flex flex-wrap items-center gap-2 mt-2">
                             <Badge
                               variant={
                                 task.status === "Done" ? "default" : "outline"
                               }
+                              className="text-[10px] font-bold uppercase tracking-tight h-5"
                             >
                               {task.status}
                             </Badge>
@@ -221,41 +236,48 @@ const MyTasks = () => {
                                 variant={
                                   task.priority === "High"
                                     ? "destructive"
-                                    : "secondary"
+                                    : task.priority === "Medium"
+                                      ? "default"
+                                      : "secondary"
                                 }
+                                className="text-[10px] font-bold uppercase tracking-tight h-5"
                               >
                                 {task.priority}
                               </Badge>
                             )}
-
-                            {task.isArchived && (
-                              <Badge variant={"outline"}>Archived</Badge>
-                            )}
+                            
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase bg-muted px-1.5 py-0.5 rounded">
+                              {task.project.title}
+                            </span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="text-sm text-muted-foreground space-y-1">
+                      <div className="flex flex-col sm:flex-row lg:flex-col sm:items-center lg:items-end gap-2 lg:gap-1 text-xs text-muted-foreground flex-shrink-0">
                         {task.dueDate && (
-                          <div>Due: {format(task.dueDate, "PPPP")}</div>
+                          <div className="flex items-center gap-1.5 font-medium">
+                            <span>Due:</span>
+                            <span className="text-foreground">{format(new Date(task.dueDate), "MMM d, yyyy")}</span>
+                          </div>
                         )}
-
-                        <div>
-                          Project:{" "}
-                          <span className="font-medium">
-                            {task.project.title}
-                          </span>
+                        <div className="flex items-center gap-1.5">
+                          <span>Updated:</span>
+                          <span>{format(new Date(task.updatedAt), "MMM d")}</span>
                         </div>
-
-                        <div>Modified on: {format(task.updatedAt, "PPPP")}</div>
                       </div>
                     </div>
                   </div>
                 ))}
 
                 {sortedTasks?.length === 0 && (
-                  <div className="p-4 text-center text-sm text-muted-foreground">
-                    No tasks found
+                  <div className="p-12 text-center">
+                    <div className="bg-muted size-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Clock className="size-6 text-muted-foreground/50" />
+                    </div>
+                    <h3 className="text-lg font-medium">No tasks found</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      You're all caught up!
+                    </p>
                   </div>
                 )}
               </div>
@@ -265,162 +287,79 @@ const MyTasks = () => {
 
         {/* BOARD VIEW */}
         <TabsContent value="board">
-          <div className="grid grid-cols-1 md:grid-cols-3  gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  To Do
-                  <Badge variant={"outline"}>{todoTasks?.length}</Badge>
-                </CardTitle>
-              </CardHeader>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+            {[
+              { title: "To Do", tasks: todoTasks, color: "bg-slate-500" },
+              { title: "In Progress", tasks: inProgressTasks, color: "bg-blue-500" },
+              { title: "Done", tasks: doneTasks, color: "bg-green-500" },
+            ].map((column) => (
+              <div key={column.title} className="flex flex-col h-full min-h-[500px]">
+                <div className="flex items-center justify-between mb-4 px-1">
+                  <div className="flex items-center gap-2">
+                    <div className={cn("size-2 rounded-full", column.color)} />
+                    <h3 className="font-bold text-sm uppercase tracking-wider">{column.title}</h3>
+                  </div>
+                  <Badge variant="outline" className="font-mono">{column.tasks.length}</Badge>
+                </div>
 
-              <CardContent className="p-3 space-y-3 max-h-[600px] overflow-y-auto">
-                {todoTasks?.map((task) => (
-                  <Card
-                    key={task._id}
-                    className="hover:shadow-md transition-shadow"
-                  >
-                    <Link
-                      to={`/workspaces/${task.project.workspace}/projects/${task.project._id}/tasks/${task._id}`}
-                      className="block"
+                <div className="space-y-3 flex-1 bg-muted/20 p-2 rounded-xl border border-dashed border-muted-foreground/20">
+                  {column.tasks?.map((task) => (
+                    <Card
+                      key={task._id}
+                      className="group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 border-none shadow-sm"
                     >
-                      <h3 className="font-medium">{task.title}</h3>
-                      <p className="text-sm text-muted-foreground line-clamp-3">
-                        {task.description || "No description "}
-                      </p>
+                      <Link
+                        to={`/workspaces/${task.project.workspace}/projects/${task.project._id}/tasks/${task._id}`}
+                        className="block p-4 space-y-3"
+                      >
+                        <div className="space-y-1.5">
+                          <div className="flex items-start justify-between gap-2">
+                            <h4 className="font-bold text-sm line-clamp-1 group-hover:text-primary transition-colors">
+                              {task.title}
+                            </h4>
+                          </div>
+                          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                            {task.description || "No description provided"}
+                          </p>
+                        </div>
 
-                      <div className="flex items-center mt-2 gap-2">
-                        <Badge
-                          variant={
-                            task.priority === "High"
-                              ? "destructive"
-                              : "secondary"
-                          }
-                        >
-                          {task.priority}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant={
+                              task.priority === "High"
+                                ? "destructive"
+                                : task.priority === "Medium"
+                                  ? "default"
+                                  : "secondary"
+                            }
+                            className="text-[10px] px-1.5 py-0 font-bold uppercase"
+                          >
+                            {task.priority}
+                          </Badge>
+                          
+                          <span className="text-[10px] font-bold text-muted-foreground/60 uppercase truncate flex-1">
+                            {task.project.title}
+                          </span>
+                        </div>
 
                         {task.dueDate && (
-                          <span className="text-sm text-muted-foreground">
-                            {format(task.dueDate, "PPPP")}
-                          </span>
+                          <div className="pt-2 border-t flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground/80">
+                            <Clock className="size-3" />
+                            <span>{format(new Date(task.dueDate), "MMM d")}</span>
+                          </div>
                         )}
-                      </div>
-                    </Link>
-                  </Card>
-                ))}
+                      </Link>
+                    </Card>
+                  ))}
 
-                {todoTasks?.length === 0 && (
-                  <div className="p-4 text-center text-sm text-muted-foreground">
-                    No tasks found
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  In Progress
-                  <Badge variant={"outline"}>{inProgressTasks?.length}</Badge>
-                </CardTitle>
-              </CardHeader>
-
-              <CardContent className="p-3 space-y-3 max-h-[600px] overflow-y-auto">
-                {inProgressTasks?.map((task) => (
-                  <Card
-                    key={task._id}
-                    className="hover:shadow-md transition-shadow"
-                  >
-                    <Link
-                      to={`/workspaces/${task.project.workspace}/projects/${task.project._id}/tasks/${task._id}`}
-                      className="block"
-                    >
-                      <h3 className="font-medium">{task.title}</h3>
-                      <p className="text-sm text-muted-foreground line-clamp-3">
-                        {task.description || "No description "}
-                      </p>
-
-                      <div className="flex items-center mt-2 gap-2">
-                        <Badge
-                          variant={
-                            task.priority === "High"
-                              ? "destructive"
-                              : "secondary"
-                          }
-                        >
-                          {task.priority}
-                        </Badge>
-
-                        {task.dueDate && (
-                          <span className="text-sm text-muted-foreground">
-                            {format(task.dueDate, "PPPP")}
-                          </span>
-                        )}
-                      </div>
-                    </Link>
-                  </Card>
-                ))}
-
-                {inProgressTasks?.length === 0 && (
-                  <div className="p-4 text-center text-sm text-muted-foreground">
-                    No tasks found
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  Done
-                  <Badge variant={"outline"}>{doneTasks?.length}</Badge>
-                </CardTitle>
-              </CardHeader>
-
-              <CardContent className="p-3 space-y-3 max-h-[600px] overflow-y-auto">
-                {doneTasks?.map((task) => (
-                  <Card
-                    key={task._id}
-                    className="hover:shadow-md transition-shadow"
-                  >
-                    <Link
-                      to={`/workspaces/${task.project.workspace}/projects/${task.project._id}/tasks/${task._id}`}
-                      className="block"
-                    >
-                      <h3 className="font-medium">{task.title}</h3>
-                      <p className="text-sm text-muted-foreground line-clamp-3">
-                        {task.description || "No description "}
-                      </p>
-
-                      <div className="flex items-center mt-2 gap-2">
-                        <Badge
-                          variant={
-                            task.priority === "High"
-                              ? "destructive"
-                              : "secondary"
-                          }
-                        >
-                          {task.priority}
-                        </Badge>
-
-                        {task.dueDate && (
-                          <span className="text-sm text-muted-foreground">
-                            {format(task.dueDate, "PPPP")}
-                          </span>
-                        )}
-                      </div>
-                    </Link>
-                  </Card>
-                ))}
-
-                {doneTasks?.length === 0 && (
-                  <div className="p-4 text-center text-sm text-muted-foreground">
-                    No tasks found
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  {column.tasks?.length === 0 && (
+                    <div className="h-24 flex items-center justify-center rounded-lg border border-dashed border-muted-foreground/10">
+                      <span className="text-xs text-muted-foreground/50 italic">Empty</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </TabsContent>
       </Tabs>
