@@ -579,6 +579,40 @@ const deleteWorkspace = async (req, res) => {
   }
 };
 
+const updateWorkspace = async (req, res) => {
+  try {
+    const { workspaceId } = req.params;
+    const { name, description, color } = req.body;
+
+    const workspace = await Workspace.findById(workspaceId);
+
+    if (!workspace) {
+      return res.status(404).json({
+        message: "Workspace not found",
+      });
+    }
+
+    if (workspace.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        message: "Only the workspace owner can update this workspace",
+      });
+    }
+
+    if (name !== undefined) workspace.name = name;
+    if (description !== undefined) workspace.description = description;
+    if (color !== undefined) workspace.color = color;
+
+    await workspace.save();
+
+    res.status(200).json(workspace);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
 export {
   createWorkspace,
   getWorkspaces,
@@ -589,4 +623,5 @@ export {
   acceptGenerateInvite,
   acceptInviteByToken,
   deleteWorkspace,
+  updateWorkspace,
 };

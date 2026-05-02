@@ -34,23 +34,23 @@ export const TaskDescription = ({
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-start gap-2 w-full">
       {isEditing ? (
         <Textarea
-          className="w-full min-w-3xl"
+          className="flex-1 w-full min-h-[100px]"
           value={newDescription}
           onChange={(e) => setNewDescription(e.target.value)}
           disabled={isPending}
         />
       ) : (
-        <div className="text-sm md:text-base text-pretty flex-1 text-muted-foreground">
+        <div className="text-sm md:text-base text-pretty flex-1 text-muted-foreground whitespace-pre-wrap break-words">
           {description}
         </div>
       )}
 
       {isEditing ? (
         <Button
-          className="py-0"
+          className="py-0 shrink-0"
           size="sm"
           onClick={updateDescription}
           disabled={isPending}
@@ -58,10 +58,14 @@ export const TaskDescription = ({
           Save
         </Button>
       ) : (
-        <Edit
-          className="size-3 cursor-pointer"
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="size-8 shrink-0 text-muted-foreground hover:text-foreground"
           onClick={() => setIsEditing(true)}
-        />
+        >
+          <Edit className="size-4" />
+        </Button>
       )}
     </div>
   );

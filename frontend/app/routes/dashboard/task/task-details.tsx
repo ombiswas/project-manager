@@ -176,37 +176,27 @@ const TaskDetails = () => {
         <div className="lg:col-span-8 space-y-6">
           <div className="bg-card rounded-xl border p-6 shadow-sm space-y-8">
             <div className="flex flex-col md:flex-row justify-between items-start gap-6 border-b pb-6">
-              <div className="space-y-3 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Priority:</span>
-                  <Badge
-                    variant={
-                      task.priority === "High"
-                        ? "destructive"
-                        : task.priority === "Medium"
-                          ? "default"
-                          : "outline"
-                    }
-                    className="capitalize"
-                  >
-                    {task.priority}
-                  </Badge>
+              <div className="space-y-3 flex-1 w-full overflow-hidden">
+                <div className="flex items-center gap-4 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Priority</span>
+                    <TaskPrioritySelector priority={task.priority} taskId={task._id} />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Status</span>
+                    <TaskStatusSelector status={task.status} taskId={task._id} />
+                  </div>
                 </div>
 
-                <TaskTitle title={task.title} taskId={task._id} />
+                <div className="pt-2">
+                  <TaskTitle title={task.title} taskId={task._id} />
+                </div>
 
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
                   <span className="font-medium">Task ID:</span>
                   <span className="font-mono bg-muted px-1.5 py-0.5 rounded uppercase">{task._id.slice(-6)}</span>
                   <span className="mx-1">•</span>
                   <span>Created {formatDistanceToNow(new Date(task.createdAt), { addSuffix: true })}</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 w-full md:w-auto pt-2 md:pt-0">
-                <div className="flex flex-col gap-1.5 w-full">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-1">Status</span>
-                  <TaskStatusSelector status={task.status} taskId={task._id} />
                 </div>
               </div>
             </div>
@@ -215,7 +205,7 @@ const TaskDetails = () => {
               <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
                 Description
               </h3>
-              <div className="bg-muted/30 rounded-lg p-1">
+              <div className="bg-muted/10 rounded-lg p-2 border border-muted/50 min-h-[100px]">
                 <TaskDescription
                   description={task.description || "No description provided."}
                   taskId={task._id}
@@ -223,23 +213,18 @@ const TaskDetails = () => {
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8 pt-4 border-t">
+            <div className="pt-4 border-t">
               <div className="space-y-4">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
                   Assignees
                 </h3>
-                <TaskAssigneesSelector
-                  task={task}
-                  assignees={task.assignees}
-                  projectMembers={project.members as any}
-                />
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                  Change Priority
-                </h3>
-                <TaskPrioritySelector priority={task.priority} taskId={task._id} />
+                <div className="max-w-md">
+                  <TaskAssigneesSelector
+                    task={task}
+                    assignees={task.assignees}
+                    projectMembers={project.members as any}
+                  />
+                </div>
               </div>
             </div>
 

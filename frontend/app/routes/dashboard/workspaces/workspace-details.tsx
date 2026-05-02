@@ -3,6 +3,7 @@ import { CreateProjectDialog } from "@/components/project/create-project";
 import { InviteMemberDialog } from "@/components/workspace/invite-member";
 import { ProjectList } from "@/components/workspace/project-list";
 import { WorkspaceHeader } from "@/components/workspace/workspace-header";
+import { EditWorkspace } from "@/components/workspace/edit-workspace";
 import { useGetWorkspaceQuery } from "@/hooks/use-workspace";
 import type { Project, Workspace } from "@/types";
 import { useState } from "react";
@@ -12,6 +13,7 @@ const WorkspaceDetails = () => {
   const { workspaceId } = useParams<{ workspaceId: string }>();
   const [isCreateProject, setIsCreateProject] = useState(false);
   const [isInviteMember, setIsInviteMember] = useState(false);
+  const [isEditWorkspace, setIsEditWorkspace] = useState(false);
 
   if (!workspaceId) {
     return <div>No workspace found</div>;
@@ -27,8 +29,8 @@ const WorkspaceDetails = () => {
 
   if (isLoading) {
     return (
-      <div>
-        <Loader />
+      <div className="flex items-center justify-center h-full min-h-[400px]">
+        <Loader label="Loading workspace..." />
       </div>
     );
   }
@@ -40,6 +42,7 @@ const WorkspaceDetails = () => {
         members={data?.workspace?.members as any}
         onCreateProject={() => setIsCreateProject(true)}
         onInviteMember={() => setIsInviteMember(true)}
+        onEditWorkspace={() => setIsEditWorkspace(true)}
       />
 
       <ProjectList
@@ -60,6 +63,14 @@ const WorkspaceDetails = () => {
         onOpenChange={setIsInviteMember}
         workspaceId={workspaceId}
       />
+
+      {data.workspace && (
+        <EditWorkspace
+          isEditingWorkspace={isEditWorkspace}
+          setIsEditingWorkspace={setIsEditWorkspace}
+          workspace={data.workspace}
+        />
+      )}
     </div>
   );
 };

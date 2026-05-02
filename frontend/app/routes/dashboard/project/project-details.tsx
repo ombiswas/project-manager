@@ -13,7 +13,7 @@ import { getProjectProgress } from "@/lib";
 import { cn } from "@/lib/utils";
 import type { Project, Task, TaskStatus } from "@/types";
 import { format } from "date-fns";
-import { AlertCircle, Calendar, CheckCircle, Clock, Plus, Settings } from "lucide-react";
+import { AlertCircle, Calendar, CheckCircle, Clock, Plus, Settings, CircleDashed } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
@@ -38,7 +38,7 @@ const ProjectDetails = () => {
 
   if (isLoading)
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center h-[80vh]">
         <Loader label="Loading project details..." />
       </div>
     );
@@ -62,7 +62,7 @@ const ProjectDetails = () => {
           <div className="mt-4">
             <h1 className="text-2xl md:text-3xl font-bold">{project.title}</h1>
             {project.description && (
-              <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
+              <p className="text-sm text-muted-foreground mt-4 max-w-2xl">
                 {project.description}
               </p>
             )}
@@ -268,95 +268,151 @@ const TaskCard = ({ task, onClick }: { task: Task; onClick: () => void }) => {
     });
   };
 
+  const completedSubtasks = task.subtasks?.filter(st => st.completed).length || 0;
+  const totalSubtasks = task.subtasks?.length || 0;
+  const progressPercent = totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
+
+  // Determine the accent color based on status
+  const getAccentColor = () => {
+    if (task.status === "Done") return "border-l-green-500";
+    if (task.status === "In Progress") return "border-l-blue-500";
+    return "border-l-slate-300";
+  };
+
   return (
     <Card
       onClick={onClick}
-      className="group cursor-pointer hover:shadow-lg transition-all duration-300 border-none bg-card shadow-sm"
+      className={cn(
+        "group relative cursor-pointer hover:shadow-lg transition-all duration-300 bg-card border border-l-[4px] shadow-sm flex flex-col gap-4 p-5 rounded-xl",
+        getAccentColor()
+      )}
     >
-      <CardHeader className="p-4 pb-2">
-        <div className="flex items-start justify-between gap-2">
+      {/* Top Row: Badges & Buttons */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Badge
             variant="secondary"
             className={cn(
-              "text-[10px] font-bold uppercase tracking-tight",
-              task.priority === "High" && "bg-red-50 text-red-600 hover:bg-red-50",
-              task.priority === "Medium" && "bg-orange-50 text-orange-600 hover:bg-orange-50",
-              task.priority === "Low" && "bg-blue-50 text-blue-600 hover:bg-blue-50"
+              "text-[11px] font-semibold tracking-tight border-none px-2.5 py-0.5",
+              task.status === "Done" && "bg-green-100 text-green-700 hover:bg-green-100",
+              task.status === "In Progress" && "bg-blue-100 text-blue-700 hover:bg-blue-100",
+              task.status === "To Do" && "bg-slate-100 text-slate-700 hover:bg-slate-100"
             )}
           >
-            {task.priority}
+            {task.status === "Done" ? "Completed" : task.status}
           </Badge>
 
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            {task.status !== "In Progress" && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-7 rounded-full hover:bg-blue-50 hover:text-blue-600"
-                onClick={(e) => handleStatusUpdate(e, "In Progress")}
-                disabled={isUpdating}
-                title="Mark as In Progress"
-              >
-                <Clock className="size-3.5" />
-              </Button>
+          <Badge
+            variant="secondary"
+            className={cn(
+              "text-[11px] font-semibold tracking-tight border-none px-2.5 py-0.5",
+              task.priority === "High" && "bg-red-100 text-red-700 hover:bg-red-100",
+              task.priority === "Medium" && "bg-orange-100 text-orange-700 hover:bg-orange-100",
+              task.priority === "Low" && "bg-slate-100 text-slate-700 hover:bg-slate-100"
             )}
-            {task.status !== "Done" && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-7 rounded-full hover:bg-green-50 hover:text-green-600"
-                onClick={(e) => handleStatusUpdate(e, "Done")}
-                disabled={isUpdating}
-                title="Mark as Done"
-              >
-                <CheckCircle className="size-3.5" />
-              </Button>
-            )}
-          </div>
+          >
+            {task.priority} Priority
+          </Badge>
         </div>
-      </CardHeader>
 
-      <CardContent className="p-4 pt-0">
-        <h4 className="font-semibold text-sm line-clamp-1 mb-1">{task.title}</h4>
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute right-4 top-4 bg-card/80 backdrop-blur-sm rounded-full p-0.5">
+          {task.status !== "To Do" && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-7 rounded-full hover:bg-slate-100 hover:text-slate-600"
+              onClick={(e) => handleStatusUpdate(e, "To Do")}
+              disabled={isUpdating}
+              title="Mark as To Do"
+            >
+              <CircleDashed className="size-3.5" />
+            </Button>
+          )}
+          {task.status !== "In Progress" && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-7 rounded-full hover:bg-blue-50 hover:text-blue-600"
+              onClick={(e) => handleStatusUpdate(e, "In Progress")}
+              disabled={isUpdating}
+              title="Mark as In Progress"
+            >
+              <Clock className="size-3.5" />
+            </Button>
+          )}
+          {task.status !== "Done" && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-7 rounded-full hover:bg-green-50 hover:text-green-600"
+              onClick={(e) => handleStatusUpdate(e, "Done")}
+              disabled={isUpdating}
+              title="Mark as Done"
+            >
+              <CheckCircle className="size-3.5" />
+            </Button>
+          )}
+        </div>
+      </div>
 
+      {/* Title & Description */}
+      <div>
+        <h4 className="font-bold text-[15px] line-clamp-2 leading-tight mb-1.5 text-foreground" title={task.title}>
+          {task.title}
+        </h4>
         {task.description && (
-          <p className="text-xs text-muted-foreground line-clamp-2 mb-3 h-8">
+          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed" title={task.description}>
             {task.description}
           </p>
         )}
+      </div>
 
-        <div className="flex items-center justify-between pt-2 border-t border-muted/50">
-          <div className="flex -space-x-2">
-            {task.assignees?.slice(0, 3).map((member) => (
-              <Avatar
-                key={member._id}
-                className="size-6 border-2 border-background ring-1 ring-muted"
-                title={member.name}
-              >
-                <AvatarImage src={member.profilePicture} />
-                <AvatarFallback className="text-[10px]">{member.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-            ))}
-            {task.assignees && task.assignees.length > 3 && (
-              <div className="size-6 rounded-full bg-muted flex items-center justify-center text-[8px] font-bold border-2 border-background">
-                +{task.assignees.length - 3}
-              </div>
-            )}
-          </div>
+      {/* Divider */}
+      <div className="border-t border-muted/40 my-1"></div>
 
-          {task.dueDate && (
-            <div className={cn(
-              "flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full",
-              new Date(task.dueDate) < new Date() && task.status !== "Done" 
-                ? "bg-red-50 text-red-600" 
-                : "bg-muted text-muted-foreground"
-            )}>
-              <Calendar className="size-3" />
-              {format(new Date(task.dueDate), "MMM d")}
+      {/* Dates */}
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col">
+          <span className="text-[11px] text-muted-foreground font-medium mb-1">Start Date</span>
+          <span className="text-sm font-bold text-foreground">
+            {task.createdAt ? format(new Date(task.createdAt), "do MMM yyyy") : "N/A"}
+          </span>
+        </div>
+        <div className="flex flex-col text-right">
+          <span className="text-[11px] text-muted-foreground font-medium mb-1">Due Date</span>
+          <span className={cn(
+            "text-sm font-bold",
+            new Date(task.dueDate) < new Date() && task.status !== "Done" 
+              ? "text-red-600" 
+              : "text-foreground"
+          )}>
+            {task.dueDate ? format(new Date(task.dueDate), "do MMM yyyy") : "N/A"}
+          </span>
+        </div>
+      </div>
+
+      {/* Profiles */}
+      <div className="flex items-center mt-1">
+        <div className="flex -space-x-2">
+          {task.assignees?.slice(0, 3).map((member) => (
+            <Avatar
+              key={member._id}
+              className="size-8 border-2 border-background shadow-sm"
+              title={member.name}
+            >
+              <AvatarImage src={member.profilePicture} />
+              <AvatarFallback className="text-[10px] bg-slate-100 font-bold text-slate-600">
+                {member.name.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
+          ))}
+          {task.assignees && task.assignees.length > 3 && (
+            <div className="size-8 rounded-full bg-slate-100 flex items-center justify-center text-[11px] font-bold border-2 border-background shadow-sm text-slate-600">
+              +{task.assignees.length - 3}
             </div>
           )}
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 };

@@ -50,10 +50,14 @@ export const CreateWorkspace = ({
     const onSubmit = (data: WorkspaceForm) => {
         mutate(data, {
             onSuccess: (data: any) => {
-                form.reset();
                 setIsCreatingWorkspace(false);
                 toast.success("Workspace created successfully!");
-                navigate(`workspaces/${data._id}`);
+                
+                // Allow the dialog's close animation to finish before navigating and resetting
+                setTimeout(() => {
+                    form.reset();
+                    navigate(`/workspaces/${data._id}`);
+                }, 300);
             },
             onError: (error: any) => {
                 const errorMessage = error?.response?.data?.message || "Failed to create workspace";

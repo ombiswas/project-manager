@@ -1,6 +1,18 @@
 import type { WorkspaceForm } from "@/components/workspace/create-workspace";
-import { fetchData, postData, deleteData } from "@/lib/fetch-util";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { fetchData, postData, deleteData, updateData } from "@/lib/fetch-util";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+export const useUpdateWorkspaceMutation = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: { workspaceId: string; workspaceData: Partial<WorkspaceForm> }) =>
+            updateData(`/workspaces/${data.workspaceId}`, data.workspaceData),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ["workspace", variables.workspaceId] });
+            queryClient.invalidateQueries({ queryKey: ["workspaces"] });
+        },
+    });
+};
 
 export const useCreateWorkspace = () => {
     return useMutation({
