@@ -27,7 +27,9 @@ const createProject = async (req, res) => {
       });
     }
 
-    const tagArray = tags ? tags.split(",") : [];
+    const tagArray = Array.isArray(tags) 
+      ? tags 
+      : tags ? tags.split(",").map(t => t.trim()).filter(t => t !== "") : [];
 
     const newProject = await Project.create({
       title,
@@ -204,7 +206,11 @@ const updateProject = async (req, res) => {
     if (status !== undefined) project.status = status;
     if (startDate !== undefined) project.startDate = startDate;
     if (dueDate !== undefined) project.dueDate = dueDate;
-    if (tags !== undefined) project.tags = tags.split(",");
+    if (tags !== undefined) {
+      project.tags = Array.isArray(tags) 
+        ? tags 
+        : tags.split(",").map(t => t.trim()).filter(t => t !== "");
+    }
     if (members !== undefined) project.members = members;
 
     await project.save();

@@ -52,7 +52,7 @@ const projectSchema = z.object({
   ]),
   startDate: z.string(),
   dueDate: z.string().optional(),
-  tags: z.string().optional(),
+  tags: z.union([z.string(), z.array(z.string())]).optional(),
   members: z
     .array(
       z.object({
