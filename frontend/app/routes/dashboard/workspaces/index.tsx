@@ -51,7 +51,7 @@ const Workspaces = () => {
   };
 
   if (isLoading) {
-    return <Loader />;
+    return <Loader label="Loading your workspaces..." />;
   }
 
   return (

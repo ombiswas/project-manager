@@ -33,11 +33,7 @@ const Dashboard = () => {
     };
 
     if (isPending || !data) {
-        return (
-            <div className="flex items-center justify-center min-h-[70vh] w-full">
-                <Loader label="Loading Workspace stats..." />
-            </div>
-        );
+        return <Loader label="Loading workspace overview..." />;
     }
 
     return (

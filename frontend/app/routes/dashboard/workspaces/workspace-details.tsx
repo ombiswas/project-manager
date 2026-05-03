@@ -27,13 +27,7 @@ const WorkspaceDetails = () => {
     isLoading: boolean;
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full min-h-[400px]">
-        <Loader label="Loading workspace..." />
-      </div>
-    );
-  }
+  if (isLoading) return <Loader label="Loading workspace details..." />;
 
   return (
     <div className="space-y-8">
