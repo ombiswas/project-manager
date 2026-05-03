@@ -133,15 +133,10 @@ const Profile = () => {
     );
   };
 
-  if (isPending)
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Loader className="animate-spin" />
-      </div>
-    );
+  if (isPending) return <Loader label="Loading profile information..." />;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-12">
       <div className="px-4 md:px-0">
         <BackButton />
         <h3 className="text-lg font-medium">Profile Information</h3>

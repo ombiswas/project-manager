@@ -36,12 +36,7 @@ const ProjectDetails = () => {
     isLoading: boolean;
   };
 
-  if (isLoading)
-    return (
-      <div className="flex items-center justify-center h-[80vh]">
-        <Loader label="Loading project details..." />
-      </div>
-    );
+  if (isLoading) return <Loader label="Loading project details..." />;
 
   if (!data) return null;
 

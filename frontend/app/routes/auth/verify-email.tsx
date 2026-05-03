@@ -35,7 +35,7 @@ const VerifyEmail = () => {
     }, [searchParams]);
 
     return (
-        <div className='flex flex-col items-center justify-center h-screen'>
+        <div className='flex flex-col items-center justify-center min-h-screen pt-10 pb-20 px-4'>
             <h1 className='text-2xl font-bold'>Verify Email</h1>
             <p className='text-sm text-gray-500'>Verifying your email...</p>
 

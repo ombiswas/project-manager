@@ -56,12 +56,7 @@ const Members = () => {
     isLoading: boolean;
   };
 
-  if (isLoading)
-    return (
-      <div>
-        <Loader />
-      </div>
-    );
+  if (isLoading) return <Loader label="Loading workspace members..." />;
 
   if (!data || !workspaceId) return <div>No workspace found</div>;
 

@@ -105,14 +105,9 @@ const MyTasks = () => {
   );
   const doneTasks = sortedTasks.filter((task) => task.status === "Done");
 
-  if (isLoading)
-    return (
-      <div>
-        <Loader />
-      </div>
-    );
+  if (isLoading) return <Loader label="Loading your tasks..." />;
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12">
       <div className="flex items-start md:items-center justify-between">
         <h1 className="text-2xl font-bold">My Tasks</h1>
 
@@ -183,7 +178,7 @@ const MyTasks = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>All Tasks</CardTitle>
-                  <CardDescription>
+                  <CardDescription className="mt-2">
                     {sortedTasks?.length} tasks assigned to you
                   </CardDescription>
                 </div>
@@ -216,7 +211,7 @@ const MyTasks = () => {
                             <span className="truncate">{task.title}</span>
                             <ArrowUpRight className="size-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                           </Link>
-                          
+
                           <p className="text-sm text-muted-foreground line-clamp-1 max-w-2xl">
                             {task.description || "No description provided"}
                           </p>
@@ -245,7 +240,7 @@ const MyTasks = () => {
                                 {task.priority}
                               </Badge>
                             )}
-                            
+
                             <span className="text-[10px] font-bold text-muted-foreground uppercase bg-muted px-1.5 py-0.5 rounded">
                               {task.project.title}
                             </span>
@@ -336,7 +331,7 @@ const MyTasks = () => {
                           >
                             {task.priority}
                           </Badge>
-                          
+
                           <span className="text-[10px] font-bold text-muted-foreground/60 uppercase truncate flex-1">
                             {task.project.title}
                           </span>

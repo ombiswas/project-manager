@@ -36,20 +36,14 @@ const Archived = () => {
         Low: "border-l-blue-500",
     };
 
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <Loader label="Loading archived tasks..." />
-            </div>
-        );
-    }
+    if (isLoading) return <Loader label="Loading archived tasks..." />;
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             <div className="flex flex-col gap-4 md:flex-row md:items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight text-foreground">Archived Tasks</h1>
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-muted-foreground text-sm mt-1">
                         Restore or manage tasks you've previously archived.
                     </p>
                 </div>
@@ -101,14 +95,14 @@ const Archived = () => {
                                             <div className={cn(
                                                 "px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider",
                                                 task.priority === "High" ? "bg-red-100 text-red-600" :
-                                                task.priority === "Medium" ? "bg-orange-100 text-orange-600" :
-                                                "bg-blue-100 text-blue-600"
+                                                    task.priority === "Medium" ? "bg-orange-100 text-orange-600" :
+                                                        "bg-blue-100 text-blue-600"
                                             )}>
                                                 {task.priority}
                                             </div>
                                         </div>
 
-                                        <div className="flex flex-wrap gap-4 pt-1">
+                                        <div className="flex flex-wrap justify-between pt-1">
                                             <div className="flex flex-col gap-0.5">
                                                 <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-tight">Status</span>
                                                 <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">

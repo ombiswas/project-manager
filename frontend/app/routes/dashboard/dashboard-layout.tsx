@@ -49,7 +49,7 @@ const DashboardLayout = () => {
     }, [searchParams, workspaces, location.pathname, navigate, currentWorkspace]);
 
     if (isLoading) {
-        return <Loader />;
+        return <Loader label="Authenticating..." />;
     };
 
     if (!isAuthenticated) {
@@ -71,8 +71,8 @@ const DashboardLayout = () => {
                     onCreateWorkspace={() => setIsCreatingWorkspace(true)}
                 />
 
-                <main className="flex-1 overflow-y-auto h-full w-full">
-                    <div className="mx-auto container px-2 sm:px-6 lg:px-8 py-0 md:py-8 w-full h-full">
+                <main className="flex-1 overflow-y-auto w-full">
+                    <div className="mx-auto container px-2 sm:px-6 lg:px-8 pt-0 pb-10 md:pt-8 md:pb-20 w-full min-h-full">
                         <Outlet />
                     </div>
                 </main>

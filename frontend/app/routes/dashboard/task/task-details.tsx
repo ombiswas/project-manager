@@ -57,13 +57,7 @@ const TaskDetails = () => {
     useAchievedTaskMutation();
   const { mutate: deleteTask, isPending: isDeleting } = useDeleteTaskMutation();
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader label="Loading task details..." />
-      </div>
-    );
-  }
+  if (isLoading) return <Loader label="Loading task details..." />;
 
   if (!data) {
     return (
