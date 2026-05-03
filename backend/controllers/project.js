@@ -195,9 +195,14 @@ const updateProject = async (req, res) => {
       });
     }
 
-    if (project.createdBy.toString() !== req.user._id.toString()) {
+    const isOwner = project.createdBy.toString() === req.user._id.toString();
+    const isManager = project.members.some(
+      (m) => m.user.toString() === req.user._id.toString() && m.role === "manager"
+    );
+
+    if (!isOwner && !isManager) {
       return res.status(403).json({
-        message: "Only the project owner can update this project",
+        message: "Only the project owner or manager can update this project",
       });
     }
 
