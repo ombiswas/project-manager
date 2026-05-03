@@ -42,7 +42,7 @@ app.use((err, req, res, next) => {
   console.log(err.stack);
   res.status(500).json({ 
     message: "Internal server error",
-    error: process.env.NODE_ENV === "development" ? err.message : undefined
+    error: err.message // Temporarily show error message to debug production issue
   });
 });
 
