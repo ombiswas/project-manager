@@ -57,7 +57,7 @@ const getProjectDetails = async (req, res) => {
   try {
     const { projectId } = req.params;
 
-    const project = await Project.findById(projectId);
+    const project = await Project.findById(projectId).populate("members.user", "name email profilePicture");
 
     if (!project) {
       return res.status(404).json({
@@ -183,7 +183,7 @@ const updateProject = async (req, res) => {
       return res.status(400).json({ message: errorMessage });
     }
 
-    const { title, description, status, startDate, dueDate } = validationResult.data;
+    const { title, description, status, startDate, dueDate, tags, members } = validationResult.data;
 
     const project = await Project.findById(projectId);
 
@@ -204,6 +204,8 @@ const updateProject = async (req, res) => {
     if (status !== undefined) project.status = status;
     if (startDate !== undefined) project.startDate = startDate;
     if (dueDate !== undefined) project.dueDate = dueDate;
+    if (tags !== undefined) project.tags = tags.split(",");
+    if (members !== undefined) project.members = members;
 
     await project.save();
 
