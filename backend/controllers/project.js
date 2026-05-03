@@ -67,11 +67,12 @@ const getProjectDetails = async (req, res) => {
       });
     }
 
+    const isCreator = project.createdBy.equals(req.user._id);
     const isMember = project.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
+      (m) => m.user && (m.user._id || m.user).equals(req.user._id)
     );
 
-    if (!isMember) {
+    if (!isCreator && !isMember) {
       return res.status(403).json({
         message: "You are not a member of this project",
       });
@@ -97,13 +98,12 @@ const getProjectTasks = async (req, res) => {
       });
     }
 
+    const isCreator = project.createdBy.equals(req.user._id);
     const isMember = project.members.some(
-      (member) =>
-        member.user._id.toString() === req.user._id.toString() ||
-        member.user.toString() === req.user._id.toString()
+      (m) => m.user && (m.user._id || m.user).equals(req.user._id)
     );
 
-    if (!isMember) {
+    if (!isCreator && !isMember) {
       return res.status(403).json({
         message: "You are not a member of this project",
       });
@@ -195,9 +195,9 @@ const updateProject = async (req, res) => {
       });
     }
 
-    const isOwner = project.createdBy.toString() === req.user._id.toString();
+    const isOwner = project.createdBy.equals(req.user._id);
     const isManager = project.members.some(
-      (m) => m.user.toString() === req.user._id.toString() && m.role === "manager"
+      (m) => m.user && m.user.equals(req.user._id) && m.role === "manager"
     );
 
     if (!isOwner && !isManager) {

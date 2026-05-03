@@ -77,23 +77,35 @@ const getWorkspaceProjects = async (req, res) => {
   try {
     const { workspaceId } = req.params;
 
-    const workspace = await Workspace.findOne({
-      _id: workspaceId,
-      members: { $elemMatch: { user: req.user._id } },
-    }).populate("members.user", "name email profilePicture");
+    const workspace = await Workspace.findById(workspaceId).populate("members.user", "name email profilePicture");
 
     if (!workspace) {
-      console.log(`Workspace not found or user not a member. WorkspaceID: ${workspaceId}, UserID: ${req.user._id}`);
       return res.status(404).json({
         message: "Workspace not found",
       });
     }
 
-    const projects = await Project.find({
-      workspace: workspaceId,
-      isArchived: false,
-      members: { $elemMatch: { user: req.user._id } },
-    })
+    const isOwner = workspace.owner.equals(req.user._id);
+    const isMember = workspace.members.some(
+      (m) => m.user && (m.user._id || m.user).equals(req.user._id)
+    );
+
+    if (!isOwner && !isMember) {
+      return res.status(403).json({
+        message: "You are not a member of this workspace",
+      });
+    }
+
+    // Projects where the user is a member OR if the user is the workspace owner (show all)
+    const projectFilter = isOwner 
+      ? { workspace: workspaceId, isArchived: false }
+      : { 
+          workspace: workspaceId, 
+          isArchived: false,
+          members: { $elemMatch: { user: req.user._id } }
+        };
+
+    const projects = await Project.find(projectFilter)
       .populate("tasks", "status")
       .sort({ createdAt: -1 });
 
@@ -118,36 +130,18 @@ const getWorkspaceStats = async (req, res) => {
       });
     }
 
+    const isOwner = workspace.owner.equals(req.user._id);
     const isMember = workspace.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
+      (m) => m.user && m.user.equals(req.user._id)
     );
 
-    if (!isMember) {
+    if (!isOwner && !isMember) {
       return res.status(403).json({
         message: "You are not a member of this workspace",
       });
     }
 
-    const [totalProjects, projects] = await Promise.all([
-      Project.countDocuments({ workspace: workspaceId }),
-      Project.find({ workspace: workspaceId })
-        .populate(
-          "tasks",
-          "title status dueDate project updatedAt isArchived priority"
-        )
-        .sort({ createdAt: -1 }),
-    ]);
-
-    const totalTasks = projects.reduce((acc, project) => {
-      return acc + project.tasks.length;
-    }, 0);
-
-    const totalProjectInProgress = projects.filter(
-      (project) => project.status === "In Progress"
-    ).length;
-    // const totalProjectCompleted = projects.filter(
-    //   (project) => project.status === "Completed"
-    // ).length;
+    // Rest of stats logic...
 
     const totalTaskCompleted = projects.reduce((acc, project) => {
       return (
