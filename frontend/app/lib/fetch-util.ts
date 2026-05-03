@@ -17,11 +17,22 @@ api.interceptors.request.use((config) => {
     return config
 });
 
-// Add a global handler for 401 errors
+// Add a global handler for 401, 403, and 404 errors
 api.interceptors.response.use((response) => response, (error) => {
-    if (error.response && error.response.status === 401) {
-        // Dispatch a custom event to trigger logout in AuthProvider
-        window.dispatchEvent(new Event("force-logout"));
+    if (error.response) {
+        if (error.response.status === 401) {
+            // Dispatch a custom event to trigger logout in AuthProvider
+            window.dispatchEvent(new Event("force-logout"));
+        } else if (error.response.status === 403 || error.response.status === 404) {
+            // Dispatch a custom event to trigger redirect if access is lost or resource is deleted
+            const event = new CustomEvent("access-denied", { 
+                detail: { 
+                    message: error.response.data.message || "Access denied or resource not found",
+                    status: error.response.status
+                } 
+            });
+            window.dispatchEvent(event);
+        }
     }
     return Promise.reject(error);
 });

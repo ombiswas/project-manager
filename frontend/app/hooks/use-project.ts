@@ -26,6 +26,7 @@ export const UseProjectQuery = (projectId: string) => {
   return useQuery({
     queryKey: ["project", projectId],
     queryFn: () => fetchData(`/projects/${projectId}/tasks`),
+    refetchInterval: 5000, // Poll every 5 seconds for real-time updates
   });
 };
 

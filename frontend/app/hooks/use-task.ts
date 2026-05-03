@@ -21,6 +21,7 @@ export const useTaskByIdQuery = (taskId: string) => {
   return useQuery({
     queryKey: ["task", taskId],
     queryFn: () => fetchData(`/tasks/${taskId}`),
+    refetchInterval: 5000, // Poll every 5 seconds for real-time updates
   });
 };
 
@@ -195,6 +196,7 @@ export const useGetCommentsByTaskIdQuery = (taskId: string) => {
   return useQuery({
     queryKey: ["comments", taskId],
     queryFn: () => fetchData(`/tasks/${taskId}/comments`),
+    refetchInterval: 5000, // Poll every 5 seconds for real-time updates
   });
 };
 

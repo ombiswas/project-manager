@@ -18,6 +18,7 @@ import {
   workspaceSchema,
 } from "../libs/validate-schema.js";
 import authMiddleware from "../middleware/auth-middleware.js";
+import { checkWorkspaceMember } from "../middleware/permission-middleware.js";
 import { z } from "zod";
 
 const router = express.Router();
@@ -39,6 +40,7 @@ router.post(
 router.post(
   "/:workspaceId/invite-member",
   authMiddleware,
+  checkWorkspaceMember,
   validateRequest({
     params: z.object({ workspaceId: z.string() }),
     body: inviteMemberSchema,
@@ -55,13 +57,14 @@ router.post(
 
 router.get("/", authMiddleware, getWorkspaces);
 
-router.get("/:workspaceId", authMiddleware, getWorkspaceDetails);
-router.get("/:workspaceId/projects", authMiddleware, getWorkspaceProjects);
-router.get("/:workspaceId/stats", authMiddleware, getWorkspaceStats);
+router.get("/:workspaceId", authMiddleware, checkWorkspaceMember, getWorkspaceDetails);
+router.get("/:workspaceId/projects", authMiddleware, checkWorkspaceMember, getWorkspaceProjects);
+router.get("/:workspaceId/stats", authMiddleware, checkWorkspaceMember, getWorkspaceStats);
 
 router.put(
   "/:workspaceId",
   authMiddleware,
+  checkWorkspaceMember,
   validateRequest({
     params: z.object({ workspaceId: z.string() }),
     body: workspaceSchema.partial(),
@@ -69,6 +72,6 @@ router.put(
   updateWorkspace
 );
 
-router.delete("/:workspaceId", authMiddleware, deleteWorkspace);
+router.delete("/:workspaceId", authMiddleware, checkWorkspaceMember, deleteWorkspace);
 
 export default router;
