@@ -5,23 +5,63 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/provider/auth-context";
+import { useUpdateUserProfile } from "@/hooks/use-user";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
+
+const profileSchema = z.object({
+    name: z.string().min(1, "Name is required"),
+});
+
+type ProfileFormValues = z.infer<typeof profileSchema>;
 
 const Settings = () => {
-    const { user } = useAuth();
-    
+    const { user, updateUser } = useAuth();
+    const { mutate: updateProfile, isPending: isUpdating } = useUpdateUserProfile();
+
+    const form = useForm<ProfileFormValues>({
+        resolver: zodResolver(profileSchema),
+        defaultValues: {
+            name: user?.name || "",
+        },
+    });
+
+    useEffect(() => {
+        if (user?.name) {
+            form.setValue("name", user.name);
+        }
+    }, [user, form]);
+
+    const onSubmit = (values: ProfileFormValues) => {
+        updateProfile(values, {
+            onSuccess: (data: any) => {
+                // The backend returns the user object directly
+                updateUser(data);
+                toast.success("Profile updated successfully");
+            },
+            onError: (error: any) => {
+                toast.error(error?.response?.data?.message || "Failed to update profile");
+            }
+        });
+    };
+
     return (
         <div className="space-y-6 animate-in fade-in duration-500 pb-12">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
             </div>
-...
+
             <Tabs defaultValue="general" className="w-full">
                 <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
                     <TabsTrigger value="general">General</TabsTrigger>
                     <TabsTrigger value="notifications">Notifications</TabsTrigger>
                     <TabsTrigger value="billing">Billing</TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="general" className="mt-6">
                     <Card>
                         <CardHeader>
@@ -30,22 +70,34 @@ const Settings = () => {
                                 Manage your personal information and preferences.
                             </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="name">Full Name</Label>
-                                <Input id="name" defaultValue={user?.name || ""} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="email">Email Address</Label>
-                                <Input id="email" type="email" defaultValue={user?.email || ""} disabled />
-                                <p className="text-sm text-muted-foreground">
-                                    Your email address cannot be changed from the dashboard.
-                                </p>
-                            </div>
-                        </CardContent>
-                        <CardFooter>
-                            <Button>Save Changes</Button>
-                        </CardFooter>
+                        <form onSubmit={form.handleSubmit(onSubmit)}>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="name">Full Name</Label>
+                                    <Input
+                                        id="name"
+                                        {...form.register("name")}
+                                        placeholder="Enter your name"
+                                    />
+                                    {form.formState.errors.name && (
+                                        <p className="text-xs text-red-500">{form.formState.errors.name.message}</p>
+                                    )}
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="email">Email Address</Label>
+                                    <Input id="email" type="email" value={user?.email || ""} disabled className="bg-muted/50 cursor-not-allowed" />
+                                    <p className="text-sm text-muted-foreground">
+                                        Your email address cannot be changed from the dashboard.
+                                    </p>
+                                </div>
+                            </CardContent>
+                            <CardFooter>
+                                <Button type="submit" disabled={isUpdating} className="mt-4">
+                                    {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Save Changes
+                                </Button>
+                            </CardFooter>
+                        </form>
                     </Card>
                 </TabsContent>
 

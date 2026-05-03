@@ -10,6 +10,7 @@ interface AuthContextType {
     isLoading: boolean;
     login: (data: any) => Promise<void>;
     logout: () => Promise<void>;
+    updateUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,6 +23,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const navigate = useNavigate();
     const currentPath = useLocation().pathname;
     const isPublicRoute = publicRoutes.includes(currentPath);
+
+    const updateUser = (updatedUser: User) => {
+        if (!updatedUser || !updatedUser._id) {
+            console.error("Invalid user data provided to updateUser");
+            return;
+        }
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+    };
 
     // check if user is authenticated
     useEffect(() => {
@@ -83,6 +93,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isLoading,
         login,
         logout,
+        updateUser,
     };
 
     return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>;
