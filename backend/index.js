@@ -40,7 +40,10 @@ app.use("/api-v1", routes);
 // error middleware
 app.use((err, req, res, next) => {
   console.log(err.stack);
-  res.status(500).json({ message: "Internal server error" });
+  res.status(500).json({ 
+    message: "Internal server error",
+    error: process.env.NODE_ENV === "development" ? err.message : undefined
+  });
 });
 
 // not found middleware

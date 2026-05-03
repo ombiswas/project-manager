@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UseProjectQuery } from "@/hooks/use-project";
 import { useUpdateTaskStatusMutation } from "@/hooks/use-task";
+import { useAuth } from "@/provider/auth-context";
 import { getProjectProgress } from "@/lib";
 import { cn } from "@/lib/utils";
 import type { Project, Task, TaskStatus } from "@/types";
@@ -19,6 +20,7 @@ import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 
 const ProjectDetails = () => {
+  const { user } = useAuth();
   const { projectId, workspaceId } = useParams<{
     projectId: string;
     workspaceId: string;
@@ -42,6 +44,13 @@ const ProjectDetails = () => {
 
   const { project, tasks } = data;
   const projectProgress = getProjectProgress(tasks);
+
+  const isOwner = project.createdBy === user?._id || (project.createdBy as any)?._id === user?._id;
+  const isManager = project.members.some(m => {
+    const memberId = typeof m.user === 'string' ? m.user : (m.user as any)._id;
+    return memberId === user?._id && m.role === "manager";
+  });
+  const canManage = isOwner || isManager;
 
   const handleTaskClick = (taskId: string) => {
     navigate(
@@ -84,15 +93,17 @@ const ProjectDetails = () => {
               Add Task
             </Button>
             
-            <Button
-              variant="outline"
-              size="icon"
-              className="shadow-sm"
-              onClick={() => navigate(`/workspaces/${workspaceId}/projects/${projectId}/settings`)}
-              title="Project Settings"
-            >
-              <Settings className="size-4" />
-            </Button>
+            {canManage && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="shadow-sm"
+                onClick={() => navigate(`/workspaces/${workspaceId}/projects/${projectId}/settings`)}
+                title="Project Settings"
+              >
+                <Settings className="size-4" />
+              </Button>
+            )}
           </div>
         </div>
       </div>
