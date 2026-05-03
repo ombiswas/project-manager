@@ -48,4 +48,6 @@ export default [
     layout("routes/user/user-layout.tsx", [
         route("user/profile", "routes/user/profile.tsx"),
     ]),
+
+    route("*", "routes/not-found.tsx"),
 ] satisfies RouteConfig;

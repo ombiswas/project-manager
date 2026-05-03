@@ -647,6 +647,30 @@ const getMyTasks = async (req, res) => {
   }
 };
 
+const getArchivedTasks = async (req, res) => {
+  try {
+    const projects = await Project.find({
+      "members.user": req.user._id,
+    });
+
+    const projectIds = projects.map((p) => p._id);
+
+    const archivedTasks = await Task.find({
+      project: { $in: projectIds },
+      isArchived: true,
+    })
+      .populate("project", "title")
+      .sort({ updatedAt: -1 });
+
+    res.status(200).json(archivedTasks);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
 const deleteTask = async (req, res) => {
   try {
     const { taskId } = req.params;
@@ -720,5 +744,6 @@ export {
   watchTask,
   achievedTask,
   getMyTasks,
+  getArchivedTasks,
   deleteTask,
 };
