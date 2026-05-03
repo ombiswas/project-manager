@@ -1,5 +1,6 @@
 import express from "express";
 import authMiddleware from "../middleware/auth-middleware.js";
+import { checkProjectMember } from "../middleware/permission-middleware.js";
 import { validateRequest } from "zod-express-middleware";
 import { projectSchema } from "../libs/validate-schema.js";
 import { z } from "zod";
@@ -28,6 +29,7 @@ router.post(
 router.get(
   "/:projectId",
   authMiddleware,
+  checkProjectMember,
   validateRequest({
     params: z.object({ projectId: z.string() }),
   }),
@@ -37,6 +39,7 @@ router.get(
 router.get(
   "/:projectId/tasks",
   authMiddleware,
+  checkProjectMember,
   validateRequest({ params: z.object({ projectId: z.string() }) }),
   getProjectTasks
 );
@@ -44,12 +47,14 @@ router.get(
 router.put(
   "/:projectId",
   authMiddleware,
+  checkProjectMember,
   updateProject
 );
 
 router.delete(
   "/:projectId",
   authMiddleware,
+  checkProjectMember,
   validateRequest({
     params: z.object({ projectId: z.string() }),
   }),

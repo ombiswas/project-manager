@@ -24,6 +24,7 @@ export const useGetWorkspacesQuery = () => {
     return useQuery({
         queryKey: ["workspaces"],
         queryFn: async () => fetchData("/workspaces"),
+        refetchInterval: 5000, // Poll every 5 seconds for real-time updates
     });
 };
 
@@ -32,6 +33,7 @@ export const useGetWorkspaceQuery = (workspaceId: string) => {
         queryKey: ["workspace", workspaceId],
         queryFn: async () => fetchData(`/workspaces/${workspaceId}/projects`),
         enabled: !!workspaceId && workspaceId !== "null",
+        refetchInterval: 5000, // Poll every 5 seconds for real-time updates
     });
 };
 

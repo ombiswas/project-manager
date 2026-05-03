@@ -23,6 +23,7 @@ import {
   deleteTask,
 } from "../controllers/task.js";
 import authMiddleware from "../middleware/auth-middleware.js";
+import { checkTaskMember } from "../middleware/permission-middleware.js";
 
 const router = express.Router();
 
@@ -41,6 +42,7 @@ router.post(
 router.post(
   "/:taskId/add-subtask",
   authMiddleware,
+  checkTaskMember,
   validateRequest({
     params: z.object({ taskId: z.string() }),
     body: z.object({ title: z.string() }),
@@ -51,6 +53,7 @@ router.post(
 router.post(
   "/:taskId/add-comment",
   authMiddleware,
+  checkTaskMember,
   validateRequest({
     params: z.object({ taskId: z.string() }),
     body: z.object({ text: z.string() }),
@@ -61,6 +64,7 @@ router.post(
 router.post(
   "/:taskId/watch",
   authMiddleware,
+  checkTaskMember,
   validateRequest({
     params: z.object({ taskId: z.string() }),
   }),
@@ -70,6 +74,7 @@ router.post(
 router.post(
   "/:taskId/achieved",
   authMiddleware,
+  checkTaskMember,
   validateRequest({
     params: z.object({ taskId: z.string() }),
   }),
@@ -79,6 +84,7 @@ router.post(
 router.put(
   "/:taskId/update-subtask/:subTaskId",
   authMiddleware,
+  checkTaskMember,
   validateRequest({
     params: z.object({ taskId: z.string(), subTaskId: z.string() }),
     body: z.object({ completed: z.boolean() }),
@@ -89,6 +95,7 @@ router.put(
 router.put(
   "/:taskId/title",
   authMiddleware,
+  checkTaskMember,
   validateRequest({
     params: z.object({ taskId: z.string() }),
     body: z.object({ title: z.string() }),
@@ -99,6 +106,7 @@ router.put(
 router.put(
   "/:taskId/description",
   authMiddleware,
+  checkTaskMember,
   validateRequest({
     params: z.object({ taskId: z.string() }),
     body: z.object({ description: z.string() }),
@@ -109,6 +117,7 @@ router.put(
 router.put(
   "/:taskId/status",
   authMiddleware,
+  checkTaskMember,
   validateRequest({
     params: z.object({ taskId: z.string() }),
     body: z.object({ status: z.string() }),
@@ -119,6 +128,7 @@ router.put(
 router.put(
   "/:taskId/assignees",
   authMiddleware,
+  checkTaskMember,
   validateRequest({
     params: z.object({ taskId: z.string() }),
     body: z.object({ assignees: z.array(z.string()) }),
@@ -132,6 +142,7 @@ router.get("/archived", authMiddleware, getArchivedTasks);
 router.put(
   "/:taskId/priority",
   authMiddleware,
+  checkTaskMember,
   validateRequest({
     params: z.object({ taskId: z.string() }),
     body: z.object({ priority: z.string() }),
@@ -142,6 +153,7 @@ router.put(
 router.get(
   "/:taskId",
   authMiddleware,
+  checkTaskMember,
   validateRequest({
     params: z.object({
       taskId: z.string(),
@@ -162,6 +174,7 @@ router.get(
 router.get(
   "/:taskId/comments",
   authMiddleware,
+  checkTaskMember,
   validateRequest({
     params: z.object({ taskId: z.string() }),
   }),
@@ -171,6 +184,7 @@ router.get(
 router.delete(
   "/:taskId",
   authMiddleware,
+  checkTaskMember,
   validateRequest({
     params: z.object({ taskId: z.string() }),
   }),

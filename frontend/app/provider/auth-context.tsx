@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { queryClient } from "./react-query-provider";
 import { useLocation, useNavigate } from "react-router";
 import { publicRoutes } from "@/lib";
+import { toast } from "sonner";
 
 interface AuthContextType {
     user: User | null;
@@ -65,8 +66,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             logout();
             navigate("/sign-in");
         };
+
+        const handleAccessDenied = (event: any) => {
+            const { message } = event.detail;
+            toast.error(message);
+            navigate("/");
+        };
+
         window.addEventListener("force-logout", handleLogout);
-        return () => window.removeEventListener("force-logout", handleLogout);
+        window.addEventListener("access-denied", handleAccessDenied);
+        
+        return () => {
+            window.removeEventListener("force-logout", handleLogout);
+            window.removeEventListener("access-denied", handleAccessDenied);
+        };
     }, []);
 
     const login = async (data: any) => {
