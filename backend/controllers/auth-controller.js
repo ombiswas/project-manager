@@ -92,7 +92,9 @@ const loginUser = async (req, res) => {
             "Email not verified. Please check your email for the verification link.",
         });
       } else {
-        await Verification.findByIdAndDelete(existingVerification._id);
+        if (existingVerification) {
+          await Verification.findByIdAndDelete(existingVerification._id);
+        }
 
         const verificationToken = jwt.sign(
           { userId: user._id, purpose: "email-verification" },
