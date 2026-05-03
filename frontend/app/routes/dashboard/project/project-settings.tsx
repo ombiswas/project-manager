@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ProjectStatus } from "@/types";
 import { UseProjectQuery, UseUpdateProject, UseDeleteProject } from "@/hooks/use-project";
 import { useGetWorkspaceDetailsQuery } from "@/hooks/use-workspace";
+import { useUserProfileQuery } from "@/hooks/use-user";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
@@ -25,9 +26,12 @@ const ProjectSettings = () => {
   const navigate = useNavigate();
 
   const { data, isLoading } = UseProjectQuery(projectId!) as any;
+  const { data: userData } = useUserProfileQuery() as any;
   const { data: workspaceData, isLoading: isLoadingWorkspace } = useGetWorkspaceDetailsQuery(workspaceId!) as any;
   const { mutate: updateProject, isPending: isUpdating } = UseUpdateProject();
   const { mutate: deleteProject, isPending: isDeleting } = UseDeleteProject();
+
+  const isOwner = userData?.user?._id === data?.project?.createdBy || userData?.user?.id === data?.project?.createdBy;
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -184,7 +188,7 @@ const ProjectSettings = () => {
               </div>
             </CardContent>
             <CardFooter className="flex justify-end border-t bg-muted/50 px-6 py-4 rounded-b-lg">
-              <Button type="submit" disabled={isUpdating}>
+              <Button type="submit" disabled={isUpdating || !isOwner}>
                 <Save className="size-4 mr-2" />
                 {isUpdating ? "Saving..." : "Save Changes"}
               </Button>
@@ -251,7 +255,7 @@ const ProjectSettings = () => {
             </div>
           </CardContent>
           <CardFooter className="flex justify-end border-t bg-muted/50 px-6 py-4 rounded-b-lg">
-            <Button onClick={handleUpdate} disabled={isUpdating}>
+            <Button onClick={handleUpdate} disabled={isUpdating || !isOwner}>
               <Save className="size-4 mr-2" />
               {isUpdating ? "Saving..." : "Save Changes"}
             </Button>
@@ -280,6 +284,7 @@ const ProjectSettings = () => {
                 variant="destructive"
                 onClick={() => setIsDeleteDialogOpen(true)}
                 className="w-full md:w-auto"
+                disabled={!isOwner}
               >
                 <Trash2 className="size-4 mr-2" />
                 Delete Project
