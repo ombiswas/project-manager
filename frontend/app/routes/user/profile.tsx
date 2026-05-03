@@ -28,7 +28,8 @@ import {
 import { useAuth } from "@/provider/auth-context";
 import type { User } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Loader, Loader2 } from "lucide-react";
+import { Loader } from "@/components/loader";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -63,7 +64,7 @@ const Profile = () => {
     data: User;
     isPending: boolean;
   };
-  const { logout } = useAuth();
+  const { logout, updateUser } = useAuth();
   const navigate = useNavigate();
 
   const form = useForm<ChangePasswordFormData>({
@@ -120,7 +121,9 @@ const Profile = () => {
     updateUserProfile(
       { name: values.name, profilePicture: values.profilePicture || "" },
       {
-        onSuccess: () => {
+        onSuccess: (data: any) => {
+          // The backend returns the user object directly
+          updateUser(data);
           toast.success("Profile updated successfully");
         },
         onError: (error: any) => {
@@ -139,7 +142,7 @@ const Profile = () => {
     <div className="space-y-8 pb-12">
       <div className="px-4 md:px-0">
         <BackButton />
-        <h3 className="text-lg font-medium">Profile Information</h3>
+        <h3 className="text-lg font-medium mt-6">Profile Information</h3>
         <p className="text-sm text-muted-foreground">
           Manage your account settings and preferences.
         </p>
@@ -187,7 +190,7 @@ const Profile = () => {
                     onClick={() =>
                       document.getElementById("avatar-upload")?.click()
                     }
-                    // disabled={uploading || isUpdatingProfile}
+                  // disabled={uploading || isUpdatingProfile}
                   >
                     Change Avatar
                   </Button>

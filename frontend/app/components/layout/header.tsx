@@ -25,15 +25,16 @@ export const Header = ({
     const isOnWorkspacePage = useLocation().pathname.includes("/workspace");
 
     const handleOnClick = (workspace: Workspace) => {
-        onWorkspaceSelected(workspace);
-        const location = window.location;
+        const url = new URL(window.location.href);
+        const searchParams = new URLSearchParams(url.search);
+        searchParams.set("workspaceId", workspace._id);
 
-        if (isOnWorkspacePage) {
+        if (url.pathname.includes("/workspaces/")) {
+            // If we are on a workspace details page, navigate to the new workspace's details
             navigate(`/workspaces/${workspace._id}`);
         } else {
-            const basePath = location.pathname;
-
-            navigate(`${basePath}?workspaceId=${workspace._id}`);
+            // Otherwise, stay on the current page but update the workspaceId query param
+            navigate(`${url.pathname}?${searchParams.toString()}`);
         }
     };
 
@@ -66,7 +67,7 @@ export const Header = ({
                         <DropdownMenuGroup>
                             {
                                 workspaces.map((ws) => (
-                                    <DropdownMenuItem key={ws._id} onClick={() => onWorkspaceSelected(ws)}>
+                                    <DropdownMenuItem key={ws._id} onClick={() => handleOnClick(ws)}>
                                         {ws.color && (
                                             <WorkspaceAvatar color={ws.color} name={ws.name} />
                                         )}
@@ -92,11 +93,11 @@ export const Header = ({
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <button className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                                <Avatar className="w-8 h-8">
-                                    <AvatarImage src={user?.profilePicture} alt={user?.name} />
-                                    <AvatarFallback className="bg-primary text-primary-foreground">
-                                        {user?.name?.charAt(0).toUpperCase()}
+                            <button className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer group">
+                                <Avatar className="w-8 h-8 border shadow-sm">
+                                    <AvatarImage src={user?.profilePicture} alt={user?.name || "User"} />
+                                    <AvatarFallback className="bg-blue-600 text-white font-bold text-xs">
+                                        {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
                                     </AvatarFallback>
                                 </Avatar>
                             </button>
