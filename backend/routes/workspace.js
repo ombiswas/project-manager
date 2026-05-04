@@ -11,6 +11,8 @@ import {
   inviteUserToWorkspace,
   deleteWorkspace,
   updateWorkspace,
+  removeMember,
+  transferOwnership,
 } from "../controllers/workspace.js";
 import {
   inviteMemberSchema,
@@ -53,6 +55,30 @@ router.post(
   authMiddleware,
   validateRequest({ params: z.object({ workspaceId: z.string() }) }),
   acceptGenerateInvite
+);
+
+router.post(
+  "/:workspaceId/remove-member/:memberId",
+  authMiddleware,
+  checkWorkspaceMember,
+  validateRequest({
+    params: z.object({
+      workspaceId: z.string(),
+      memberId: z.string(),
+    }),
+  }),
+  removeMember
+);
+
+router.post(
+  "/:workspaceId/transfer-ownership",
+  authMiddleware,
+  checkWorkspaceMember,
+  validateRequest({
+    params: z.object({ workspaceId: z.string() }),
+    body: z.object({ newOwnerId: z.string() }),
+  }),
+  transferOwnership
 );
 
 router.get("/", authMiddleware, getWorkspaces);

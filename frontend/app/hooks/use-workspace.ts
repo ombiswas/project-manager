@@ -82,3 +82,25 @@ export const useDeleteWorkspaceMutation = () => {
     });
 };
 
+export const useRemoveMemberMutation = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: { workspaceId: string; memberId: string }) =>
+            postData(`/workspaces/${data.workspaceId}/remove-member/${data.memberId}`, {}),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ["workspace", variables.workspaceId] });
+        },
+    });
+};
+
+export const useTransferOwnershipMutation = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: { workspaceId: string; newOwnerId: string }) =>
+            postData(`/workspaces/${data.workspaceId}/transfer-ownership`, { newOwnerId: data.newOwnerId }),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ["workspace", variables.workspaceId] });
+        },
+    });
+};
+

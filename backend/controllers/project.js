@@ -17,13 +17,19 @@ const createProject = async (req, res) => {
       });
     }
 
-    const isMember = workspace.members.some(
+    const memberInfo = workspace.members.find(
       (member) => member.user.toString() === req.user._id.toString()
     );
 
-    if (!isMember) {
+    if (!memberInfo) {
       return res.status(403).json({
         message: "You are not a member of this workspace",
+      });
+    }
+
+    if (memberInfo.role === "viewer") {
+      return res.status(403).json({
+        message: "Viewers cannot create projects",
       });
     }
 
@@ -145,7 +151,7 @@ const deleteProject = async (req, res) => {
   try {
     const { projectId } = req.params;
 
-    const project = await Project.findById(projectId);
+    const project = await Project.findById(projectId).populate("workspace");
 
     if (!project) {
       return res.status(404).json({
@@ -153,15 +159,44 @@ const deleteProject = async (req, res) => {
       });
     }
 
-    // Check if user is the owner (creator) of the project
-    if (project.createdBy.toString() !== req.user._id.toString()) {
+    const workspace = project.workspace;
+    const requesterMember = workspace.members.find(
+      (m) => m.user.toString() === req.user._id.toString()
+    );
+
+    if (!requesterMember) {
+      return res.status(403).json({ message: "You are not a member of this workspace" });
+    }
+
+    const creatorMember = workspace.members.find(
+      (m) => m.user.toString() === project.createdBy.toString()
+    );
+
+    const requesterRole = requesterMember.role;
+    const creatorRole = creatorMember ? creatorMember.role : "member"; // Default to member if creator left
+
+    let canDelete = false;
+
+    if (requesterRole === "owner") {
+      canDelete = true;
+    } else if (requesterRole === "admin") {
+      if (creatorRole !== "owner") {
+        canDelete = true;
+      }
+    } else if (requesterRole === "member") {
+      if (project.createdBy.toString() === req.user._id.toString()) {
+         canDelete = true;
+      }
+    }
+
+    if (!canDelete) {
       return res.status(403).json({
-        message: "Only the project owner can delete this project",
+        message: "You do not have permission to delete this project based on your role and the project creator's role",
       });
     }
 
     // Remove project from workspace
-    await Workspace.findByIdAndUpdate(project.workspace, {
+    await Workspace.findByIdAndUpdate(project.workspace._id, {
       $pull: { projects: projectId },
     });
 
