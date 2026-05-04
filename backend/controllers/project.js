@@ -30,9 +30,9 @@ const createProject = async (req, res) => {
       });
     }
 
-    if (requesterRole === "viewer") {
+    if (requesterRole !== "owner" && requesterRole !== "admin") {
       return res.status(403).json({
-        message: "Viewers cannot create projects",
+        message: "Only Workspace Owners and Admins can create projects",
       });
     }
 
@@ -46,11 +46,10 @@ const createProject = async (req, res) => {
       });
     }
 
-    // Ensure the creator is added as a member if not already there
-    const creatorIncluded = members && members.some(m => m.user.toString() === req.user._id.toString());
+    // Ensure the creator is added as a member for access control
     const finalMembers = members || [];
-    if (!creatorIncluded && !members) {
-      finalMembers.push({ user: req.user._id, role: "manager" });
+    if (!finalMembers.some(m => m.toString() === req.user._id.toString())) {
+      finalMembers.push(req.user._id);
     }
 
     const newProject = await Project.create({
@@ -81,7 +80,7 @@ const getProjectDetails = async (req, res) => {
   try {
     const { projectId } = req.params;
 
-    const project = await Project.findById(projectId).populate("members.user", "name email profilePicture");
+    const project = await Project.findById(projectId).populate("members", "name email profilePicture");
 
     if (!project) {
       return res.status(404).json({
@@ -91,7 +90,7 @@ const getProjectDetails = async (req, res) => {
 
     const isCreator = project.createdBy.equals(req.user._id);
     const isMember = project.members.some(
-      (m) => m.user && (m.user._id || m.user).equals(req.user._id)
+      (m) => String(m._id || m) === req.user._id.toString()
     );
 
     if (!isCreator && !isMember) {
@@ -112,7 +111,7 @@ const getProjectDetails = async (req, res) => {
 const getProjectTasks = async (req, res) => {
   try {
     const { projectId } = req.params;
-    const project = await Project.findById(projectId).populate("members.user");
+    const project = await Project.findById(projectId).populate("members");
 
     if (!project) {
       return res.status(404).json({
@@ -122,7 +121,7 @@ const getProjectTasks = async (req, res) => {
 
     const isCreator = project.createdBy.equals(req.user._id);
     const isMember = project.members.some(
-      (m) => m.user && (m.user._id || m.user).equals(req.user._id)
+      (m) => String(m._id || m) === req.user._id.toString()
     );
 
     if (!isCreator && !isMember) {
@@ -188,17 +187,8 @@ const deleteProject = async (req, res) => {
     const creatorRole = isCreatorOwner ? "owner" : (creatorMember ? creatorMember.role : "member");
 
     let canDelete = false;
-
-    if (requesterRole === "owner") {
+    if (requesterRole === "owner" || requesterRole === "admin") {
       canDelete = true;
-    } else if (requesterRole === "admin") {
-      if (creatorRole !== "owner") {
-        canDelete = true;
-      }
-    } else if (requesterRole === "member") {
-      if (creatorRole === "member") {
-        canDelete = true;
-      }
     }
 
     if (!canDelete) {
@@ -281,15 +271,8 @@ const updateProject = async (req, res) => {
     const creatorRole = isCreatorOwner ? "owner" : (creatorMember ? creatorMember.role : "member");
 
     let canUpdate = false;
-
-    if (requesterRole === "owner") {
+    if (requesterRole === "owner" || requesterRole === "admin") {
       canUpdate = true;
-    } else if (requesterRole === "admin") {
-      canUpdate = true;
-    } else if (requesterRole === "member") {
-      if (creatorRole === "member") {
-        canUpdate = true;
-      }
     }
 
     if (!canUpdate) {

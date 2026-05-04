@@ -12,7 +12,7 @@ import { useAuth } from "@/provider/auth-context";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
-import { Trash2, Save, AlertTriangle, Users, UserPlus } from "lucide-react";
+import { Trash2, Save, AlertTriangle, Users } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -31,15 +31,7 @@ const ProjectSettings = () => {
   const { mutate: updateProject, isPending: isUpdating } = UseUpdateProject();
   const { mutate: deleteProject, isPending: isDeleting } = UseDeleteProject();
 
-  const createdBy = typeof data?.project?.createdBy === "string" 
-    ? data.project.createdBy 
-    : data?.project?.createdBy?._id || "";
-  const isCreator = createdBy === currentUser?._id;
-  const isManager = data?.project?.members?.some((m: any) => {
-    const memberId = m.user?._id || m.user;
-    return memberId === currentUser?._id && m.role === "manager";
-  });
-  
+  const createdBy = data?.project?.createdBy?._id || data?.project?.createdBy;
   const workspaceOwnerId = String(workspaceData?.owner?._id || workspaceData?.owner || "");
   const currentUserId = String(currentUser?._id || "");
   const isWorkspaceOwner = workspaceOwnerId && currentUserId && workspaceOwnerId === currentUserId;
@@ -59,31 +51,16 @@ const ProjectSettings = () => {
   let canDelete = false;
   let canUpdate = false;
 
-  if (currentUserWorkspaceRole === "owner") {
-    // Owner can edit/delete projects created by own, admins, and members.
+  if (currentUserWorkspaceRole === "owner" || currentUserWorkspaceRole === "admin") {
     canDelete = true;
     canUpdate = true;
-  } else if (currentUserWorkspaceRole === "admin") {
-    // Admins can edit/delete projects created by own, other admins and members only. 
-    // admins can edit a project created by owener but can't delete it.
-    canUpdate = true;
-    if (creatorRole !== "owner") {
-      canDelete = true;
-    }
-  } else if (currentUserWorkspaceRole === "member") {
-    // Member can crate and edit projects created by own and other members 
-    // and also delete projects created by own and other members.
-    if (creatorRole === "member") {
-      canUpdate = true;
-      canDelete = true;
-    }
   }
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<ProjectStatus | "">("");
   const [tags, setTags] = useState("");
-  const [projectMembers, setProjectMembers] = useState<{ user: string; role: string }[]>([]);
+  const [projectMembers, setProjectMembers] = useState<string[]>([]);
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -93,10 +70,7 @@ const ProjectSettings = () => {
       setDescription(data.project.description || "");
       setStatus(data.project.status);
       setTags(data.project.tags?.join(",") || "");
-      setProjectMembers(data.project.members.map((m: any) => ({
-        user: m.user._id || m.user,
-        role: m.role
-      })));
+      setProjectMembers(data.project.members.map((m: any) => m._id || m));
     }
   }, [data]);
 
@@ -140,18 +114,10 @@ const ProjectSettings = () => {
 
   const handleMemberToggle = (userId: string, checked: boolean) => {
     if (checked) {
-      setProjectMembers([...projectMembers, { user: userId, role: "contributor" }]);
+      setProjectMembers([...projectMembers, userId]);
     } else {
-      setProjectMembers(projectMembers.filter((m) => m.user !== userId));
+      setProjectMembers(projectMembers.filter((id) => id !== userId));
     }
-  };
-
-  const handleRoleChange = (userId: string, role: string) => {
-    setProjectMembers(
-      projectMembers.map((m) =>
-        m.user === userId ? { ...m, role } : m
-      )
-    );
   };
 
   const handleDelete = () => {
@@ -251,14 +217,13 @@ const ProjectSettings = () => {
               Project Members
             </CardTitle>
             <CardDescription>
-              Manage who has access to this project and their roles.
+              Manage who has access to this project.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="border rounded-lg divide-y">
               {workspaceMembers.map((member: any) => {
-                const isProjectMember = projectMembers.some((m) => m.user === member.user._id);
-                const currentMember = projectMembers.find((m) => m.user === member.user._id);
+                const isProjectMember = projectMembers.includes(String(member.user._id));
 
                 return (
                   <div key={member.user._id} className="flex items-center justify-between p-4 bg-card">
@@ -266,7 +231,7 @@ const ProjectSettings = () => {
                       <Checkbox
                         id={`member-${member.user._id}`}
                         checked={isProjectMember}
-                        onCheckedChange={(checked) => handleMemberToggle(member.user._id, checked as boolean)}
+                        onCheckedChange={(checked) => handleMemberToggle(String(member.user._id), checked as boolean)}
                       />
                       <Avatar className="size-8">
                         <AvatarImage src={member.user.profilePicture} />
@@ -279,24 +244,6 @@ const ProjectSettings = () => {
                         <p className="text-xs text-muted-foreground">{member.user.email}</p>
                       </div>
                     </div>
-
-                    {isProjectMember && (
-                      <div className="flex items-center gap-2">
-                        <Select
-                          value={currentMember?.role}
-                          onValueChange={(value) => handleRoleChange(member.user._id, value)}
-                        >
-                          <SelectTrigger className="w-[130px] h-8 text-xs">
-                            <SelectValue placeholder="Select role" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="manager">Manager</SelectItem>
-                            <SelectItem value="contributor">Contributor</SelectItem>
-                            <SelectItem value="viewer">Viewer</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
                   </div>
                 );
               })}
@@ -374,4 +321,3 @@ const ProjectSettings = () => {
 };
 
 export default ProjectSettings;
-

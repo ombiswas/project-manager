@@ -24,15 +24,8 @@ const projectSchema = new Schema(
     tasks: [{ type: Schema.Types.ObjectId, ref: "Task" }],
     members: [
       {
-        user: {
-          type: Schema.Types.ObjectId,
-          ref: "User",
-        },
-        role: {
-          type: String,
-          enum: ["manager", "contributor", "viewer"],
-          default: "contributor",
-        },
+        type: Schema.Types.ObjectId,
+        ref: "User",
       },
     ],
     tags: [{ type: String }],

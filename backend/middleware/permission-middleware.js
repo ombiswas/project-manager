@@ -37,12 +37,17 @@ export const checkProjectMember = async (req, res, next) => {
     }
 
     const isCreator = project.createdBy.equals(req.user._id);
-    const isWorkspaceOwner = project.workspace && project.workspace.owner && project.workspace.owner.equals(req.user._id);
-    const isMember = project.members.some(
+    const workspace = project.workspace;
+    const isWorkspaceOwner = workspace?.owner?.equals(req.user._id);
+    const isWorkspaceAdmin = workspace?.members?.find(
       (m) => m.user && m.user.equals(req.user._id)
+    )?.role === "admin";
+
+    const isMember = project.members.some(
+      (userId) => userId && userId.equals(req.user._id)
     );
 
-    if (!isCreator && !isMember && !isWorkspaceOwner) {
+    if (!isCreator && !isMember && !isWorkspaceOwner && !isWorkspaceAdmin) {
       return res.status(403).json({ message: "You no longer have access to this project" });
     }
 
@@ -68,12 +73,17 @@ export const checkTaskMember = async (req, res, next) => {
     }
 
     const isCreator = project.createdBy.equals(req.user._id);
-    const isWorkspaceOwner = project.workspace && project.workspace.owner && project.workspace.owner.equals(req.user._id);
-    const isMember = project.members.some(
+    const workspace = project.workspace;
+    const isWorkspaceOwner = workspace?.owner?.equals(req.user._id);
+    const isWorkspaceAdmin = workspace?.members?.find(
       (m) => m.user && m.user.equals(req.user._id)
+    )?.role === "admin";
+
+    const isMember = project.members.some(
+      (userId) => userId && userId.equals(req.user._id)
     );
 
-    if (!isCreator && !isMember && !isWorkspaceOwner) {
+    if (!isCreator && !isMember && !isWorkspaceOwner && !isWorkspaceAdmin) {
       return res.status(403).json({ message: "You no longer have access to this task" });
     }
 

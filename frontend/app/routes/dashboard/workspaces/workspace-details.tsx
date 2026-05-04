@@ -5,7 +5,7 @@ import { ProjectList } from "@/components/workspace/project-list";
 import { WorkspaceHeader } from "@/components/workspace/workspace-header";
 import { EditWorkspace } from "@/components/workspace/edit-workspace";
 import { useGetWorkspaceQuery } from "@/hooks/use-workspace";
-import type { Project, Workspace } from "@/types";
+import { useAuth } from "@/provider/auth-context";
 import { useState } from "react";
 import { useParams } from "react-router";
 
@@ -29,6 +29,10 @@ const WorkspaceDetails = () => {
 
   if (isLoading) return <Loader label="Loading workspace details..." />;
 
+  const { user } = useAuth();
+  const currentUserRole = data?.workspace?.members?.find((m: any) => (m.user?._id || m.user) === user?._id)?.role;
+  const canCreateProject = ["owner", "admin"].includes(currentUserRole || "");
+
   return (
     <div className="space-y-8">
       <WorkspaceHeader
@@ -42,6 +46,7 @@ const WorkspaceDetails = () => {
       <ProjectList
         workspaceId={workspaceId}
         projects={data.projects}
+        canCreateProject={canCreateProject}
         onCreateProject={() => setIsCreateProject(true)}
       />
 

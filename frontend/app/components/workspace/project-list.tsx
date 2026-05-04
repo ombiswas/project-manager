@@ -6,13 +6,14 @@ import { getProjectProgress } from "@/lib";
 interface ProjectListProps {
     workspaceId: string;
     projects: Project[];
-
+    canCreateProject: boolean;
     onCreateProject: () => void;
 }
 
 export const ProjectList = ({
     workspaceId,
     projects,
+    canCreateProject,
     onCreateProject,
 }: ProjectListProps) => {
     return (
@@ -22,9 +23,9 @@ export const ProjectList = ({
                 {projects.length === 0 ? (
                     <NoDataFound
                         title="No projects found"
-                        description="Create a project to get started"
-                        buttonText="Create Project"
-                        buttonAction={onCreateProject}
+                        description="Projects you are a part of will appear here."
+                        buttonText={canCreateProject ? "Create Project" : undefined}
+                        buttonAction={canCreateProject ? onCreateProject : undefined}
                     />
                 ) : (
                     projects.map((project) => {

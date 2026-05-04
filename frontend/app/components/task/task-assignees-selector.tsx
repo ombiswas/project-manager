@@ -1,11 +1,14 @@
-import type { ProjectMemberRole, Task, User } from "@/types";
+import type { Task, User } from "@/types";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
-import { Download } from "lucide-react";
+import { Plus, Users, X } from "lucide-react";
 import { Checkbox } from "../ui/checkbox";
 import { useUpdateTaskAssigneesMutation } from "@/hooks/use-task";
 import { toast } from "sonner";
+import { Badge } from "../ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Label } from "../ui/label";
 
 export const TaskAssigneesSelector = ({
   task,
@@ -15,154 +18,137 @@ export const TaskAssigneesSelector = ({
 }: {
   task: Task;
   assignees: User[];
-  projectMembers: { user: User; role: ProjectMemberRole }[];
+  projectMembers: User[];
   canEdit?: boolean;
 }) => {
   const [selectedIds, setSelectedIds] = useState<string[]>(
     assignees.map((assignee) => assignee._id)
   );
-  const [dropDownOpen, setDropDownOpen] = useState(false);
-  const { mutate, isPending } = useUpdateTaskAssigneesMutation();
+  const { mutate: updateAssignees, isPending } = useUpdateTaskAssigneesMutation();
 
-  const handleSelectAll = () => {
-    const allIds = projectMembers.map((m) => m.user._id);
+  const handleToggle = (userId: string, isChecked: boolean) => {
+    if (!canEdit) return;
 
-    setSelectedIds(allIds);
-  };
-
-  const handleUnSelectAll = () => {
-    setSelectedIds([]);
-  };
-
-  const handleSelect = (id: string) => {
-    let newSelected: string[] = [];
-
-    if (selectedIds.includes(id)) {
-      newSelected = selectedIds.filter((sid) => sid !== id);
+    let newIds = [...selectedIds];
+    if (isChecked) {
+      if (!newIds.includes(userId)) {
+        newIds.push(userId);
+      }
     } else {
-      newSelected = [...selectedIds, id];
+      newIds = newIds.filter((id) => id !== userId);
     }
 
-    setSelectedIds(newSelected);
-  };
-
-  const handleSave = () => {
-    mutate(
+    setSelectedIds(newIds);
+    updateAssignees(
       {
         taskId: task._id,
-        assignees: selectedIds,
+        assignees: newIds,
       },
       {
         onSuccess: () => {
-          setDropDownOpen(false);
           toast.success("Assignees updated successfully");
         },
         onError: (error: any) => {
-          const errMessage =
-            error.response?.data?.message || "Failed to update assignees";
-          toast.error(errMessage);
-          console.log(error);
+          toast.error(error.response?.data?.message || "Failed to update assignees");
         },
       }
     );
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        {selectedIds.length === 0 ? (
-          <span className="text-sm text-muted-foreground italic bg-muted/20 px-3 py-1.5 rounded-md border">No assignees selected</span>
-        ) : (
-          projectMembers
-            .filter((member) => selectedIds.includes(member.user._id))
-            .map((m) => (
-              <div
-                key={m.user._id}
-                className="flex items-center bg-secondary/50 border rounded-full px-2.5 py-1 transition-colors hover:bg-secondary"
-              >
-                <Avatar className="size-5 mr-2">
-                  <AvatarImage src={m.user.profilePicture} />
-                  <AvatarFallback className="text-[10px]">{m.user.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <span className="text-xs font-medium text-secondary-foreground">
-                  {m.user.name}
-                </span>
-              </div>
-            ))
-        )}
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h4 className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
+          <Users className="size-4" />
+          Assignees
+        </h4>
       </div>
 
-      {/* dropdown */}
-      <div className="relative">
-        <button
-          className="text-sm text-muted-foreground w-full border rounded-md px-3 py-2 text-left bg-background hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={() => setDropDownOpen(!dropDownOpen)}
-          disabled={!canEdit}
-        >
-          {selectedIds.length === 0
-            ? "Select assignees..."
-            : `${selectedIds.length} assignee${selectedIds.length > 1 ? 's' : ''} selected`}
-        </button>
+      <div className="flex flex-wrap gap-2 items-center">
+        {assignees.length === 0 && !canEdit && (
+          <span className="text-xs text-muted-foreground italic">No assignees</span>
+        )}
+        
+        {assignees.filter(a => !!a).map((assignee) => (
+          <Badge
+            key={assignee._id}
+            variant="secondary"
+            className="flex items-center gap-1.5 pl-1 py-1 pr-2 rounded-full border-muted/50"
+          >
+            <Avatar className="size-5">
+              <AvatarImage src={assignee.profilePicture} />
+              <AvatarFallback className="text-[10px] bg-slate-100">
+                {assignee.name?.charAt(0) || "U"}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-xs font-medium">{assignee.name || "Unknown"}</span>
+            {canEdit && (
+              <X 
+                className="size-3 cursor-pointer hover:text-red-500 transition-colors ml-0.5" 
+                onClick={() => handleToggle(assignee._id, false)}
+              />
+            )}
+          </Badge>
+        ))}
 
-        {dropDownOpen && (
-          <div className="absolute z-50 mt-1 w-full bg-popover border text-popover-foreground rounded-md shadow-md max-h-60 flex flex-col overflow-hidden">
-            <div className="flex justify-between px-3 py-2 border-b bg-muted/30 shrink-0">
-              <button
-                className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-                onClick={handleSelectAll}
+        {canEdit && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8 w-8 rounded-full p-0 border-dashed hover:border-primary hover:text-primary transition-all"
               >
-                Select all
-              </button>
-              <button
-                className="text-[11px] font-semibold text-red-600 hover:text-red-700 transition-colors"
-                onClick={handleUnSelectAll}
-              >
-                Unselect all
-              </button>
-            </div>
-
-            <div className="overflow-y-auto flex-1 p-1">
-              {projectMembers.map((m) => (
-                <label
-                  className="flex items-center px-2 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground rounded-sm transition-colors"
-                  key={m.user._id}
-                >
-                  <Checkbox
-                    checked={selectedIds.includes(m.user._id)}
-                    onCheckedChange={() => handleSelect(m.user._id)}
-                    className="mr-3"
-                  />
-
-                  <Avatar className="size-6 mr-3 border shadow-sm">
-                    <AvatarImage src={m.user.profilePicture} />
-                    <AvatarFallback className="text-[10px]">{m.user.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-
-                  <span className="text-sm font-medium">{m.user.name}</span>
-                </label>
-              ))}
-            </div>
-
-            <div className="flex justify-end gap-2 px-3 py-2 border-t bg-muted/30 shrink-0">
-              <Button
-                variant="outline"
-                size="sm"
-                onClickCapture={() => setDropDownOpen(false)}
-                disabled={isPending}
-                className="h-8 text-xs"
-              >
-                Cancel
+                <Plus className="size-4" />
               </Button>
-              <Button
-                size="sm"
-                disabled={isPending}
-                onClickCapture={() => handleSave()}
-                className="h-8 text-xs"
-              >
-                Save Changes
-              </Button>
-            </div>
-          </div>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-0 shadow-xl border-muted/40" align="start">
+              <div className="p-2 border-b bg-muted/20">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">
+                  Project Members
+                </span>
+              </div>
+              <div className="p-1 max-h-64 overflow-y-auto">
+                {projectMembers.filter(m => !!m).map((member) => (
+                  <div
+                    key={member._id}
+                    className="flex items-center gap-2 p-2 hover:bg-accent hover:text-accent-foreground rounded-md cursor-pointer transition-colors"
+                    onClick={() => handleToggle(member._id, !selectedIds.includes(member._id))}
+                  >
+                    <Checkbox
+                      id={`assignee-${member._id}`}
+                      checked={selectedIds.includes(member._id)}
+                      onCheckedChange={(checked) =>
+                        handleToggle(member._id, !!checked)
+                      }
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <Label
+                      htmlFor={`assignee-${member._id}`}
+                      className="flex-1 flex items-center gap-2 cursor-pointer"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Avatar className="size-6 shadow-sm">
+                        <AvatarImage src={member.profilePicture} />
+                        <AvatarFallback className="text-[10px]">
+                          {member.name?.charAt(0) || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium leading-none">{member.name || "Unknown"}</span>
+                        <span className="text-[10px] text-muted-foreground leading-tight">{member.email}</span>
+                      </div>
+                    </Label>
+                  </div>
+                ))}
+                {projectMembers.length === 0 && (
+                  <p className="text-xs text-center py-4 text-muted-foreground italic">
+                    No members found in this project.
+                  </p>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
         )}
       </div>
     </div>

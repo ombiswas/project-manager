@@ -7,6 +7,7 @@ import { useAuth } from "@/provider/auth-context";
 import type { Workspace } from "@/types";
 import { useEffect, useState } from "react";
 import { Navigate, Outlet, useLoaderData, useLocation, useNavigate, useSearchParams } from "react-router";
+import { toast } from "sonner";
 
 export const clientLoader = async () => {
     try {
@@ -47,6 +48,32 @@ const DashboardLayout = () => {
             }
         }
     }, [searchParams, workspaces, location.pathname, navigate, currentWorkspace]);
+
+    useEffect(() => {
+        let lastAlertTime = 0;
+        const ALERT_DEBOUNCE = 1000; // 1 second debounce
+
+        const handleAccessDenied = (event: any) => {
+            const now = Date.now();
+            if (now - lastAlertTime < ALERT_DEBOUNCE) return;
+            lastAlertTime = now;
+
+            const { message } = event.detail;
+            toast.error(message, {
+                id: "access-denied-toast",
+            });
+            
+            const workspaceId = searchParams.get("workspaceId");
+            if (workspaceId) {
+                navigate(`/dashboard?workspaceId=${workspaceId}`);
+            } else {
+                navigate("/dashboard");
+            }
+        };
+
+        window.addEventListener("access-denied" as any, handleAccessDenied);
+        return () => window.removeEventListener("access-denied" as any, handleAccessDenied);
+    }, [navigate, searchParams]);
 
     if (isLoading) {
         return <Loader label="Authenticating..." />;
