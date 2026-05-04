@@ -30,18 +30,19 @@ export const checkWorkspaceMember = async (req, res, next) => {
 export const checkProjectMember = async (req, res, next) => {
   try {
     const { projectId } = req.params;
-    const project = await Project.findById(projectId);
+    const project = await Project.findById(projectId).populate("workspace");
 
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
 
     const isCreator = project.createdBy.equals(req.user._id);
+    const isWorkspaceOwner = project.workspace && project.workspace.owner && project.workspace.owner.equals(req.user._id);
     const isMember = project.members.some(
       (m) => m.user && m.user.equals(req.user._id)
     );
 
-    if (!isCreator && !isMember) {
+    if (!isCreator && !isMember && !isWorkspaceOwner) {
       return res.status(403).json({ message: "You no longer have access to this project" });
     }
 
@@ -61,17 +62,18 @@ export const checkTaskMember = async (req, res, next) => {
       return res.status(404).json({ message: "Task not found" });
     }
 
-    const project = await Project.findById(task.project);
+    const project = await Project.findById(task.project).populate("workspace");
     if (!project) {
         return res.status(404).json({ message: "Associated project not found" });
     }
 
     const isCreator = project.createdBy.equals(req.user._id);
+    const isWorkspaceOwner = project.workspace && project.workspace.owner && project.workspace.owner.equals(req.user._id);
     const isMember = project.members.some(
       (m) => m.user && m.user.equals(req.user._id)
     );
 
-    if (!isCreator && !isMember) {
+    if (!isCreator && !isMember && !isWorkspaceOwner) {
       return res.status(403).json({ message: "You no longer have access to this task" });
     }
 

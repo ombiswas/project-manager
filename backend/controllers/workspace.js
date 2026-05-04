@@ -96,14 +96,15 @@ const getWorkspaceProjects = async (req, res) => {
       });
     }
 
-    // Projects where the user is a member OR if the user is the workspace owner (show all)
-    const projectFilter = isOwner 
-      ? { workspace: workspaceId, isArchived: false }
-      : { 
-          workspace: workspaceId, 
-          isArchived: false,
-          members: { $elemMatch: { user: req.user._id } }
-        };
+    // Show only projects where the user is a member (or creator)
+    const projectFilter = { 
+      workspace: workspaceId, 
+      isArchived: false,
+      $or: [
+        { createdBy: req.user._id },
+        { "members.user": req.user._id }
+      ]
+    };
 
     const projects = await Project.find(projectFilter)
       .populate("tasks", "status")
@@ -141,7 +142,23 @@ const getWorkspaceStats = async (req, res) => {
       });
     }
 
-    // Rest of stats logic...
+    const [totalProjects, projects] = await Promise.all([
+      Project.countDocuments({ workspace: workspaceId }),
+      Project.find({ workspace: workspaceId })
+        .populate(
+          "tasks",
+          "title status dueDate project updatedAt isArchived priority"
+        )
+        .sort({ createdAt: -1 }),
+    ]);
+
+    const totalTasks = projects.reduce((acc, project) => {
+      return acc + project.tasks.length;
+    }, 0);
+
+    const totalProjectInProgress = projects.filter(
+      (project) => project.status === "In Progress"
+    ).length;
 
     const totalTaskCompleted = projects.reduce((acc, project) => {
       return (

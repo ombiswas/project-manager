@@ -118,10 +118,12 @@ const ProjectSettings = () => {
     deleteProject(projectId!, {
       onSuccess: () => {
         toast.success("Project deleted successfully");
-        navigate(`/dashboard/workspace/${workspaceId}`);
+        navigate(`/workspaces/${workspaceId}`);
       },
       onError: (error: any) => {
-        toast.error(error?.response?.data?.message || "Failed to delete project");
+        if (error?.response?.status !== 403 && error?.response?.status !== 404) {
+          toast.error(error?.response?.data?.message || "Failed to delete project");
+        }
       },
     });
   };

@@ -31,6 +31,19 @@ const createProject = async (req, res) => {
       ? tags 
       : tags ? tags.split(",").map(t => t.trim()).filter(t => t !== "") : [];
 
+    if (members && members.length === 0) {
+      return res.status(400).json({
+        message: "At least one member is required for the project",
+      });
+    }
+
+    // Ensure the creator is added as a member if not already there
+    const creatorIncluded = members && members.some(m => m.user.toString() === req.user._id.toString());
+    const finalMembers = members || [];
+    if (!creatorIncluded && !members) {
+      finalMembers.push({ user: req.user._id, role: "manager" });
+    }
+
     const newProject = await Project.create({
       title,
       description,
@@ -39,7 +52,7 @@ const createProject = async (req, res) => {
       dueDate,
       tags: tagArray,
       workspace: workspaceId,
-      members,
+      members: finalMembers,
       createdBy: req.user._id,
     });
 
@@ -216,7 +229,14 @@ const updateProject = async (req, res) => {
         ? tags 
         : tags.split(",").map(t => t.trim()).filter(t => t !== "");
     }
-    if (members !== undefined) project.members = members;
+    if (members !== undefined) {
+      if (members.length === 0) {
+        return res.status(400).json({
+          message: "At least one member is required for the project",
+        });
+      }
+      project.members = members;
+    }
 
     await project.save();
 
