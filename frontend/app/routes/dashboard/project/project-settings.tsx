@@ -32,12 +32,36 @@ const ProjectSettings = () => {
   const { mutate: deleteProject, isPending: isDeleting } = UseDeleteProject();
 
   const createdBy = data?.project?.createdBy?._id || data?.project?.createdBy;
-  const isOwner = createdBy === currentUser?._id;
+  const isCreator = createdBy === currentUser?._id;
   const isManager = data?.project?.members?.some((m: any) => {
     const memberId = m.user?._id || m.user;
     return memberId === currentUser?._id && m.role === "manager";
   });
-  const canUpdate = isOwner || isManager;
+  
+  const currentUserWorkspaceMember = workspaceData?.members?.find(
+    (m: any) => (m.user?._id || m.user) === currentUser?._id
+  );
+  const currentUserWorkspaceRole = currentUserWorkspaceMember?.role;
+
+  const creatorMember = workspaceData?.members?.find(
+    (m: any) => (m.user?._id || m.user) === createdBy
+  );
+  const creatorRole = creatorMember?.role || "member";
+
+  let canDelete = false;
+  if (currentUserWorkspaceRole === "owner") {
+    canDelete = true;
+  } else if (currentUserWorkspaceRole === "admin") {
+    if (creatorRole !== "owner") {
+      canDelete = true;
+    }
+  } else if (currentUserWorkspaceRole === "member") {
+    if (isCreator) {
+      canDelete = true;
+    }
+  }
+
+  const canUpdate = isCreator || isManager || currentUserWorkspaceRole === "owner" || currentUserWorkspaceRole === "admin";
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -292,7 +316,7 @@ const ProjectSettings = () => {
                 variant="destructive"
                 onClick={() => setIsDeleteDialogOpen(true)}
                 className="w-full md:w-auto"
-                disabled={!isOwner}
+                disabled={!canDelete}
               >
                 <Trash2 className="size-4 mr-2" />
                 Delete Project

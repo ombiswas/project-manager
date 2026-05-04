@@ -3,6 +3,7 @@ import { WorkspaceAvatar } from "./workspace-avatar";
 import { Button } from "../ui/button";
 import { Plus, UserPlus, Settings } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { useAuth } from "@/provider/auth-context";
 
 interface WorkspaceHeaderProps {
   workspace: Workspace;
@@ -24,6 +25,15 @@ export const WorkspaceHeader = ({
   onInviteMember,
   onEditWorkspace,
 }: WorkspaceHeaderProps) => {
+  const { user } = useAuth();
+  
+  const currentUserMember = members.find(m => m.user._id === user?._id);
+  const currentUserRole = currentUserMember?.role;
+
+  const canCreateProject = ["owner", "admin", "member"].includes(currentUserRole || "");
+  const canInviteMember = ["owner", "admin"].includes(currentUserRole || "");
+  const canEditWorkspace = ["owner", "admin"].includes(currentUserRole || "");
+
   return (
     <div className="space-y-8">
       <div className="space-y-3">
@@ -39,17 +49,25 @@ export const WorkspaceHeader = ({
           </div>
 
           <div className="flex items-center gap-3 justify-between md:justify-start mb-4 md:mb-0">
-            <Button variant={"outline"} size="icon" onClick={onEditWorkspace} title="Workspace Settings">
-              <Settings className="size-4" />
-            </Button>
-            <Button variant={"outline"} onClick={onInviteMember}>
-              <UserPlus className="size-4 mr-2" />
-              Invite
-            </Button>
-            <Button onClick={onCreateProject}>
-              <Plus className="size-4 mr-2" />
-              Create Project
-            </Button>
+            {canEditWorkspace && (
+              <Button variant={"outline"} size="icon" onClick={onEditWorkspace} title="Workspace Settings">
+                <Settings className="size-4" />
+              </Button>
+            )}
+            
+            {canInviteMember && (
+              <Button variant={"outline"} onClick={onInviteMember}>
+                <UserPlus className="size-4 mr-2" />
+                Invite
+              </Button>
+            )}
+
+            {canCreateProject && (
+              <Button onClick={onCreateProject}>
+                <Plus className="size-4 mr-2" />
+                Create Project
+              </Button>
+            )}
           </div>
         </div>
 

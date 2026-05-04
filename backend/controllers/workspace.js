@@ -610,9 +610,13 @@ const updateWorkspace = async (req, res) => {
       });
     }
 
-    if (workspace.owner.toString() !== req.user._id.toString()) {
+    const userRole = workspace.members.find(
+      (m) => m.user.toString() === req.user._id.toString()
+    )?.role;
+
+    if (userRole !== "owner" && userRole !== "admin") {
       return res.status(403).json({
-        message: "Only the workspace owner can update this workspace",
+        message: "Only the workspace owner or admin can update this workspace",
       });
     }
 
@@ -631,6 +635,99 @@ const updateWorkspace = async (req, res) => {
   }
 };
 
+const removeMember = async (req, res) => {
+  try {
+    const { workspaceId, memberId } = req.params;
+
+    const workspace = await Workspace.findById(workspaceId);
+
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace not found" });
+    }
+
+    const requesterRole = workspace.members.find(
+      (m) => m.user.toString() === req.user._id.toString()
+    )?.role;
+
+    const targetMember = workspace.members.find(
+      (m) => m.user.toString() === memberId
+    );
+
+    if (!targetMember) {
+      return res.status(404).json({ message: "Member not found in workspace" });
+    }
+
+    // Role checks
+    if (requesterRole !== "owner" && requesterRole !== "admin") {
+      return res.status(403).json({ message: "Not authorized to remove members" });
+    }
+
+    if (targetMember.role === "owner") {
+      return res.status(403).json({ message: "Cannot remove the workspace owner" });
+    }
+
+    if (requesterRole === "admin" && targetMember.role === "admin" && req.user._id.toString() !== memberId) {
+       // Optional: Can admins remove other admins? User said "Admin can manage projects and invite/remove members".
+       // Usually, owners manage admins. Let's allow admins to remove members but maybe not other admins?
+       // The user didn't specify. I'll allow it for now unless it's the owner.
+    }
+
+    workspace.members = workspace.members.filter(
+      (m) => m.user.toString() !== memberId
+    );
+
+    await workspace.save();
+
+    res.status(200).json({ message: "Member removed successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const transferOwnership = async (req, res) => {
+  try {
+    const { workspaceId } = req.params;
+    const { newOwnerId } = req.body;
+
+    const workspace = await Workspace.findById(workspaceId);
+
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace not found" });
+    }
+
+    if (workspace.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Only the owner can transfer ownership" });
+    }
+
+    const newOwnerMember = workspace.members.find(
+      (m) => m.user.toString() === newOwnerId
+    );
+
+    if (!newOwnerMember) {
+      return res.status(400).json({ message: "New owner must be a member of the workspace" });
+    }
+
+    // Update old owner to admin
+    workspace.members.forEach((m) => {
+      if (m.user.toString() === req.user._id.toString()) {
+        m.role = "admin";
+      }
+      if (m.user.toString() === newOwnerId) {
+        m.role = "owner";
+      }
+    });
+
+    workspace.owner = newOwnerId;
+    await workspace.save();
+
+    res.status(200).json({ message: "Ownership transferred successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export {
   createWorkspace,
   getWorkspaces,
@@ -642,4 +739,6 @@ export {
   acceptInviteByToken,
   deleteWorkspace,
   updateWorkspace,
+  removeMember,
+  transferOwnership,
 };
