@@ -94,25 +94,16 @@ const TaskDetails = () => {
   );
   const creatorRole = isCreatorOwner ? "owner" : (creatorMember?.role || "member");
 
-  let canDelete = false;
-  let canUpdate = false;
+  const isOwnerOrAdmin = currentUserWorkspaceRole === "owner" || currentUserWorkspaceRole === "admin";
+  const isMember = currentUserWorkspaceRole === "member";
+  const isViewer = currentUserWorkspaceRole === "viewer";
 
-  if (currentUserWorkspaceRole === "owner") {
-    canDelete = true;
-    canUpdate = true;
-  } else if (currentUserWorkspaceRole === "admin") {
-    canUpdate = true;
-    if (creatorRole !== "owner") {
-      canDelete = true;
-    }
-  } else if (currentUserWorkspaceRole === "member") {
-    if (creatorRole === "member") {
-      canUpdate = true;
-      canDelete = true;
-    }
-  }
-
-  const canEditTasks = currentUserWorkspaceRole === "owner" || currentUserWorkspaceRole === "admin" || currentUserWorkspaceRole === "member";
+  const canManageTask = isOwnerOrAdmin;
+  const canDeleteTask = isOwnerOrAdmin;
+  const canUpdateStatus = isOwnerOrAdmin || isMember;
+  const canManageSubtasks = isOwnerOrAdmin || isMember;
+  const canComment = isOwnerOrAdmin || isMember;
+  const canWatch = isOwnerOrAdmin || isMember;
 
   const handleWatchTask = () => {
     watchTask(
@@ -165,9 +156,8 @@ const TaskDetails = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          {canEditTasks && (
-            <>
-              <Button
+          {canWatch && (
+            <Button
                 variant="outline"
                 size="sm"
                 onClick={handleWatchTask}
@@ -186,27 +176,28 @@ const TaskDetails = () => {
                   </>
                 )}
               </Button>
+          )}
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleAchievedTask}
-                className="flex items-center gap-2 shadow-sm"
-                disabled={isAchieved}
-              >
-                {task.isArchived ? (
-                  <>
-                    <ArchiveRestore className="size-4" />
-                    <span>Unarchive</span>
-                  </>
-                ) : (
-                  <>
-                    <Archive className="size-4" />
-                    <span>Archive</span>
-                  </>
-                )}
-              </Button>
-            </>
+          {canManageTask && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleAchievedTask}
+              className="flex items-center gap-2 shadow-sm"
+              disabled={isAchieved}
+            >
+              {task.isArchived ? (
+                <>
+                  <ArchiveRestore className="size-4" />
+                  <span>Unarchive</span>
+                </>
+              ) : (
+                <>
+                  <Archive className="size-4" />
+                  <span>Archive</span>
+                </>
+              )}
+            </Button>
           )}
         </div>
       </div>
@@ -220,16 +211,16 @@ const TaskDetails = () => {
                 <div className="flex items-center gap-4 flex-wrap">
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Priority</span>
-                    <TaskPrioritySelector priority={task.priority} taskId={task._id} canEdit={canEditTasks} />
+                    <TaskPrioritySelector priority={task.priority} taskId={task._id} canEdit={canManageTask} />
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Status</span>
-                    <TaskStatusSelector status={task.status} taskId={task._id} canEdit={canEditTasks} />
+                    <TaskStatusSelector status={task.status} taskId={task._id} canEdit={canUpdateStatus} />
                   </div>
                 </div>
 
                 <div className="pt-2">
-                  <TaskTitle title={task.title} taskId={task._id} canEdit={canEditTasks} />
+                  <TaskTitle title={task.title} taskId={task._id} canEdit={canManageTask} />
                 </div>
 
                 <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
@@ -249,7 +240,7 @@ const TaskDetails = () => {
                 <TaskDescription
                   description={task.description || "No description provided."}
                   taskId={task._id}
-                  canEdit={canEditTasks}
+                  canEdit={canManageTask}
                 />
               </div>
             </div>
@@ -262,20 +253,24 @@ const TaskDetails = () => {
                 <div className="max-w-md">
                   <TaskAssigneesSelector
                     task={task}
-                    assignees={task.assignees}
-                    projectMembers={project.members as any}
-                    canEdit={canEditTasks}
+                    assignees={task.assignees || []}
+                    projectMembers={data.project.members as any}
+                    canEdit={canManageTask}
                   />
                 </div>
               </div>
             </div>
 
             <div className="pt-6 border-t">
-              <SubTasksDetails subTasks={task.subtasks || []} taskId={task._id} canEdit={canEditTasks} />
+              <SubTasksDetails subTasks={task.subtasks || []} taskId={task._id} canEdit={canManageSubtasks} />
             </div>
           </div>
 
-          <CommentSection taskId={task._id} members={project.members as any} canComment={currentUserWorkspaceRole !== "viewer"} />
+            <CommentSection 
+              taskId={task._id} 
+              members={data.project.members}
+              canComment={canComment} 
+            />
         </div>
 
         {/* Right sidebar */}
@@ -291,8 +286,8 @@ const TaskDetails = () => {
             <TaskActivity resourceId={task._id} />
           </div>
 
-          {canDelete && (
-            <div className="bg-red-50/30 rounded-xl border border-red-100 p-6 space-y-4">
+          {canDeleteTask && (
+            <div className="bg-red-50/50 rounded-xl border border-red-100 p-6 shadow-sm">
               <h3 className="text-sm font-bold text-red-700 uppercase tracking-wider border-b border-red-100 pb-2">
                 Danger Zone
               </h3>

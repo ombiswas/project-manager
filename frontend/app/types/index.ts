@@ -40,10 +40,7 @@ export interface Project {
     dueDate: Date;
     progress: number;
     tasks: Task[];
-    members: {
-        user: User;
-        role: "admin" | "member" | "owner" | "viewer";
-    }[];
+    members: User[];
     createdAt: Date;
     updatedAt: Date;
     isArchived: boolean;

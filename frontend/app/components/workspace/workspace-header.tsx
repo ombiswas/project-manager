@@ -30,7 +30,7 @@ export const WorkspaceHeader = ({
   const currentUserMember = members.find(m => m.user._id === user?._id);
   const currentUserRole = currentUserMember?.role;
 
-  const canCreateProject = ["owner", "admin", "member"].includes(currentUserRole || "");
+  const canCreateProject = ["owner", "admin"].includes(currentUserRole || "");
   const canInviteMember = ["owner", "admin"].includes(currentUserRole || "");
   const canEditWorkspace = ["owner", "admin"].includes(currentUserRole || "");
 

@@ -56,16 +56,14 @@ const createTask = async (req, res) => {
     const isCreatorOwner = workspace.owner.toString() === project.createdBy.toString();
     const creatorRole = isCreatorOwner ? "owner" : (creatorMember ? creatorMember.role : "member");
 
-    let canEditProject = false;
+    let canManageTask = false;
     if (requesterRole === "owner" || requesterRole === "admin") {
-      canEditProject = true;
-    } else if (requesterRole === "member") {
-      canEditProject = true;
+      canManageTask = true;
     }
 
-    if (!canEditProject) {
+    if (!canManageTask) {
       return res.status(403).json({
-        message: "You do not have permission to add tasks to this project.",
+        message: "Only Workspace Owners and Admins can create tasks.",
       });
     }
 

@@ -69,23 +69,13 @@ const ProjectDetails = () => {
   let canDelete = false;
   let canUpdate = false;
 
-  if (currentUserWorkspaceRole === "owner") {
+  if (currentUserWorkspaceRole === "owner" || currentUserWorkspaceRole === "admin") {
     canDelete = true;
     canUpdate = true;
-  } else if (currentUserWorkspaceRole === "admin") {
-    canUpdate = true;
-    if (creatorRole !== "owner") {
-      canDelete = true;
-    }
-  } else if (currentUserWorkspaceRole === "member") {
-    if (creatorRole === "member") {
-      canUpdate = true;
-      canDelete = true;
-    }
   }
 
   const canManage = canUpdate || canDelete;
-  const canEditTasks = currentUserWorkspaceRole === "owner" || currentUserWorkspaceRole === "admin" || currentUserWorkspaceRole === "member";
+  const canEditTasks = currentUserWorkspaceRole === "owner" || currentUserWorkspaceRole === "admin";
 
   const handleTaskClick = (taskId: string) => {
     navigate(

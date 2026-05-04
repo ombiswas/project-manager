@@ -35,6 +35,7 @@ import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { Checkbox } from "../ui/checkbox";
+import { Badge } from "../ui/badge";
 import { UseCreateProject } from "@/hooks/use-project";
 import { toast } from "sonner";
 
@@ -279,94 +280,60 @@ export const CreateProjectDialog = ({
                               <span className="text-muted-foreground">
                                 Select Members
                               </span>
-                            ) : selectedMembers.length <= 2 ? (
-                              selectedMembers.map((m) => {
-                                const member = workspaceMembers.find(
-                                  (wm) => wm.user._id === m.user
-                                );
-
-                                return `${member?.user.name} (${member?.role})`;
-                              })
+                            ) : selectedMembers.length <= 3 ? (
+                              selectedMembers
+                                .map((id) => {
+                                  const member = workspaceMembers.find(
+                                    (wm) => wm.user._id === id
+                                  );
+                                  return member?.user.name;
+                                })
+                                .join(", ")
                             ) : (
                               `${selectedMembers.length} members selected`
                             )}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent
-                          className="w-full max-w-60 overflow-y-auto"
+                          className="w-full max-w-60 p-2 overflow-y-auto"
                           align="start"
                         >
-                          <div className="flex flex-col gap-2">
+                          <div className="flex flex-col gap-1">
                             {workspaceMembers.map((member) => {
-                              const selectedMember = selectedMembers.find(
-                                (m) => m.user === member.user._id
-                              );
+                              const isSelected = selectedMembers.includes(member.user._id);
 
                               return (
                                 <div
                                   key={member._id}
-                                  className="flex items-center gap-2 p-2 border rounded"
+                                  className="flex items-center gap-2 p-2 hover:bg-accent rounded-md transition-colors"
                                 >
                                   <Checkbox
-                                    checked={!!selectedMember}
+                                    checked={isSelected}
                                     onCheckedChange={(checked) => {
                                       if (checked) {
                                         field.onChange([
                                           ...selectedMembers,
-                                          {
-                                            user: member.user._id,
-                                            role: "contributor",
-                                          },
+                                          member.user._id,
                                         ]);
                                       } else {
                                         field.onChange(
                                           selectedMembers.filter(
-                                            (m) => m.user !== member.user._id
+                                            (id) => id !== member.user._id
                                           )
                                         );
                                       }
                                     }}
                                     id={`member-${member.user._id}`}
                                   />
-                                  <span className="truncate flex-1">
+                                  <label
+                                    htmlFor={`member-${member.user._id}`}
+                                    className="flex-1 text-sm cursor-pointer truncate"
+                                  >
                                     {member.user.name}
-                                  </span>
-
-                                  {selectedMember && (
-                                    <Select
-                                      value={selectedMember.role}
-                                      onValueChange={(role) => {
-                                        field.onChange(
-                                          selectedMembers.map((m) =>
-                                            m.user === member.user._id
-                                              ? {
-                                                  ...m,
-                                                  role: role as
-                                                    | "contributor"
-                                                    | "manager"
-                                                    | "viewer",
-                                                }
-                                              : m
-                                          )
-                                        );
-                                      }}
-                                    >
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select Role" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="manager">
-                                          Manager
-                                        </SelectItem>
-                                        <SelectItem value="contributor">
-                                          Contributor
-                                        </SelectItem>
-                                        <SelectItem value="viewer">
-                                          Viewer
-                                        </SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  )}
+                                  </label>
+                                  <Badge variant="outline" className="text-[10px] scale-90">
+                                    {member.role}
+                                  </Badge>
                                 </div>
                               );
                             })}

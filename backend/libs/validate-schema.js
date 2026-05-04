@@ -53,14 +53,7 @@ const projectSchema = z.object({
   startDate: z.string(),
   dueDate: z.string().optional(),
   tags: z.union([z.string(), z.array(z.string())]).optional(),
-  members: z
-    .array(
-      z.object({
-        user: z.string(),
-        role: z.enum(["manager", "contributor", "viewer"]),
-      })
-    )
-    .optional(),
+  members: z.array(z.string()).optional(),
 });
 
 const taskSchema = z.object({

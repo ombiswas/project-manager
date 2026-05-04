@@ -96,15 +96,23 @@ const getWorkspaceProjects = async (req, res) => {
       });
     }
 
-    // Show only projects where the user is a member (or creator)
+    const requesterRole = workspace.members.find(
+      (m) => m.user && (m.user._id || m.user).equals(req.user._id)
+    )?.role;
+
+    // Owners and Admins can see all projects in the workspace
+    // Members and Viewers can only see projects they are added to
     const projectFilter = { 
       workspace: workspaceId, 
       isArchived: false,
-      $or: [
-        { createdBy: req.user._id },
-        { "members.user": req.user._id }
-      ]
     };
+
+    if (requesterRole !== "owner" && requesterRole !== "admin") {
+      projectFilter.$or = [
+        { createdBy: req.user._id },
+        { members: req.user._id }
+      ];
+    }
 
     const projects = await Project.find(projectFilter)
       .populate("tasks", "status")
@@ -131,20 +139,30 @@ const getWorkspaceStats = async (req, res) => {
       });
     }
 
-    const isOwner = workspace.owner.equals(req.user._id);
-    const isMember = workspace.members.some(
+    const requesterRole = workspace.members.find(
       (m) => m.user && m.user.equals(req.user._id)
-    );
+    )?.role;
 
-    if (!isOwner && !isMember) {
+    if (!requesterRole) {
       return res.status(403).json({
         message: "You are not a member of this workspace",
       });
     }
 
+    const projectFilter = {
+      workspace: workspaceId,
+    };
+
+    if (requesterRole !== "owner" && requesterRole !== "admin") {
+      projectFilter.$or = [
+        { createdBy: req.user._id },
+        { members: req.user._id }
+      ];
+    }
+
     const [totalProjects, projects] = await Promise.all([
-      Project.countDocuments({ workspace: workspaceId }),
-      Project.find({ workspace: workspaceId })
+      Project.countDocuments(projectFilter),
+      Project.find(projectFilter)
         .populate(
           "tasks",
           "title status dueDate project updatedAt isArchived priority"
@@ -221,6 +239,8 @@ const getWorkspaceStats = async (req, res) => {
             date.getMonth() === taskDate.getMonth() &&
             date.getFullYear() === taskDate.getFullYear()
         );
+
+
 
         if (dayInDate !== -1) {
           const dayName = last7Days[dayInDate].toLocaleDateString("en-US", {
@@ -413,11 +433,17 @@ const inviteUserToWorkspace = async (req, res) => {
       <p>Click here to join: <a href="${invitationLink}">${invitationLink}</a></p>
     `;
 
-    await sendEmail(
+    const emailSent = await sendEmail(
       email,
       "You have been invited to join a workspace",
       emailContent
     );
+
+    if (!emailSent) {
+      return res.status(500).json({
+        message: "Failed to send invitation email. Please check email configuration.",
+      });
+    }
 
     res.status(200).json({
       message: "Invitation sent successfully",

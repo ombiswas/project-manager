@@ -40,7 +40,7 @@ interface CreateTaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectId: string;
-  projectMembers: { user: User; role: ProjectMemberRole }[];
+  projectMembers: User[];
 }
 
 export type CreateTaskFormData = z.infer<typeof createTaskSchema>;
@@ -262,9 +262,9 @@ export const CreateTaskDialog = ({
                                   selectedMembers
                                     .map((m) => {
                                       const member = projectMembers.find(
-                                        (wm) => wm.user._id === m
+                                        (pm) => pm._id === m
                                       );
-                                      return `${member?.user.name}`;
+                                      return `${member?.name}`;
                                     })
                                     .join(", ")
                                 ) : (
@@ -278,36 +278,33 @@ export const CreateTaskDialog = ({
                               align="start"
                             >
                               <div className="flex flex-col gap-2">
-                                {projectMembers.map((member) => {
-                                  const selectedMember = selectedMembers.find(
-                                    (m) => m === member.user?._id
-                                  );
+                                {projectMembers.filter(m => !!m).map((member) => {
+                                  const isSelected = selectedMembers.includes(member._id);
                                   return (
                                     <div
-                                      key={member.user._id}
+                                      key={member._id}
                                       className="flex items-center gap-2 p-2 border rounded"
                                     >
                                       <Checkbox
-                                        checked={!!selectedMember}
+                                        checked={isSelected}
                                         onCheckedChange={(checked) => {
                                           if (checked) {
                                             field.onChange([
                                               ...selectedMembers,
-
-                                              member.user._id,
+                                              member._id,
                                             ]);
                                           } else {
                                             field.onChange(
                                               selectedMembers.filter(
-                                                (m) => m !== member.user._id
+                                                (m) => m !== member._id
                                               )
                                             );
                                           }
                                         }}
-                                        id={`member-${member.user._id}`}
+                                        id={`member-${member._id}`}
                                       />
                                       <span className="truncate flex-1">
-                                        {member.user.name}
+                                        {member.name || "Unknown"}
                                       </span>
                                     </div>
                                   );
