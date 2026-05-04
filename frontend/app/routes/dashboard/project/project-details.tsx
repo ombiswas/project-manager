@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UseProjectQuery } from "@/hooks/use-project";
 import { useUpdateTaskStatusMutation } from "@/hooks/use-task";
+import { useGetWorkspaceDetailsQuery } from "@/hooks/use-workspace";
 import { useAuth } from "@/provider/auth-context";
 import { getProjectProgress } from "@/lib";
 import { cn } from "@/lib/utils";
@@ -37,6 +38,7 @@ const ProjectDetails = () => {
     };
     isLoading: boolean;
   };
+  const { data: workspaceData, isLoading: isLoadingWorkspace } = useGetWorkspaceDetailsQuery(workspaceId!) as any;
 
   if (isLoading) return <Loader label="Loading project details..." />;
 
@@ -45,12 +47,45 @@ const ProjectDetails = () => {
   const { project, tasks } = data;
   const projectProgress = getProjectProgress(tasks);
 
-  const isOwner = project.createdBy === user?._id || (project.createdBy as any)?._id === user?._id;
-  const isManager = project.members.some(m => {
-    const memberId = typeof m.user === 'string' ? m.user : (m.user as any)._id;
-    return memberId === user?._id && m.role === "manager";
-  });
-  const canManage = isOwner || isManager;
+  // Permission logic
+  const workspaceOwnerId = String(workspaceData?.owner?._id || workspaceData?.owner || "");
+  const currentUserId = String(user?._id || "");
+  const isWorkspaceOwner = workspaceOwnerId && currentUserId && workspaceOwnerId === currentUserId;
+
+  const currentUserWorkspaceRole = isWorkspaceOwner ? "owner" : workspaceData?.members?.find(
+    (m: any) => String(m.user?._id || m.user) === currentUserId
+  )?.role;
+
+  const projectCreatorId = typeof project.createdBy === "string" 
+    ? project.createdBy 
+    : project.createdBy?._id || "";
+  const isCreatorOwner = workspaceOwnerId && projectCreatorId && workspaceOwnerId === projectCreatorId;
+  
+  const creatorMember = workspaceData?.members?.find(
+    (m: any) => String(m.user?._id || m.user) === projectCreatorId
+  );
+  const creatorRole = isCreatorOwner ? "owner" : (creatorMember?.role || "member");
+
+  let canDelete = false;
+  let canUpdate = false;
+
+  if (currentUserWorkspaceRole === "owner") {
+    canDelete = true;
+    canUpdate = true;
+  } else if (currentUserWorkspaceRole === "admin") {
+    canUpdate = true;
+    if (creatorRole !== "owner") {
+      canDelete = true;
+    }
+  } else if (currentUserWorkspaceRole === "member") {
+    if (creatorRole === "member") {
+      canUpdate = true;
+      canDelete = true;
+    }
+  }
+
+  const canManage = canUpdate || canDelete;
+  const canEditTasks = currentUserWorkspaceRole === "owner" || currentUserWorkspaceRole === "admin" || currentUserWorkspaceRole === "member";
 
   const handleTaskClick = (taskId: string) => {
     navigate(
@@ -85,13 +120,15 @@ const ProjectDetails = () => {
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Button 
-              onClick={() => setIsCreateTask(true)} 
-              className="flex-1 sm:flex-none shadow-sm"
-            >
-              <Plus className="size-4 mr-2" />
-              Add Task
-            </Button>
+            {canEditTasks && (
+              <Button 
+                onClick={() => setIsCreateTask(true)} 
+                className="flex-1 sm:flex-none shadow-sm"
+              >
+                <Plus className="size-4 mr-2" />
+                Add Task
+              </Button>
+            )}
             
             {canManage && (
               <Button
@@ -154,18 +191,21 @@ const ProjectDetails = () => {
                 title="To Do"
                 tasks={tasks.filter((task) => task.status === "To Do")}
                 onTaskClick={handleTaskClick}
+                canEditTasks={canEditTasks}
               />
 
               <TaskColumn
                 title="In Progress"
                 tasks={tasks.filter((task) => task.status === "In Progress")}
                 onTaskClick={handleTaskClick}
+                canEditTasks={canEditTasks}
               />
 
               <TaskColumn
                 title="Done"
                 tasks={tasks.filter((task) => task.status === "Done")}
                 onTaskClick={handleTaskClick}
+                canEditTasks={canEditTasks}
               />
             </div>
           </TabsContent>
@@ -176,6 +216,7 @@ const ProjectDetails = () => {
               tasks={tasks.filter((task) => task.status === "To Do")}
               onTaskClick={handleTaskClick}
               isFullWidth
+              canEditTasks={canEditTasks}
             />
           </TabsContent>
 
@@ -185,6 +226,7 @@ const ProjectDetails = () => {
               tasks={tasks.filter((task) => task.status === "In Progress")}
               onTaskClick={handleTaskClick}
               isFullWidth
+              canEditTasks={canEditTasks}
             />
           </TabsContent>
 
@@ -194,6 +236,7 @@ const ProjectDetails = () => {
               tasks={tasks.filter((task) => task.status === "Done")}
               onTaskClick={handleTaskClick}
               isFullWidth
+              canEditTasks={canEditTasks}
             />
           </TabsContent>
         </Tabs>
@@ -217,6 +260,7 @@ interface TaskColumnProps {
   tasks: Task[];
   onTaskClick: (taskId: string) => void;
   isFullWidth?: boolean;
+  canEditTasks: boolean;
 }
 
 const TaskColumn = ({
@@ -224,6 +268,7 @@ const TaskColumn = ({
   tasks,
   onTaskClick,
   isFullWidth = false,
+  canEditTasks,
 }: TaskColumnProps) => {
   return (
     <div className={cn("space-y-4", isFullWidth && "w-full")}>
@@ -254,6 +299,7 @@ const TaskColumn = ({
               key={task._id}
               task={task}
               onClick={() => onTaskClick(task._id)}
+              canEditTasks={canEditTasks}
             />
           ))
         )}
@@ -262,7 +308,7 @@ const TaskColumn = ({
   );
 };
 
-const TaskCard = ({ task, onClick }: { task: Task; onClick: () => void }) => {
+const TaskCard = ({ task, onClick, canEditTasks }: { task: Task; onClick: () => void; canEditTasks: boolean }) => {
   const { mutate: updateStatus, isPending: isUpdating } = useUpdateTaskStatusMutation();
 
   const handleStatusUpdate = (e: React.MouseEvent, status: TaskStatus) => {
@@ -321,44 +367,46 @@ const TaskCard = ({ task, onClick }: { task: Task; onClick: () => void }) => {
           </Badge>
         </div>
 
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute right-4 top-4 bg-card/80 backdrop-blur-sm rounded-full p-0.5">
-          {task.status !== "To Do" && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-7 rounded-full hover:bg-slate-100 hover:text-slate-600"
-              onClick={(e) => handleStatusUpdate(e, "To Do")}
-              disabled={isUpdating}
-              title="Mark as To Do"
-            >
-              <CircleDashed className="size-3.5" />
-            </Button>
-          )}
-          {task.status !== "In Progress" && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-7 rounded-full hover:bg-blue-50 hover:text-blue-600"
-              onClick={(e) => handleStatusUpdate(e, "In Progress")}
-              disabled={isUpdating}
-              title="Mark as In Progress"
-            >
-              <Clock className="size-3.5" />
-            </Button>
-          )}
-          {task.status !== "Done" && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-7 rounded-full hover:bg-green-50 hover:text-green-600"
-              onClick={(e) => handleStatusUpdate(e, "Done")}
-              disabled={isUpdating}
-              title="Mark as Done"
-            >
-              <CheckCircle className="size-3.5" />
-            </Button>
-          )}
-        </div>
+        {canEditTasks && (
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute right-4 top-4 bg-card/80 backdrop-blur-sm rounded-full p-0.5">
+            {task.status !== "To Do" && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7 rounded-full hover:bg-slate-100 hover:text-slate-600"
+                onClick={(e) => handleStatusUpdate(e, "To Do")}
+                disabled={isUpdating}
+                title="Mark as To Do"
+              >
+                <CircleDashed className="size-3.5" />
+              </Button>
+            )}
+            {task.status !== "In Progress" && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7 rounded-full hover:bg-blue-50 hover:text-blue-600"
+                onClick={(e) => handleStatusUpdate(e, "In Progress")}
+                disabled={isUpdating}
+                title="Mark as In Progress"
+              >
+                <Clock className="size-3.5" />
+              </Button>
+            )}
+            {task.status !== "Done" && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7 rounded-full hover:bg-green-50 hover:text-green-600"
+                onClick={(e) => handleStatusUpdate(e, "Done")}
+                disabled={isUpdating}
+                title="Mark as Done"
+              >
+                <CheckCircle className="size-3.5" />
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Title & Description */}

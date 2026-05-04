@@ -93,6 +93,17 @@ export const useRemoveMemberMutation = () => {
     });
 };
 
+export const useChangeMemberRoleMutation = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: { workspaceId: string; memberId: string; role: string }) =>
+            postData(`/workspaces/${data.workspaceId}/change-member-role/${data.memberId}`, { role: data.role }),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ["workspace", variables.workspaceId] });
+        },
+    });
+};
+
 export const useTransferOwnershipMutation = () => {
     const queryClient = useQueryClient();
     return useMutation({

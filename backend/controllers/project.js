@@ -21,13 +21,16 @@ const createProject = async (req, res) => {
       (member) => member.user.toString() === req.user._id.toString()
     );
 
-    if (!memberInfo) {
+    const isWorkspaceOwner = workspace.owner.toString() === req.user._id.toString();
+    const requesterRole = isWorkspaceOwner ? "owner" : (memberInfo ? memberInfo.role : null);
+
+    if (!requesterRole) {
       return res.status(403).json({
         message: "You are not a member of this workspace",
       });
     }
 
-    if (memberInfo.role === "viewer") {
+    if (requesterRole === "viewer") {
       return res.status(403).json({
         message: "Viewers cannot create projects",
       });
@@ -160,20 +163,29 @@ const deleteProject = async (req, res) => {
     }
 
     const workspace = project.workspace;
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace associated with project not found" });
+    }
+
+    // Robust Owner check
+    const isOwner = workspace.owner.toString() === req.user._id.toString();
+
     const requesterMember = workspace.members.find(
       (m) => m.user.toString() === req.user._id.toString()
     );
 
-    if (!requesterMember) {
+    if (!isOwner && !requesterMember) {
       return res.status(403).json({ message: "You are not a member of this workspace" });
     }
+
+    const requesterRole = isOwner ? "owner" : requesterMember.role;
 
     const creatorMember = workspace.members.find(
       (m) => m.user.toString() === project.createdBy.toString()
     );
 
-    const requesterRole = requesterMember.role;
-    const creatorRole = creatorMember ? creatorMember.role : "member"; // Default to member if creator left
+    const isCreatorOwner = workspace.owner.toString() === project.createdBy.toString();
+    const creatorRole = isCreatorOwner ? "owner" : (creatorMember ? creatorMember.role : "member");
 
     let canDelete = false;
 
@@ -184,14 +196,14 @@ const deleteProject = async (req, res) => {
         canDelete = true;
       }
     } else if (requesterRole === "member") {
-      if (project.createdBy.toString() === req.user._id.toString()) {
-         canDelete = true;
+      if (creatorRole === "member") {
+        canDelete = true;
       }
     }
 
     if (!canDelete) {
       return res.status(403).json({
-        message: "You do not have permission to delete this project based on your role and the project creator's role",
+        message: "You do not have permission to delete this project.",
       });
     }
 
@@ -235,7 +247,7 @@ const updateProject = async (req, res) => {
 
     const { title, description, status, startDate, dueDate, tags, members } = validationResult.data;
 
-    const project = await Project.findById(projectId);
+    const project = await Project.findById(projectId).populate("workspace");
 
     if (!project) {
       return res.status(404).json({
@@ -243,14 +255,46 @@ const updateProject = async (req, res) => {
       });
     }
 
-    const isOwner = project.createdBy.equals(req.user._id);
-    const isManager = project.members.some(
-      (m) => m.user && m.user.equals(req.user._id) && m.role === "manager"
+    const workspace = project.workspace;
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace associated with project not found" });
+    }
+
+    // Robust Owner check
+    const isOwner = workspace.owner.toString() === req.user._id.toString();
+
+    const requesterMember = workspace.members.find(
+      (m) => m.user.toString() === req.user._id.toString()
     );
 
-    if (!isOwner && !isManager) {
+    if (!isOwner && !requesterMember) {
+      return res.status(403).json({ message: "You are not a member of this workspace" });
+    }
+
+    const requesterRole = isOwner ? "owner" : requesterMember.role;
+
+    const creatorMember = workspace.members.find(
+      (m) => m.user.toString() === project.createdBy.toString()
+    );
+
+    const isCreatorOwner = workspace.owner.toString() === project.createdBy.toString();
+    const creatorRole = isCreatorOwner ? "owner" : (creatorMember ? creatorMember.role : "member");
+
+    let canUpdate = false;
+
+    if (requesterRole === "owner") {
+      canUpdate = true;
+    } else if (requesterRole === "admin") {
+      canUpdate = true;
+    } else if (requesterRole === "member") {
+      if (creatorRole === "member") {
+        canUpdate = true;
+      }
+    }
+
+    if (!canUpdate) {
       return res.status(403).json({
-        message: "Only the project owner or manager can update this project",
+        message: "You do not have permission to update this project.",
       });
     }
 

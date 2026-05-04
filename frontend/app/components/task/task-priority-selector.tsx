@@ -15,9 +15,11 @@ import { toast } from "sonner";
 export const TaskPrioritySelector = ({
   priority,
   taskId,
+  canEdit = true,
 }: {
   priority: TaskPriority;
   taskId: string;
+  canEdit?: boolean;
 }) => {
   const { mutate, isPending } = useUpdateTaskPriorityMutation();
 
@@ -37,8 +39,8 @@ export const TaskPrioritySelector = ({
     );
   };
   return (
-    <Select value={priority || ""} onValueChange={handleStatusChange}>
-      <SelectTrigger className="w-[180px]" disabled={isPending}>
+    <Select value={priority || ""} onValueChange={handleStatusChange} disabled={!canEdit}>
+      <SelectTrigger className="w-[180px]" disabled={isPending || !canEdit}>
         <SelectValue placeholder="Priority" />
       </SelectTrigger>
 

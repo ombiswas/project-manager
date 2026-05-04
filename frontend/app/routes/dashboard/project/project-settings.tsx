@@ -31,37 +31,53 @@ const ProjectSettings = () => {
   const { mutate: updateProject, isPending: isUpdating } = UseUpdateProject();
   const { mutate: deleteProject, isPending: isDeleting } = UseDeleteProject();
 
-  const createdBy = data?.project?.createdBy?._id || data?.project?.createdBy;
+  const createdBy = typeof data?.project?.createdBy === "string" 
+    ? data.project.createdBy 
+    : data?.project?.createdBy?._id || "";
   const isCreator = createdBy === currentUser?._id;
   const isManager = data?.project?.members?.some((m: any) => {
     const memberId = m.user?._id || m.user;
     return memberId === currentUser?._id && m.role === "manager";
   });
   
-  const currentUserWorkspaceMember = workspaceData?.members?.find(
-    (m: any) => (m.user?._id || m.user) === currentUser?._id
-  );
-  const currentUserWorkspaceRole = currentUserWorkspaceMember?.role;
+  const workspaceOwnerId = String(workspaceData?.owner?._id || workspaceData?.owner || "");
+  const currentUserId = String(currentUser?._id || "");
+  const isWorkspaceOwner = workspaceOwnerId && currentUserId && workspaceOwnerId === currentUserId;
 
+  const currentUserWorkspaceRole = isWorkspaceOwner ? "owner" : workspaceData?.members?.find(
+    (m: any) => String(m.user?._id || m.user) === currentUserId
+  )?.role;
+
+  const projectCreatorId = String(createdBy || "");
+  const isCreatorOwner = workspaceOwnerId && projectCreatorId && workspaceOwnerId === projectCreatorId;
+  
   const creatorMember = workspaceData?.members?.find(
-    (m: any) => (m.user?._id || m.user) === createdBy
+    (m: any) => String(m.user?._id || m.user) === projectCreatorId
   );
-  const creatorRole = creatorMember?.role || "member";
+  const creatorRole = isCreatorOwner ? "owner" : (creatorMember?.role || "member");
 
   let canDelete = false;
+  let canUpdate = false;
+
   if (currentUserWorkspaceRole === "owner") {
+    // Owner can edit/delete projects created by own, admins, and members.
     canDelete = true;
+    canUpdate = true;
   } else if (currentUserWorkspaceRole === "admin") {
+    // Admins can edit/delete projects created by own, other admins and members only. 
+    // admins can edit a project created by owener but can't delete it.
+    canUpdate = true;
     if (creatorRole !== "owner") {
       canDelete = true;
     }
   } else if (currentUserWorkspaceRole === "member") {
-    if (isCreator) {
+    // Member can crate and edit projects created by own and other members 
+    // and also delete projects created by own and other members.
+    if (creatorRole === "member") {
+      canUpdate = true;
       canDelete = true;
     }
   }
-
-  const canUpdate = isCreator || isManager || currentUserWorkspaceRole === "owner" || currentUserWorkspaceRole === "admin";
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");

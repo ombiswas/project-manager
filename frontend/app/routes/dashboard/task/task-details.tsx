@@ -17,6 +17,7 @@ import {
   useWatchTaskMutation,
   useDeleteTaskMutation,
 } from "@/hooks/use-task";
+import { useGetWorkspaceDetailsQuery } from "@/hooks/use-workspace";
 import { useAuth } from "@/provider/auth-context";
 import type { Project, Task } from "@/types";
 import { formatDistanceToNow } from "date-fns";
@@ -52,6 +53,8 @@ const TaskDetails = () => {
     };
     isLoading: boolean;
   };
+  const { data: workspaceData, isLoading: isLoadingWorkspace } = useGetWorkspaceDetailsQuery(workspaceId!) as any;
+
   const { mutate: watchTask, isPending: isWatching } = useWatchTaskMutation();
   const { mutate: achievedTask, isPending: isAchieved } =
     useAchievedTaskMutation();
@@ -69,8 +72,47 @@ const TaskDetails = () => {
 
   const { task, project } = data;
   const isUserWatching = task?.watchers?.some(
-    (watcher) => watcher._id.toString() === user?._id.toString()
+    (watcher) => (watcher._id || watcher).toString() === user?._id.toString()
   );
+
+  // Permission logic
+  const workspaceOwnerId = String(workspaceData?.owner?._id || workspaceData?.owner || "");
+  const currentUserId = String(user?._id || "");
+  const isWorkspaceOwner = workspaceOwnerId && currentUserId && workspaceOwnerId === currentUserId;
+
+  const currentUserWorkspaceRole = isWorkspaceOwner ? "owner" : workspaceData?.members?.find(
+    (m: any) => String(m.user?._id || m.user) === currentUserId
+  )?.role;
+
+  const projectCreatorId = typeof project.createdBy === "string" 
+    ? project.createdBy 
+    : project.createdBy?._id || "";
+  const isCreatorOwner = workspaceOwnerId && projectCreatorId && workspaceOwnerId === projectCreatorId;
+  
+  const creatorMember = workspaceData?.members?.find(
+    (m: any) => String(m.user?._id || m.user) === projectCreatorId
+  );
+  const creatorRole = isCreatorOwner ? "owner" : (creatorMember?.role || "member");
+
+  let canDelete = false;
+  let canUpdate = false;
+
+  if (currentUserWorkspaceRole === "owner") {
+    canDelete = true;
+    canUpdate = true;
+  } else if (currentUserWorkspaceRole === "admin") {
+    canUpdate = true;
+    if (creatorRole !== "owner") {
+      canDelete = true;
+    }
+  } else if (currentUserWorkspaceRole === "member") {
+    if (creatorRole === "member") {
+      canUpdate = true;
+      canDelete = true;
+    }
+  }
+
+  const canEditTasks = currentUserWorkspaceRole === "owner" || currentUserWorkspaceRole === "admin" || currentUserWorkspaceRole === "member";
 
   const handleWatchTask = () => {
     watchTask(
@@ -123,45 +165,49 @@ const TaskDetails = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleWatchTask}
-            className="flex items-center gap-2 shadow-sm"
-            disabled={isWatching}
-          >
-            {isUserWatching ? (
-              <>
-                <EyeOff className="size-4" />
-                <span>Unwatch</span>
-              </>
-            ) : (
-              <>
-                <Eye className="size-4" />
-                <span>Watch</span>
-              </>
-            )}
-          </Button>
+          {canEditTasks && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleWatchTask}
+                className="flex items-center gap-2 shadow-sm"
+                disabled={isWatching}
+              >
+                {isUserWatching ? (
+                  <>
+                    <EyeOff className="size-4" />
+                    <span>Unwatch</span>
+                  </>
+                ) : (
+                  <>
+                    <Eye className="size-4" />
+                    <span>Watch</span>
+                  </>
+                )}
+              </Button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleAchievedTask}
-            className="flex items-center gap-2 shadow-sm"
-            disabled={isAchieved}
-          >
-            {task.isArchived ? (
-              <>
-                <ArchiveRestore className="size-4" />
-                <span>Unarchive</span>
-              </>
-            ) : (
-              <>
-                <Archive className="size-4" />
-                <span>Archive</span>
-              </>
-            )}
-          </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleAchievedTask}
+                className="flex items-center gap-2 shadow-sm"
+                disabled={isAchieved}
+              >
+                {task.isArchived ? (
+                  <>
+                    <ArchiveRestore className="size-4" />
+                    <span>Unarchive</span>
+                  </>
+                ) : (
+                  <>
+                    <Archive className="size-4" />
+                    <span>Archive</span>
+                  </>
+                )}
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -174,16 +220,16 @@ const TaskDetails = () => {
                 <div className="flex items-center gap-4 flex-wrap">
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Priority</span>
-                    <TaskPrioritySelector priority={task.priority} taskId={task._id} />
+                    <TaskPrioritySelector priority={task.priority} taskId={task._id} canEdit={canEditTasks} />
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Status</span>
-                    <TaskStatusSelector status={task.status} taskId={task._id} />
+                    <TaskStatusSelector status={task.status} taskId={task._id} canEdit={canEditTasks} />
                   </div>
                 </div>
 
                 <div className="pt-2">
-                  <TaskTitle title={task.title} taskId={task._id} />
+                  <TaskTitle title={task.title} taskId={task._id} canEdit={canEditTasks} />
                 </div>
 
                 <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
@@ -203,6 +249,7 @@ const TaskDetails = () => {
                 <TaskDescription
                   description={task.description || "No description provided."}
                   taskId={task._id}
+                  canEdit={canEditTasks}
                 />
               </div>
             </div>
@@ -217,17 +264,18 @@ const TaskDetails = () => {
                     task={task}
                     assignees={task.assignees}
                     projectMembers={project.members as any}
+                    canEdit={canEditTasks}
                   />
                 </div>
               </div>
             </div>
 
             <div className="pt-6 border-t">
-              <SubTasksDetails subTasks={task.subtasks || []} taskId={task._id} />
+              <SubTasksDetails subTasks={task.subtasks || []} taskId={task._id} canEdit={canEditTasks} />
             </div>
           </div>
 
-          <CommentSection taskId={task._id} members={project.members as any} />
+          <CommentSection taskId={task._id} members={project.members as any} canComment={currentUserWorkspaceRole !== "viewer"} />
         </div>
 
         {/* Right sidebar */}
@@ -243,24 +291,26 @@ const TaskDetails = () => {
             <TaskActivity resourceId={task._id} />
           </div>
 
-          <div className="bg-red-50/30 rounded-xl border border-red-100 p-6 space-y-4">
-            <h3 className="text-sm font-bold text-red-700 uppercase tracking-wider border-b border-red-100 pb-2">
-              Danger Zone
-            </h3>
-            <p className="text-xs text-red-600/70">
-              Actions that can't be undone. Delete this task permanently from the project.
-            </p>
-            <Button
-              variant="destructive"
-              size="sm"
-              className="w-full shadow-sm"
-              onClick={() => setIsDeleteDialogOpen(true)}
-              disabled={isDeleting}
-            >
-              <Trash2 className="size-4 mr-2" />
-              Delete Task
-            </Button>
-          </div>
+          {canDelete && (
+            <div className="bg-red-50/30 rounded-xl border border-red-100 p-6 space-y-4">
+              <h3 className="text-sm font-bold text-red-700 uppercase tracking-wider border-b border-red-100 pb-2">
+                Danger Zone
+              </h3>
+              <p className="text-xs text-red-600/70">
+                Actions that can't be undone. Delete this task permanently from the project.
+              </p>
+              <Button
+                variant="destructive"
+                size="sm"
+                className="w-full shadow-sm"
+                onClick={() => setIsDeleteDialogOpen(true)}
+                disabled={isDeleting}
+              >
+                <Trash2 className="size-4 mr-2" />
+                Delete Task
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 

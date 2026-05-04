@@ -13,9 +13,11 @@ import { toast } from "sonner";
 export const SubTasksDetails = ({
   subTasks,
   taskId,
+  canEdit = true,
 }: {
   subTasks: Subtask[];
   taskId: string;
+  canEdit?: boolean;
 }) => {
   const [newSubTask, setNewSubTask] = useState("");
   const { mutate: addSubTask, isPending } = useAddSubTaskMutation();
@@ -72,7 +74,7 @@ export const SubTasksDetails = ({
                   onCheckedChange={(checked) =>
                     handleToggleTask(subTask._id, !!checked)
                   }
-                  disabled={isUpdating}
+                  disabled={isUpdating || !canEdit}
                   className="size-4"
                 />
 
@@ -93,28 +95,30 @@ export const SubTasksDetails = ({
         )}
       </div>
 
-      <div className="flex items-center gap-2">
-        <Input
-          placeholder="Add a new sub task..."
-          value={newSubTask}
-          onChange={(e) => setNewSubTask(e.target.value)}
-          className="flex-1"
-          disabled={isPending}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && newSubTask.length > 0 && !isPending) {
-              handleAddSubTask();
-            }
-          }}
-        />
+      {canEdit && (
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="Add a new sub task..."
+            value={newSubTask}
+            onChange={(e) => setNewSubTask(e.target.value)}
+            className="flex-1"
+            disabled={isPending}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && newSubTask.length > 0 && !isPending) {
+                handleAddSubTask();
+              }
+            }}
+          />
 
-        <Button
-          onClick={handleAddSubTask}
-          disabled={isPending || newSubTask.length === 0}
-          className="shrink-0"
-        >
-          Add Task
-        </Button>
-      </div>
+          <Button
+            onClick={handleAddSubTask}
+            disabled={isPending || newSubTask.length === 0}
+            className="shrink-0"
+          >
+            Add Task
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
