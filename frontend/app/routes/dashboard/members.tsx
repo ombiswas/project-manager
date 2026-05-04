@@ -23,10 +23,11 @@ import { useAuth } from "@/provider/auth-context";
 import { 
   useGetWorkspaceDetailsQuery, 
   useRemoveMemberMutation, 
-  useTransferOwnershipMutation 
+  useTransferOwnershipMutation,
+  useChangeMemberRoleMutation
 } from "@/hooks/use-workspace";
 import type { Workspace } from "@/types";
-import { MoreHorizontal, ShieldCheck, UserMinus, UserPlus } from "lucide-react";
+import { ChevronDown, MoreHorizontal, ShieldCheck, UserCog, UserMinus } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import { toast } from "sonner";
@@ -44,8 +45,9 @@ const Members = () => {
     isLoading: boolean;
   };
 
-  const { mutate: removeMember, isPending: isRemoving } = useRemoveMemberMutation();
-  const { mutate: transferOwnership, isPending: isTransferring } = useTransferOwnershipMutation();
+  const { mutate: removeMember } = useRemoveMemberMutation();
+  const { mutate: transferOwnership } = useTransferOwnershipMutation();
+  const { mutate: changeRole } = useChangeMemberRoleMutation();
 
   useEffect(() => {
     const params: Record<string, string> = {};
@@ -84,6 +86,13 @@ const Members = () => {
         onError: (err: any) => toast.error(err?.response?.data?.message || "Failed to transfer ownership")
       });
     }
+  };
+
+  const handleChangeRole = (memberId: string, role: string) => {
+    changeRole({ workspaceId: workspaceId!, memberId, role }, {
+      onSuccess: () => toast.success("Role updated successfully"),
+      onError: (err: any) => toast.error(err?.response?.data?.message || "Failed to update role")
+    });
   };
 
   const filteredMembers = data?.members?.filter(
@@ -163,7 +172,6 @@ const Members = () => {
                         <Badge variant={"outline"}>{data.name}</Badge>
                       </div>
 
-                      {/* Actions Menu */}
                       {member.user._id !== currentUser?._id && 
                        (currentUserRole === "owner" || currentUserRole === "admin") && (
                         <DropdownMenu>
@@ -175,7 +183,6 @@ const Members = () => {
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             
-                            {/* Transfer Ownership (Owner only) */}
                             {currentUserRole === "owner" && (
                               <DropdownMenuItem 
                                 onClick={() => handleTransferOwnership(member.user._id)}
@@ -186,16 +193,32 @@ const Members = () => {
                               </DropdownMenuItem>
                             )}
 
-                            {/* Remove Member (Owner/Admin, but Admin can't remove Owner) */}
                             {((currentUserRole === "owner") || 
                               (currentUserRole === "admin" && member.role !== "owner")) && (
-                              <DropdownMenuItem 
-                                onClick={() => handleRemoveMember(member.user._id)}
-                                className="text-red-600 cursor-pointer"
-                              >
-                                <UserMinus className="mr-2 h-4 w-4" />
-                                Remove Member
-                              </DropdownMenuItem>
+                              <>
+                                <div className="p-2 border-t mt-1">
+                                  <p className="text-[10px] uppercase font-bold text-muted-foreground mb-2 px-2">Change Role</p>
+                                  {["admin", "member", "viewer"].map((role) => (
+                                    <DropdownMenuItem
+                                      key={role}
+                                      onClick={() => handleChangeRole(member.user._id, role)}
+                                      disabled={member.role === role}
+                                      className="capitalize cursor-pointer"
+                                    >
+                                      <UserCog className="mr-2 h-4 w-4 opacity-50" />
+                                      {role}
+                                    </DropdownMenuItem>
+                                  ))}
+                                </div>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                  onClick={() => handleRemoveMember(member.user._id)}
+                                  className="text-red-600 cursor-pointer"
+                                >
+                                  <UserMinus className="mr-2 h-4 w-4" />
+                                  Remove Member
+                                </DropdownMenuItem>
+                              </>
                             )}
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -208,7 +231,6 @@ const Members = () => {
           </Card>
         </TabsContent>
 
-        {/* BOARD VIEW */}
         <TabsContent value="board">
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredMembers.map((member) => (
@@ -242,31 +264,51 @@ const Members = () => {
                       {member.role}
                     </Badge>
 
-                    {/* Quick actions for board view? Or just leave it for list view. 
-                        Let's add a small action button if authorized */}
                     {member.user._id !== currentUser?._id && 
                      (currentUserRole === "owner" || currentUserRole === "admin") && (
-                      <div className="pt-2">
+                      <div className="pt-2 flex flex-wrap justify-center gap-x-3 gap-y-1">
                         {currentUserRole === "owner" && (
                           <Button 
                             variant="link" 
                             size="sm" 
-                            className="text-blue-600 h-auto p-0 text-xs"
+                            className="text-blue-600 h-auto p-0 text-[10px]"
                             onClick={() => handleTransferOwnership(member.user._id)}
                           >
-                            Transfer Ownership
+                            Transfer
                           </Button>
                         )}
+                        
                         {((currentUserRole === "owner") || 
                           (currentUserRole === "admin" && member.role !== "owner")) && (
-                          <Button 
-                            variant="link" 
-                            size="sm" 
-                            className="text-red-600 h-auto p-0 text-xs ml-2"
-                            onClick={() => handleRemoveMember(member.user._id)}
-                          >
-                            Remove
-                          </Button>
+                          <>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="link" size="sm" className="text-muted-foreground h-auto p-0 text-[10px]">
+                                  Role <ChevronDown className="size-2 ml-1" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent>
+                                {["admin", "member", "viewer"].map((role) => (
+                                  <DropdownMenuItem
+                                    key={role}
+                                    onClick={() => handleChangeRole(member.user._id, role)}
+                                    className="capitalize text-xs"
+                                  >
+                                    {role}
+                                  </DropdownMenuItem>
+                                ))}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+
+                            <Button 
+                              variant="link" 
+                              size="sm" 
+                              className="text-red-600 h-auto p-0 text-[10px]"
+                              onClick={() => handleRemoveMember(member.user._id)}
+                            >
+                              Remove
+                            </Button>
+                          </>
                         )}
                       </div>
                     )}

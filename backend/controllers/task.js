@@ -27,13 +27,45 @@ const createTask = async (req, res) => {
       });
     }
 
-    const isMember = workspace.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
+    const memberInfo = workspace.members.find(
+      (m) => m.user.toString() === req.user._id.toString()
     );
 
-    if (!isMember) {
+    const isWorkspaceOwner = workspace.owner.toString() === req.user._id.toString();
+    const requesterRole = isWorkspaceOwner ? "owner" : (memberInfo ? memberInfo.role : null);
+
+    if (!requesterRole) {
       return res.status(403).json({
         message: "You are not a member of this workspace",
+      });
+    }
+
+    if (requesterRole === "viewer") {
+      return res.status(403).json({
+        message: "Viewers cannot create tasks",
+      });
+    }
+
+    // Members can only create tasks in projects they can edit.
+    // However, the rule says "Workspace Members: Can create new projects".
+    // Usually if they are in the project or can edit it, they can create tasks.
+    // Let's check project creator role for Members.
+    const creatorMember = workspace.members.find(
+      (m) => m.user.toString() === project.createdBy.toString()
+    );
+    const isCreatorOwner = workspace.owner.toString() === project.createdBy.toString();
+    const creatorRole = isCreatorOwner ? "owner" : (creatorMember ? creatorMember.role : "member");
+
+    let canEditProject = false;
+    if (requesterRole === "owner" || requesterRole === "admin") {
+      canEditProject = true;
+    } else if (requesterRole === "member") {
+      canEditProject = true;
+    }
+
+    if (!canEditProject) {
+      return res.status(403).json({
+        message: "You do not have permission to add tasks to this project.",
       });
     }
 
@@ -109,13 +141,39 @@ const updateTaskTitle = async (req, res) => {
       });
     }
 
-    const isMember = project.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
+    const workspace = await Workspace.findById(project.workspace);
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace not found" });
+    }
 
-    if (!isMember) {
+    const isWorkspaceOwner = workspace.owner.toString() === req.user._id.toString();
+    const memberInfo = workspace.members.find(
+      (m) => m.user.toString() === req.user._id.toString()
+    );
+    const requesterRole = isWorkspaceOwner ? "owner" : (memberInfo ? memberInfo.role : null);
+
+    if (!requesterRole || requesterRole === "viewer") {
       return res.status(403).json({
-        message: "You are not a member of this project",
+        message: "You do not have permission to modify tasks in this workspace",
+      });
+    }
+
+    const creatorMember = workspace.members.find(
+      (m) => m.user.toString() === project.createdBy.toString()
+    );
+    const isCreatorOwner = workspace.owner.toString() === project.createdBy.toString();
+    const creatorRole = isCreatorOwner ? "owner" : (creatorMember ? creatorMember.role : "member");
+
+    let canEditProject = false;
+    if (requesterRole === "owner" || requesterRole === "admin") {
+      canEditProject = true;
+    } else if (requesterRole === "member") {
+      canEditProject = true;
+    }
+
+    if (!canEditProject) {
+      return res.status(403).json({
+        message: "You do not have permission to modify tasks in this project.",
       });
     }
 
@@ -158,13 +216,39 @@ const updateTaskDescription = async (req, res) => {
       });
     }
 
-    const isMember = project.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
+    const workspace = await Workspace.findById(project.workspace);
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace not found" });
+    }
 
-    if (!isMember) {
+    const isWorkspaceOwner = workspace.owner.toString() === req.user._id.toString();
+    const memberInfo = workspace.members.find(
+      (m) => m.user.toString() === req.user._id.toString()
+    );
+    const requesterRole = isWorkspaceOwner ? "owner" : (memberInfo ? memberInfo.role : null);
+
+    if (!requesterRole || requesterRole === "viewer") {
       return res.status(403).json({
-        message: "You are not a member of this project",
+        message: "You do not have permission to modify tasks in this workspace",
+      });
+    }
+
+    const creatorMember = workspace.members.find(
+      (m) => m.user.toString() === project.createdBy.toString()
+    );
+    const isCreatorOwner = workspace.owner.toString() === project.createdBy.toString();
+    const creatorRole = isCreatorOwner ? "owner" : (creatorMember ? creatorMember.role : "member");
+
+    let canEditProject = false;
+    if (requesterRole === "owner" || requesterRole === "admin") {
+      canEditProject = true;
+    } else if (requesterRole === "member") {
+      canEditProject = true;
+    }
+
+    if (!canEditProject) {
+      return res.status(403).json({
+        message: "You do not have permission to modify tasks in this project.",
       });
     }
 
@@ -212,13 +296,39 @@ const updateTaskStatus = async (req, res) => {
       });
     }
 
-    const isMember = project.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
+    const workspace = await Workspace.findById(project.workspace);
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace not found" });
+    }
 
-    if (!isMember) {
+    const isWorkspaceOwner = workspace.owner.toString() === req.user._id.toString();
+    const memberInfo = workspace.members.find(
+      (m) => m.user.toString() === req.user._id.toString()
+    );
+    const requesterRole = isWorkspaceOwner ? "owner" : (memberInfo ? memberInfo.role : null);
+
+    if (!requesterRole || requesterRole === "viewer") {
       return res.status(403).json({
-        message: "You are not a member of this project",
+        message: "You do not have permission to modify tasks in this workspace",
+      });
+    }
+
+    const creatorMember = workspace.members.find(
+      (m) => m.user.toString() === project.createdBy.toString()
+    );
+    const isCreatorOwner = workspace.owner.toString() === project.createdBy.toString();
+    const creatorRole = isCreatorOwner ? "owner" : (creatorMember ? creatorMember.role : "member");
+
+    let canEditProject = false;
+    if (requesterRole === "owner" || requesterRole === "admin") {
+      canEditProject = true;
+    } else if (requesterRole === "member") {
+      canEditProject = true;
+    }
+
+    if (!canEditProject) {
+      return res.status(403).json({
+        message: "You do not have permission to modify tasks in this project.",
       });
     }
 
@@ -261,13 +371,39 @@ const updateTaskAssignees = async (req, res) => {
       });
     }
 
-    const isMember = project.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
+    const workspace = await Workspace.findById(project.workspace);
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace not found" });
+    }
 
-    if (!isMember) {
+    const isWorkspaceOwner = workspace.owner.toString() === req.user._id.toString();
+    const memberInfo = workspace.members.find(
+      (m) => m.user.toString() === req.user._id.toString()
+    );
+    const requesterRole = isWorkspaceOwner ? "owner" : (memberInfo ? memberInfo.role : null);
+
+    if (!requesterRole || requesterRole === "viewer") {
       return res.status(403).json({
-        message: "You are not a member of this project",
+        message: "You do not have permission to modify tasks in this workspace",
+      });
+    }
+
+    const creatorMember = workspace.members.find(
+      (m) => m.user.toString() === project.createdBy.toString()
+    );
+    const isCreatorOwner = workspace.owner.toString() === project.createdBy.toString();
+    const creatorRole = isCreatorOwner ? "owner" : (creatorMember ? creatorMember.role : "member");
+
+    let canEditProject = false;
+    if (requesterRole === "owner" || requesterRole === "admin") {
+      canEditProject = true;
+    } else if (requesterRole === "member") {
+      canEditProject = true;
+    }
+
+    if (!canEditProject) {
+      return res.status(403).json({
+        message: "You do not have permission to modify tasks in this project.",
       });
     }
 
@@ -310,13 +446,39 @@ const updateTaskPriority = async (req, res) => {
       });
     }
 
-    const isMember = project.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
+    const workspace = await Workspace.findById(project.workspace);
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace not found" });
+    }
 
-    if (!isMember) {
+    const isWorkspaceOwner = workspace.owner.toString() === req.user._id.toString();
+    const memberInfo = workspace.members.find(
+      (m) => m.user.toString() === req.user._id.toString()
+    );
+    const requesterRole = isWorkspaceOwner ? "owner" : (memberInfo ? memberInfo.role : null);
+
+    if (!requesterRole || requesterRole === "viewer") {
       return res.status(403).json({
-        message: "You are not a member of this project",
+        message: "You do not have permission to modify tasks in this workspace",
+      });
+    }
+
+    const creatorMember = workspace.members.find(
+      (m) => m.user.toString() === project.createdBy.toString()
+    );
+    const isCreatorOwner = workspace.owner.toString() === project.createdBy.toString();
+    const creatorRole = isCreatorOwner ? "owner" : (creatorMember ? creatorMember.role : "member");
+
+    let canEditProject = false;
+    if (requesterRole === "owner" || requesterRole === "admin") {
+      canEditProject = true;
+    } else if (requesterRole === "member") {
+      canEditProject = true;
+    }
+
+    if (!canEditProject) {
+      return res.status(403).json({
+        message: "You do not have permission to modify tasks in this project.",
       });
     }
 
@@ -360,13 +522,39 @@ const addSubTask = async (req, res) => {
       });
     }
 
-    const isMember = project.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
+    const workspace = await Workspace.findById(project.workspace);
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace not found" });
+    }
 
-    if (!isMember) {
+    const isWorkspaceOwner = workspace.owner.toString() === req.user._id.toString();
+    const memberInfo = workspace.members.find(
+      (m) => m.user.toString() === req.user._id.toString()
+    );
+    const requesterRole = isWorkspaceOwner ? "owner" : (memberInfo ? memberInfo.role : null);
+
+    if (!requesterRole || requesterRole === "viewer") {
       return res.status(403).json({
-        message: "You are not a member of this project",
+        message: "You do not have permission to modify tasks in this workspace",
+      });
+    }
+
+    const creatorMember = workspace.members.find(
+      (m) => m.user.toString() === project.createdBy.toString()
+    );
+    const isCreatorOwner = workspace.owner.toString() === project.createdBy.toString();
+    const creatorRole = isCreatorOwner ? "owner" : (creatorMember ? creatorMember.role : "member");
+
+    let canEditProject = false;
+    if (requesterRole === "owner" || requesterRole === "admin") {
+      canEditProject = true;
+    } else if (requesterRole === "member") {
+      canEditProject = true;
+    }
+
+    if (!canEditProject) {
+      return res.status(403).json({
+        message: "You do not have permission to modify tasks in this project.",
       });
     }
 
@@ -488,13 +676,39 @@ const addComment = async (req, res) => {
       });
     }
 
-    const isMember = project.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
+    const workspace = await Workspace.findById(project.workspace);
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace not found" });
+    }
 
-    if (!isMember) {
+    const isWorkspaceOwner = workspace.owner.toString() === req.user._id.toString();
+    const memberInfo = workspace.members.find(
+      (m) => m.user.toString() === req.user._id.toString()
+    );
+    const requesterRole = isWorkspaceOwner ? "owner" : (memberInfo ? memberInfo.role : null);
+
+    if (!requesterRole || requesterRole === "viewer") {
       return res.status(403).json({
-        message: "You are not a member of this project",
+        message: "You do not have permission to modify tasks in this workspace",
+      });
+    }
+
+    const creatorMember = workspace.members.find(
+      (m) => m.user.toString() === project.createdBy.toString()
+    );
+    const isCreatorOwner = workspace.owner.toString() === project.createdBy.toString();
+    const creatorRole = isCreatorOwner ? "owner" : (creatorMember ? creatorMember.role : "member");
+
+    let canEditProject = false;
+    if (requesterRole === "owner" || requesterRole === "admin") {
+      canEditProject = true;
+    } else if (requesterRole === "member") {
+      canEditProject = true;
+    }
+
+    if (!canEditProject) {
+      return res.status(403).json({
+        message: "You do not have permission to modify tasks in this project.",
       });
     }
 
@@ -543,13 +757,39 @@ const watchTask = async (req, res) => {
       });
     }
 
-    const isMember = project.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
+    const workspace = await Workspace.findById(project.workspace);
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace not found" });
+    }
 
-    if (!isMember) {
+    const isWorkspaceOwner = workspace.owner.toString() === req.user._id.toString();
+    const memberInfo = workspace.members.find(
+      (m) => m.user.toString() === req.user._id.toString()
+    );
+    const requesterRole = isWorkspaceOwner ? "owner" : (memberInfo ? memberInfo.role : null);
+
+    if (!requesterRole || requesterRole === "viewer") {
       return res.status(403).json({
-        message: "You are not a member of this project",
+        message: "You do not have permission to modify tasks in this workspace",
+      });
+    }
+
+    const creatorMember = workspace.members.find(
+      (m) => m.user.toString() === project.createdBy.toString()
+    );
+    const isCreatorOwner = workspace.owner.toString() === project.createdBy.toString();
+    const creatorRole = isCreatorOwner ? "owner" : (creatorMember ? creatorMember.role : "member");
+
+    let canEditProject = false;
+    if (requesterRole === "owner" || requesterRole === "admin") {
+      canEditProject = true;
+    } else if (requesterRole === "member") {
+      canEditProject = true;
+    }
+
+    if (!canEditProject) {
+      return res.status(403).json({
+        message: "You do not have permission to modify tasks in this project.",
       });
     }
 
@@ -601,13 +841,39 @@ const achievedTask = async (req, res) => {
       });
     }
 
-    const isMember = project.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
+    const workspace = await Workspace.findById(project.workspace);
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace not found" });
+    }
 
-    if (!isMember) {
+    const isWorkspaceOwner = workspace.owner.toString() === req.user._id.toString();
+    const memberInfo = workspace.members.find(
+      (m) => m.user.toString() === req.user._id.toString()
+    );
+    const requesterRole = isWorkspaceOwner ? "owner" : (memberInfo ? memberInfo.role : null);
+
+    if (!requesterRole || requesterRole === "viewer") {
       return res.status(403).json({
-        message: "You are not a member of this project",
+        message: "You do not have permission to modify tasks in this workspace",
+      });
+    }
+
+    const creatorMember = workspace.members.find(
+      (m) => m.user.toString() === project.createdBy.toString()
+    );
+    const isCreatorOwner = workspace.owner.toString() === project.createdBy.toString();
+    const creatorRole = isCreatorOwner ? "owner" : (creatorMember ? creatorMember.role : "member");
+
+    let canEditProject = false;
+    if (requesterRole === "owner" || requesterRole === "admin") {
+      canEditProject = true;
+    } else if (requesterRole === "member") {
+      canEditProject = true;
+    }
+
+    if (!canEditProject) {
+      return res.status(403).json({
+        message: "You do not have permission to modify tasks in this project.",
       });
     }
     const isAchieved = task.isArchived;
@@ -691,13 +957,39 @@ const deleteTask = async (req, res) => {
       });
     }
 
-    const isMember = project.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
+    const workspace = await Workspace.findById(project.workspace);
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace not found" });
+    }
 
-    if (!isMember) {
+    const isWorkspaceOwner = workspace.owner.toString() === req.user._id.toString();
+    const memberInfo = workspace.members.find(
+      (m) => m.user.toString() === req.user._id.toString()
+    );
+    const requesterRole = isWorkspaceOwner ? "owner" : (memberInfo ? memberInfo.role : null);
+
+    if (!requesterRole || requesterRole === "viewer") {
       return res.status(403).json({
-        message: "You are not a member of this project",
+        message: "You do not have permission to modify tasks in this workspace",
+      });
+    }
+
+    const creatorMember = workspace.members.find(
+      (m) => m.user.toString() === project.createdBy.toString()
+    );
+    const isCreatorOwner = workspace.owner.toString() === project.createdBy.toString();
+    const creatorRole = isCreatorOwner ? "owner" : (creatorMember ? creatorMember.role : "member");
+
+    let canEditProject = false;
+    if (requesterRole === "owner" || requesterRole === "admin") {
+      canEditProject = true;
+    } else if (requesterRole === "member") {
+      canEditProject = true;
+    }
+
+    if (!canEditProject) {
+      return res.status(403).json({
+        message: "You do not have permission to modify tasks in this project.",
       });
     }
 

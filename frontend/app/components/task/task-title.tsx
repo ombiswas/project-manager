@@ -8,9 +8,11 @@ import { toast } from "sonner";
 export const TaskTitle = ({
   title,
   taskId,
+  canEdit = true,
 }: {
   title: string;
   taskId: string;
+  canEdit?: boolean;
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [newTitle, setNewTitle] = useState(title);
@@ -45,24 +47,28 @@ export const TaskTitle = ({
         <h2 className="text-xl flex-1 font-semibold break-words overflow-hidden text-ellipsis">{title}</h2>
       )}
 
-      {isEditing ? (
-        <Button
-          className="py-0 shrink-0"
-          size="sm"
-          onClick={updateTitle}
-          disabled={isPending}
-        >
-          Save
-        </Button>
-      ) : (
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="size-8 shrink-0 text-muted-foreground hover:text-foreground"
-          onClick={() => setIsEditing(true)}
-        >
-          <Edit className="size-4" />
-        </Button>
+      {canEdit && (
+        <>
+          {isEditing ? (
+            <Button
+              className="py-0 shrink-0"
+              size="sm"
+              onClick={updateTitle}
+              disabled={isPending}
+            >
+              Save
+            </Button>
+          ) : (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="size-8 shrink-0 text-muted-foreground hover:text-foreground"
+              onClick={() => setIsEditing(true)}
+            >
+              <Edit className="size-4" />
+            </Button>
+          )}
+        </>
       )}
     </div>
   );

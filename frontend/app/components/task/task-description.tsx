@@ -9,9 +9,11 @@ import { Textarea } from "../ui/textarea";
 export const TaskDescription = ({
   description,
   taskId,
+  canEdit = true,
 }: {
   description: string;
   taskId: string;
+  canEdit?: boolean;
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [newDescription, setNewDescription] = useState(description);
@@ -48,24 +50,28 @@ export const TaskDescription = ({
         </div>
       )}
 
-      {isEditing ? (
-        <Button
-          className="py-0 shrink-0"
-          size="sm"
-          onClick={updateDescription}
-          disabled={isPending}
-        >
-          Save
-        </Button>
-      ) : (
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="size-8 shrink-0 text-muted-foreground hover:text-foreground"
-          onClick={() => setIsEditing(true)}
-        >
-          <Edit className="size-4" />
-        </Button>
+      {canEdit && (
+        <>
+          {isEditing ? (
+            <Button
+              className="py-0 shrink-0"
+              size="sm"
+              onClick={updateDescription}
+              disabled={isPending}
+            >
+              Save
+            </Button>
+          ) : (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="size-8 shrink-0 text-muted-foreground hover:text-foreground"
+              onClick={() => setIsEditing(true)}
+            >
+              <Edit className="size-4" />
+            </Button>
+          )}
+        </>
       )}
     </div>
   );

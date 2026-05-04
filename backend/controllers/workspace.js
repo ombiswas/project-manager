@@ -666,12 +666,6 @@ const removeMember = async (req, res) => {
       return res.status(403).json({ message: "Cannot remove the workspace owner" });
     }
 
-    if (requesterRole === "admin" && targetMember.role === "admin" && req.user._id.toString() !== memberId) {
-       // Optional: Can admins remove other admins? User said "Admin can manage projects and invite/remove members".
-       // Usually, owners manage admins. Let's allow admins to remove members but maybe not other admins?
-       // The user didn't specify. I'll allow it for now unless it's the owner.
-    }
-
     workspace.members = workspace.members.filter(
       (m) => m.user.toString() !== memberId
     );
@@ -679,6 +673,55 @@ const removeMember = async (req, res) => {
     await workspace.save();
 
     res.status(200).json({ message: "Member removed successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const changeMemberRole = async (req, res) => {
+  try {
+    const { workspaceId, memberId } = req.params;
+    const { role } = req.body;
+
+    if (!["admin", "member", "viewer"].includes(role)) {
+      return res.status(400).json({ message: "Invalid role" });
+    }
+
+    const workspace = await Workspace.findById(workspaceId);
+
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace not found" });
+    }
+
+    const requesterRole = workspace.members.find(
+      (m) => m.user.toString() === req.user._id.toString()
+    )?.role;
+
+    const targetMember = workspace.members.find(
+      (m) => m.user.toString() === memberId
+    );
+
+    if (!targetMember) {
+      return res.status(404).json({ message: "Member not found in workspace" });
+    }
+
+    // Role checks
+    if (requesterRole !== "owner" && requesterRole !== "admin") {
+      return res.status(403).json({ message: "Not authorized to change roles" });
+    }
+
+    if (targetMember.role === "owner") {
+      return res.status(403).json({ message: "Cannot change the workspace owner's role" });
+    }
+
+    // Admin can promote/demote others to admin, member, viewer, but cannot touch owner
+    // Also, admins cannot promote themselves to owner (handled by the 'role' enum check anyway, as 'owner' is not in the allowed list)
+
+    targetMember.role = role;
+    await workspace.save();
+
+    res.status(200).json({ message: "Member role updated successfully" });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal server error" });
@@ -740,5 +783,6 @@ export {
   deleteWorkspace,
   updateWorkspace,
   removeMember,
+  changeMemberRole,
   transferOwnership,
 };

@@ -16,9 +16,11 @@ import { Loader } from "../loader";
 export const CommentSection = ({
   taskId,
   members,
+  canComment = true,
 }: {
   taskId: string;
   members: User[];
+  canComment?: boolean;
 }) => {
   const [newComment, setNewComment] = useState("");
 
@@ -92,22 +94,24 @@ export const CommentSection = ({
 
       <Separator className="my-4" />
 
-      <div className="mt-4">
-        <Textarea
-          placeholder="Add a comment"
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-        />
+      {canComment && (
+        <div className="mt-4">
+          <Textarea
+            placeholder="Add a comment"
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+          />
 
-        <div className="flex justify-end mt-4">
-          <Button
-            disabled={!newComment.trim() || isPending}
-            onClick={handleAddComment}
-          >
-            Post Comment
-          </Button>
+          <div className="flex justify-end mt-4">
+            <Button
+              disabled={!newComment.trim() || isPending}
+              onClick={handleAddComment}
+            >
+              Post Comment
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

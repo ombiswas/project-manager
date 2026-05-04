@@ -12,6 +12,7 @@ import {
   deleteWorkspace,
   updateWorkspace,
   removeMember,
+  changeMemberRole,
   transferOwnership,
 } from "../controllers/workspace.js";
 import {
@@ -55,6 +56,22 @@ router.post(
   authMiddleware,
   validateRequest({ params: z.object({ workspaceId: z.string() }) }),
   acceptGenerateInvite
+);
+
+router.post(
+  "/:workspaceId/change-member-role/:memberId",
+  authMiddleware,
+  checkWorkspaceMember,
+  validateRequest({
+    params: z.object({
+      workspaceId: z.string(),
+      memberId: z.string(),
+    }),
+    body: z.object({
+      role: z.enum(["admin", "member", "viewer"]),
+    }),
+  }),
+  changeMemberRole
 );
 
 router.post(
