@@ -11,16 +11,12 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
   FRONTEND_URL: z.string().min(1, "FRONTEND_URL is required"),
 
-  // SMTP / Email configuration
+  // SMTP / Email configuration (Nodemailer)
   SMTP_HOST: z.string().min(1, "SMTP_HOST is required"),
   SMTP_PORT: z.coerce.number().default(587),
   SMTP_USER: z.string().min(1, "SMTP_USER is required"),
   SMTP_PASS: z.string().min(1, "SMTP_PASS is required"),
   FROM_EMAIL: z.string().email("FROM_EMAIL must be a valid email address"),
-
-  // Optional / legacy variables (SendGrid & Arcjet)
-  SEND_GRID_API: z.string().optional(),
-  ARCJET_KEY: z.string().optional(),
 });
 
 const result = envSchema.safeParse(process.env);

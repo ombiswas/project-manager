@@ -17,17 +17,25 @@ import {
   verifyResetPasswordTokenAndResetPassword,
 } from "../controllers/auth-controller.js";
 
+import {
+  authLimiter,
+  passwordResetLimiter,
+} from "../src/middleware/rate-limiter.js";
+
 const router = express.Router();
 
 router.post(
   "/register",
+  authLimiter,
   validateRequest({
     body: registerSchema,
   }),
   registerUser
 );
+
 router.post(
   "/login",
+  authLimiter,
   validateRequest({
     body: loginSchema,
   }),
@@ -44,6 +52,7 @@ router.post(
 
 router.post(
   "/reset-password-request",
+  passwordResetLimiter,
   validateRequest({
     body: emailSchema,
   }),
@@ -52,6 +61,7 @@ router.post(
 
 router.post(
   "/reset-password",
+  passwordResetLimiter,
   validateRequest({
     body: resetPasswordSchema,
   }),

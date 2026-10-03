@@ -20,9 +20,10 @@ flowchart TD
 
     subgraph Server ["Backend (Node.js ESM + Express)"]
         Router["Express API Router (/api-v1)"]
+        SecurityMW["Helmet (Security Headers)"]
+        RateLimitMW["Express Rate Limit (Global & Auth Limiters)"]
         AuthMW["Auth Middleware (JWT Verify)"]
         PermMW["Permission Middleware (Role Guard)"]
-        RateLimit["Arcjet Security / Rate Limiting"]
         
         subgraph Controllers ["Controllers (MVC)"]
             AuthCtrl["Auth Controller"]
@@ -32,8 +33,9 @@ flowchart TD
             TaskCtrl["Task Controller"]
         end
 
-        Router --> RateLimit
-        RateLimit --> AuthMW
+        Router --> SecurityMW
+        SecurityMW --> RateLimitMW
+        RateLimitMW --> AuthMW
         AuthMW --> PermMW
         PermMW --> Controllers
     end
@@ -45,14 +47,12 @@ flowchart TD
         MongooseODM --> Mongo
     end
 
-    subgraph External ["External Services"]
-        SendGrid["SendGrid (Email Verification & Password Reset)"]
-        ArcjetService["Arcjet API (Bot Protection & Rate Limiting)"]
+    subgraph External ["External Services (Free Tier)"]
+        SMTPService["Nodemailer (Gmail SMTP / Free SMTP)"]
     end
 
     AxiosClient -->|"REST API Requests (JSON / Bearer Token)"| Router
-    AuthCtrl -.->|"Send Emails"| SendGrid
-    RateLimit -.->|"Security Analysis"| ArcjetService
+    AuthCtrl -.->|"Send Emails (Verification / Password Reset)"| SMTPService
 ```
 
 ---
@@ -81,13 +81,13 @@ The technology stack is extracted directly from project dependencies:
   - `bcrypt` (`^6.0.0`)
   - `jsonwebtoken` (`^9.0.3`)
   - `cors` (`^2.8.6`)
-  - `@arcjet/node` (`^1.1.0`)
-  - `@arcjet/inspect` (`^1.1.0`)
+  - `helmet` (`^8.0.0`)
+  - `express-rate-limit` (`^7.5.0`)
 - **Validation**:
   - `zod` (`^3.25.76`)
   - `zod-express-middleware` (`^1.4.0`)
-- **Email Service**: `@sendgrid/mail` (`^8.1.6`)
-- **Utilities & Logging**: `morgan` (`^1.10.1`), `dotenv` (`^17.2.3`)
+- **Email Service**: `nodemailer` (`^6.10.0`) via free SMTP (Gmail App Password / Resend)
+- **Utilities & Logging**: `winston` (`^3.17.0`), `morgan` (`^1.10.1`), `dotenv` (`^17.2.3`)
 - **Development**: `nodemon` (`^3.1.11`)
 
 ### Frontend (`frontend/package.json`)
@@ -129,10 +129,11 @@ project-manager/
 ├── backend/                      # Express.js REST API
 │   ├── config/                   # Database & application configurations
 │   ├── controllers/              # Business logic (auth, workspace, project, task, user)
-│   ├── libs/                     # Utilities (email sender, arcjet, schema validators)
-│   ├── middleware/               # Auth (JWT) & permission middlewares
+│   ├── libs/                     # Utilities (email sender, schema validators)
+│   ├── middleware/               # Auth, rate limiting, permissions, and error handling
 │   ├── models/                   # Mongoose schemas (User, Workspace, Project, Task, etc.)
 │   ├── routes/                   # Express route definitions
+│   ├── src/                      # Modular architecture (config, libs, middleware, utils)
 │   ├── index.js                  # Express entry point
 │   ├── package.json              # Backend dependencies and scripts
 │   └── vercel.json               # Backend deployment configuration
@@ -173,12 +174,15 @@ Before running the application locally, ensure you have:
 | Variable | Description |
 |---|---|
 | `PORT` | Port number the backend server listens on (e.g. `5000`) |
-| `MONGODB_URI` | MongoDB connection connection string |
+| `NODE_ENV` | Environment mode (`development` \| `production` \| `test`) |
+| `MONGODB_URI` | MongoDB connection string |
 | `JWT_SECRET` | Secret key used for signing and verifying JWT tokens |
 | `FRONTEND_URL` | Base URL of the client app (for CORS, verification & reset links) |
-| `SEND_GRID_API` | SendGrid API key for transactional emails |
-| `FROM_EMAIL` | Sender email address registered with SendGrid |
-| `ARCJET_KEY` | Arcjet security API key for bot protection and rate limiting |
+| `SMTP_HOST` | SMTP server host (e.g. `smtp.gmail.com`) |
+| `SMTP_PORT` | SMTP port (e.g. `587` for TLS or `465` for SSL) |
+| `SMTP_USER` | SMTP username / email address |
+| `SMTP_PASS` | SMTP password (e.g. 16-character Google App Password) |
+| `FROM_EMAIL` | Sender email address displayed to recipients |
 
 ### Frontend (`frontend/.env`)
 
@@ -203,12 +207,15 @@ Before running the application locally, ensure you have:
 3. Create a `.env` file in `backend/` and configure the environment variables:
    ```bash
    PORT=5000
+   NODE_ENV=development
    MONGODB_URI=mongodb://localhost:27017/project-manager
    JWT_SECRET=your_jwt_secret_key_here
    FRONTEND_URL=http://localhost:5173
-   SEND_GRID_API=your_sendgrid_api_key
-   FROM_EMAIL=noreply@example.com
-   ARCJET_KEY=your_arcjet_api_key
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USER=your_email@gmail.com
+   SMTP_PASS=your_16_char_google_app_password
+   FROM_EMAIL=your_email@gmail.com
    ```
 4. Start the backend development server:
    ```bash

@@ -4,7 +4,6 @@ import jwt from "jsonwebtoken";
 import User from "../models/user.js";
 import Verification from "../models/verification.js";
 import { sendEmail } from "../libs/send-email.js";
-import aj from "../libs/arcjet.js";
 import { env } from "../src/config/env.js";
 import {
   AppError,
@@ -22,14 +21,6 @@ import { asyncHandler } from "../src/utils/async-handler.js";
  */
 export const registerUser = asyncHandler(async (req, res) => {
   const { email, name, password } = req.body;
-
-  // Protect with Arcjet if configured
-  if (env.ARCJET_KEY) {
-    const decision = await aj.protect(req, { email, requested: 1 });
-    if (decision.isDenied()) {
-      throw new ForbiddenError("Registration request blocked by security policy");
-    }
-  }
 
   const existingUser = await User.findOne({ email });
   if (existingUser) {

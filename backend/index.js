@@ -1,22 +1,33 @@
 import cors from "cors";
 import express from "express";
+import helmet from "helmet";
 import morgan from "morgan";
 
 import { env } from "./src/config/env.js";
 import { connectDB, closeDB } from "./src/config/database.js";
 import { logger } from "./src/utils/logger.js";
 import { notFoundHandler, errorHandler } from "./src/middleware/error-middleware.js";
+import { globalLimiter } from "./src/middleware/rate-limiter.js";
 import routes from "./routes/index.js";
 
 const app = express();
 
+// Security HTTP headers
+app.use(helmet());
+
+// CORS configuration driven by FRONTEND_URL
 app.use(
   cors({
     origin: env.FRONTEND_URL,
-    methods: ["GET", "POST", "DELETE", "PUT"],
+    methods: ["GET", "POST", "DELETE", "PUT", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   })
 );
+
+// Global looser rate limiter across all routes
+app.use(globalLimiter);
+
 app.use(morgan("dev"));
 app.use(express.json());
 
