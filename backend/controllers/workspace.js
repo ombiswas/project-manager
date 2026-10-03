@@ -389,8 +389,8 @@ const inviteUserToWorkspace = async (req, res) => {
     );
 
     if (isMember) {
-      return res.status(400).json({
-        message: "User already a member of this workspace",
+      return res.status(409).json({
+        message: "User is already a member of this workspace",
       });
     }
 
@@ -400,8 +400,8 @@ const inviteUserToWorkspace = async (req, res) => {
     });
 
     if (isInvited && isInvited.expiresAt > new Date()) {
-      return res.status(400).json({
-        message: "User already invited to this workspace",
+      return res.status(409).json({
+        message: "An active invitation has already been sent to this user",
       });
     }
 
@@ -412,6 +412,7 @@ const inviteUserToWorkspace = async (req, res) => {
     const inviteToken = jwt.sign(
       {
         user: existingUser._id,
+        email: existingUser.email,
         workspaceId: workspaceId,
         role: role || "member",
       },
@@ -474,7 +475,7 @@ const acceptGenerateInvite = async (req, res) => {
     );
 
     if (isMember) {
-      return res.status(400).json({
+      return res.status(409).json({
         message: "You are already a member of this workspace",
       });
     }
@@ -512,9 +513,32 @@ const acceptInviteByToken = async (req, res) => {
   try {
     const { token } = req.body;
 
-    const decoded = jwt.verify(token, env.JWT_SECRET);
+    let decoded;
+    try {
+      decoded = jwt.verify(token, env.JWT_SECRET);
+    } catch (jwtErr) {
+      if (jwtErr.name === "TokenExpiredError") {
+        return res.status(400).json({
+          message: "Invitation token has expired",
+        });
+      }
+      return res.status(401).json({
+        message: "Invalid invitation token",
+      });
+    }
 
-    const { user, workspaceId, role } = decoded;
+    const { user, email: inviteEmail, workspaceId, role } = decoded;
+
+    // Verify the invite belongs to the authenticated user's email / ID
+    const isTargetUser =
+      (user && req.user._id.toString() === user.toString()) ||
+      (inviteEmail && req.user.email.toLowerCase() === inviteEmail.toLowerCase());
+
+    if (!isTargetUser) {
+      return res.status(403).json({
+        message: "This invitation was not issued to your account",
+      });
+    }
 
     const workspace = await Workspace.findById(workspaceId);
 
@@ -525,43 +549,46 @@ const acceptInviteByToken = async (req, res) => {
     }
 
     const isMember = workspace.members.some(
-      (member) => member.user.toString() === user.toString()
+      (member) => member.user.toString() === req.user._id.toString()
     );
 
     if (isMember) {
-      return res.status(400).json({
-        message: "User already a member of this workspace",
+      return res.status(409).json({
+        message: "You are already a member of this workspace",
       });
     }
 
     const inviteInfo = await WorkspaceInvite.findOne({
-      user: user,
-      workspaceId: workspaceId,
+      $or: [
+        { token: token },
+        { user: req.user._id, workspaceId: workspaceId },
+      ],
     });
 
     if (!inviteInfo) {
       return res.status(404).json({
-        message: "Invitation not found",
+        message: "Invitation not found or has already been used",
       });
     }
 
     if (inviteInfo.expiresAt < new Date()) {
+      await WorkspaceInvite.deleteOne({ _id: inviteInfo._id });
       return res.status(400).json({
         message: "Invitation has expired",
       });
     }
 
     workspace.members.push({
-      user: user,
-      role: role || "member",
+      user: req.user._id,
+      role: role || inviteInfo.role || "member",
       joinedAt: new Date(),
     });
 
     await workspace.save();
 
     await Promise.all([
-      WorkspaceInvite.deleteOne({ _id: inviteInfo._id }),
-      recordActivity(user, "joined_workspace", "Workspace", workspaceId, {
+      WorkspaceInvite.deleteMany({ user: req.user._id, workspaceId: workspaceId }),
+      recordActivity(req.user._id, "joined_workspace", "Workspace", workspaceId, {
         description: `Joined ${workspace.name} workspace`,
       }),
     ]);

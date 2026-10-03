@@ -250,18 +250,24 @@ const updateTaskDescription = async (req, res) => {
       });
     }
 
-    const oldDescription =
-      task.description.substring(0, 50) +
-      (task.description.length > 50 ? "..." : "");
-    const newDescription =
-      description.substring(0, 50) + (description.length > 50 ? "..." : "");
+    const cleanDescription = typeof description === "string" ? description.trim() : "";
+    const oldDescText = task.description ? task.description : "";
+    const oldSnippet =
+      oldDescText.length > 0
+        ? oldDescText.substring(0, 50) + (oldDescText.length > 50 ? "..." : "")
+        : "(empty)";
+    const newSnippet =
+      cleanDescription.length > 0
+        ? cleanDescription.substring(0, 50) +
+          (cleanDescription.length > 50 ? "..." : "")
+        : "(empty)";
 
-    task.description = description;
+    task.description = cleanDescription;
     await task.save();
 
     // record activity
     await recordActivity(req.user._id, "updated_task", "Task", taskId, {
-      description: `updated task description from ${oldDescription} to ${newDescription}`,
+      description: `updated task description from "${oldSnippet}" to "${newSnippet}"`,
     });
 
     res.status(200).json(task);

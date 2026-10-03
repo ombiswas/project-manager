@@ -1,9 +1,14 @@
 import express from "express";
+import { validateRequest } from "zod-express-middleware";
+import { z } from "zod";
+
 import authMiddleware from "../middleware/auth-middleware.js";
 import { checkProjectMember } from "../middleware/permission-middleware.js";
-import { validateRequest } from "zod-express-middleware";
-import { projectSchema } from "../libs/validate-schema.js";
-import { z } from "zod";
+import {
+  objectIdSchema,
+  paginationQuerySchema,
+  projectSchema,
+} from "../libs/validate-schema.js";
 import {
   createProject,
   getProjectDetails,
@@ -14,49 +19,62 @@ import {
 
 const router = express.Router();
 
+// Create project in workspace
 router.post(
   "/:workspaceId/create-project",
   authMiddleware,
   validateRequest({
     params: z.object({
-      workspaceId: z.string(),
+      workspaceId: objectIdSchema,
     }),
     body: projectSchema,
   }),
   createProject
 );
 
+// Get project details
 router.get(
   "/:projectId",
   authMiddleware,
   checkProjectMember,
   validateRequest({
-    params: z.object({ projectId: z.string() }),
+    params: z.object({ projectId: objectIdSchema }),
   }),
   getProjectDetails
 );
 
+// Get project tasks with pagination/filter query support
 router.get(
   "/:projectId/tasks",
   authMiddleware,
   checkProjectMember,
-  validateRequest({ params: z.object({ projectId: z.string() }) }),
+  validateRequest({
+    params: z.object({ projectId: objectIdSchema }),
+    query: paginationQuerySchema,
+  }),
   getProjectTasks
 );
 
-router.put(
-  "/:projectId",
+// Update project: Supports both PATCH and PUT
+const updateProjectHandler = [
   authMiddleware,
   checkProjectMember,
-  updateProject
-);
+  validateRequest({
+    params: z.object({ projectId: objectIdSchema }),
+    body: projectSchema.partial(),
+  }),
+  updateProject,
+];
+router.patch("/:projectId", ...updateProjectHandler);
+router.put("/:projectId", ...updateProjectHandler);
 
+// Delete project
 router.delete(
   "/:projectId",
   authMiddleware,
   checkProjectMember,
   validateRequest({
-    params: z.object({ projectId: z.string() }),
+    params: z.object({ projectId: objectIdSchema }),
   }),
   deleteProject
 );

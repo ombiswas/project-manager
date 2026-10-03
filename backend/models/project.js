@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { PROJECT_STATUSES } from "../src/constants/enums.js";
 
 const projectSchema = new Schema(
   {
@@ -15,7 +16,7 @@ const projectSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["Planning", "In Progress", "On Hold", "Completed", "Cancelled"],
+      enum: PROJECT_STATUSES,
       default: "Planning",
     },
     startDate: { type: Date },

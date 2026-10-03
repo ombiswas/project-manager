@@ -1,5 +1,7 @@
 import express from "express";
 import { validateRequest } from "zod-express-middleware";
+import { z } from "zod";
+
 import {
   acceptGenerateInvite,
   acceptInviteByToken,
@@ -17,15 +19,18 @@ import {
 } from "../controllers/workspace.js";
 import {
   inviteMemberSchema,
+  objectIdSchema,
+  paginationQuerySchema,
   tokenSchema,
   workspaceSchema,
 } from "../libs/validate-schema.js";
+import { INVITE_ROLES } from "../src/constants/enums.js";
 import authMiddleware from "../middleware/auth-middleware.js";
 import { checkWorkspaceMember } from "../middleware/permission-middleware.js";
-import { z } from "zod";
 
 const router = express.Router();
 
+// Create workspace
 router.post(
   "/",
   authMiddleware,
@@ -33,6 +38,7 @@ router.post(
   createWorkspace
 );
 
+// Accept invitation via token
 router.post(
   "/accept-invite-token",
   authMiddleware,
@@ -40,81 +46,131 @@ router.post(
   acceptInviteByToken
 );
 
+// Invite member to workspace
 router.post(
   "/:workspaceId/invite-member",
   authMiddleware,
   checkWorkspaceMember,
   validateRequest({
-    params: z.object({ workspaceId: z.string() }),
+    params: z.object({ workspaceId: objectIdSchema }),
     body: inviteMemberSchema,
   }),
   inviteUserToWorkspace
 );
 
+// Join workspace via public generate link
 router.post(
   "/:workspaceId/accept-generate-invite",
   authMiddleware,
-  validateRequest({ params: z.object({ workspaceId: z.string() }) }),
+  validateRequest({ params: z.object({ workspaceId: objectIdSchema }) }),
   acceptGenerateInvite
 );
 
-router.post(
+// Change member role: Changed from POST to PATCH
+router.patch(
   "/:workspaceId/change-member-role/:memberId",
   authMiddleware,
   checkWorkspaceMember,
   validateRequest({
     params: z.object({
-      workspaceId: z.string(),
-      memberId: z.string(),
+      workspaceId: objectIdSchema,
+      memberId: objectIdSchema,
     }),
     body: z.object({
-      role: z.enum(["admin", "member", "viewer"]),
+      role: z.enum(INVITE_ROLES, {
+        errorMap: () => ({
+          message: `Role must be one of: ${INVITE_ROLES.join(", ")}`,
+        }),
+      }),
     }),
   }),
   changeMemberRole
 );
 
-router.post(
+// Remove member from workspace: Changed from POST to DELETE
+router.delete(
   "/:workspaceId/remove-member/:memberId",
   authMiddleware,
   checkWorkspaceMember,
   validateRequest({
     params: z.object({
-      workspaceId: z.string(),
-      memberId: z.string(),
+      workspaceId: objectIdSchema,
+      memberId: objectIdSchema,
     }),
   }),
   removeMember
 );
 
-router.post(
+// Transfer workspace ownership: Changed from POST to PATCH
+router.patch(
   "/:workspaceId/transfer-ownership",
   authMiddleware,
   checkWorkspaceMember,
   validateRequest({
-    params: z.object({ workspaceId: z.string() }),
-    body: z.object({ newOwnerId: z.string() }),
+    params: z.object({ workspaceId: objectIdSchema }),
+    body: z.object({ newOwnerId: objectIdSchema }),
   }),
   transferOwnership
 );
 
-router.get("/", authMiddleware, getWorkspaces);
+// Query all user workspaces
+router.get(
+  "/",
+  authMiddleware,
+  validateRequest({ query: paginationQuerySchema }),
+  getWorkspaces
+);
 
-router.get("/:workspaceId", authMiddleware, checkWorkspaceMember, getWorkspaceDetails);
-router.get("/:workspaceId/projects", authMiddleware, checkWorkspaceMember, getWorkspaceProjects);
-router.get("/:workspaceId/stats", authMiddleware, checkWorkspaceMember, getWorkspaceStats);
-
-router.put(
+// Get workspace details
+router.get(
   "/:workspaceId",
   authMiddleware,
   checkWorkspaceMember,
-  validateRequest({
-    params: z.object({ workspaceId: z.string() }),
-    body: workspaceSchema.partial(),
-  }),
-  updateWorkspace
+  validateRequest({ params: z.object({ workspaceId: objectIdSchema }) }),
+  getWorkspaceDetails
 );
 
-router.delete("/:workspaceId", authMiddleware, checkWorkspaceMember, deleteWorkspace);
+// Get workspace projects with pagination support
+router.get(
+  "/:workspaceId/projects",
+  authMiddleware,
+  checkWorkspaceMember,
+  validateRequest({
+    params: z.object({ workspaceId: objectIdSchema }),
+    query: paginationQuerySchema,
+  }),
+  getWorkspaceProjects
+);
+
+// Get workspace statistics
+router.get(
+  "/:workspaceId/stats",
+  authMiddleware,
+  checkWorkspaceMember,
+  validateRequest({ params: z.object({ workspaceId: objectIdSchema }) }),
+  getWorkspaceStats
+);
+
+// Update workspace: Supports both PATCH and PUT
+const updateWorkspaceHandler = [
+  authMiddleware,
+  checkWorkspaceMember,
+  validateRequest({
+    params: z.object({ workspaceId: objectIdSchema }),
+    body: workspaceSchema.partial(),
+  }),
+  updateWorkspace,
+];
+router.patch("/:workspaceId", ...updateWorkspaceHandler);
+router.put("/:workspaceId", ...updateWorkspaceHandler);
+
+// Delete workspace
+router.delete(
+  "/:workspaceId",
+  authMiddleware,
+  checkWorkspaceMember,
+  validateRequest({ params: z.object({ workspaceId: objectIdSchema }) }),
+  deleteWorkspace
+);
 
 export default router;

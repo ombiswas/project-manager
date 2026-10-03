@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { TASK_STATUSES, TASK_PRIORITIES } from "../src/constants/enums.js";
 
 const taskSchema = new Schema(
   {
@@ -11,12 +12,12 @@ const taskSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["To Do", "In Progress", "Review", "Done"],
+      enum: TASK_STATUSES,
       default: "To Do",
     },
     priority: {
       type: String,
-      enum: ["Low", "Medium", "High"],
+      enum: TASK_PRIORITIES,
       default: "Medium",
     },
     assignees: [{ type: Schema.Types.ObjectId, ref: "User" }],

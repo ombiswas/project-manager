@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { INVITE_ROLES } from "../src/constants/enums.js";
 
 const workspaceInviteSchema = new mongoose.Schema(
   {
@@ -18,7 +19,7 @@ const workspaceInviteSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "member", "viewer"],
+      enum: INVITE_ROLES,
       default: "member",
     },
     expiresAt: {
