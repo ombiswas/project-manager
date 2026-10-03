@@ -8,10 +8,11 @@ const userSchema = new Schema(
       unique: true,
       trim: true,
       lowercase: true,
+      maxlength: 255,
     },
     password: { type: String, required: true, select: false },
-    name: { type: String, required: true, trim: true },
-    profilePicture: { type: String },
+    name: { type: String, required: true, trim: true, maxlength: 100 },
+    profilePicture: { type: String, maxlength: 2000 },
     isEmailVerified: { type: Boolean, default: false },
     lastLogin: { type: Date },
     is2FAEnabled: { type: Boolean, default: false },
@@ -40,7 +41,6 @@ const userSchema = new Schema(
     },
   }
 );
-
 
 const User = mongoose.model("User", userSchema);
 

@@ -6,6 +6,7 @@ const commentSchema = new Schema(
       type: String,
       required: true,
       trim: true,
+      maxlength: 2000,
     },
     task: {
       type: Schema.Types.ObjectId,
@@ -35,6 +36,7 @@ const commentSchema = new Schema(
       {
         emoji: {
           type: String,
+          maxlength: 20,
         },
         user: {
           type: Schema.Types.ObjectId,
@@ -44,9 +46,9 @@ const commentSchema = new Schema(
     ],
     attachments: [
       {
-        fileName: { type: String },
-        fileUrl: { type: String },
-        fileType: { type: String },
+        fileName: { type: String, maxlength: 255 },
+        fileUrl: { type: String, maxlength: 2000 },
+        fileType: { type: String, maxlength: 50 },
         fileSize: { type: Number },
         uploadedAt: { type: Date, default: Date.now },
       },

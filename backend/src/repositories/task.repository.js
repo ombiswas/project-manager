@@ -127,9 +127,21 @@ class TaskRepository {
     return await Task.deleteMany({ project: { $in: projectIds } }, opts);
   }
 
+  async findTaskIdsByProject(projectId) {
+    const tasks = await Task.find({ project: projectId }, "_id").lean();
+    return tasks.map((t) => t._id);
+  }
+
   async findTaskIdsByProjects(projectIds) {
     const tasks = await Task.find({ project: { $in: projectIds } }, "_id").lean();
     return tasks.map((t) => t._id);
+  }
+
+  async findTasksByProjects(projectIds, filter = {}) {
+    if (!projectIds || projectIds.length === 0) return [];
+    return await Task.find({ project: { $in: projectIds }, ...filter })
+      .sort({ createdAt: -1 })
+      .lean();
   }
 
   async countByProject(projectId, filter = {}) {

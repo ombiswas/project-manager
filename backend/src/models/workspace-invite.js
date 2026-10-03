@@ -32,7 +32,8 @@ const workspaceInviteSchema = new mongoose.Schema(
 
 workspaceInviteSchema.index({ user: 1, workspaceId: 1 });
 workspaceInviteSchema.index({ token: 1 });
-workspaceInviteSchema.index({ expiresAt: 1 });
+// TTL index for automatic expiration cleanup
+workspaceInviteSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 const WorkspaceInvite = mongoose.model(
   "WorkspaceInvite",

@@ -34,6 +34,23 @@ class TaskService {
     return { task, project, workspace };
   }
 
+  _assertAssigneesAreWorkspaceMembers(workspace, assignees = []) {
+    if (!assignees || assignees.length === 0) return;
+    const memberIdSet = new Set(
+      (workspace.members || []).map((m) => (m.user?._id || m.user).toString())
+    );
+    if (workspace.owner) {
+      memberIdSet.add((workspace.owner._id || workspace.owner).toString());
+    }
+
+    for (const assignee of assignees) {
+      const assigneeId = (assignee?._id || assignee).toString();
+      if (!memberIdSet.has(assigneeId)) {
+        throw new BadRequestError(`Cannot assign task to user ${assigneeId} who is not a member of this workspace`);
+      }
+    }
+  }
+
   async createTask(projectId, userId, taskData) {
     const project = await projectRepository.findById(projectId);
     if (!project) {
@@ -48,6 +65,14 @@ class TaskService {
     permissionService.assertTaskManagementPermission(workspace, userId, project.createdBy);
 
     const { title, description, status, priority, dueDate, assignees } = taskData;
+
+    // Edge case: Assigning task to a non-member
+    this._assertAssigneesAreWorkspaceMembers(workspace, assignees);
+
+    // Edge case: Date sanity
+    if (dueDate && isNaN(new Date(dueDate).getTime())) {
+      throw new BadRequestError("Invalid due date format");
+    }
 
     return await withTransaction(async (session) => {
       const task = await taskRepository.create(
@@ -64,7 +89,6 @@ class TaskService {
         session
       );
 
-      await projectRepository.addTaskToProject(projectId, task._id, session);
       await recordActivity(userId, "created_task", "Task", task._id, {
         description: `Created task "${title}"`,
       }, session);
@@ -141,7 +165,11 @@ class TaskService {
   }
 
   async updateTaskAssignees(taskId, userId, assignees) {
-    const { task } = await this._resolveTaskContext(taskId, userId);
+    const { task, workspace } = await this._resolveTaskContext(taskId, userId);
+
+    // Edge case: Assigning task to a non-member
+    this._assertAssigneesAreWorkspaceMembers(workspace, assignees);
+
     const updated = await taskRepository.updateById(taskId, { assignees });
 
     await recordActivity(userId, "updated_task", "Task", taskId, {
@@ -196,9 +224,6 @@ class TaskService {
         author: userId,
       }, session);
 
-      task.comments.push(comment._id);
-      await task.save({ session });
-
       const snippet = text.substring(0, 50) + (text.length > 50 ? "..." : "");
       await recordActivity(userId, "added_comment", "Task", taskId, {
         description: `added comment ${snippet}`,
@@ -241,31 +266,93 @@ class TaskService {
     return task;
   }
 
-  async getMyTasks(userId) {
-    const { tasks } = await taskRepository.findMyTasks(userId, { limit: 100 });
-    return tasks;
+  async getMyTasks(userId, query = {}) {
+    const { page = 1, limit = 50, search, status, priority, sortBy, sortOrder } = query;
+    const { tasks, total } = await taskRepository.findMyTasks(userId, {
+      page: Number(page) || 1,
+      limit: Number(limit) || 50,
+      search,
+      status,
+      priority,
+      sortBy,
+      sortOrder,
+    });
+
+    return {
+      tasks,
+      pagination: {
+        total,
+        page: Number(page) || 1,
+        limit: Number(limit) || 50,
+        totalPages: Math.ceil(total / (Number(limit) || 50)),
+      },
+    };
   }
 
-  async getArchivedTasks(userId) {
-    const { tasks } = await taskRepository.findArchivedTasks(userId, { limit: 100 });
-    return tasks;
+  async getArchivedTasks(userId, query = {}) {
+    const { page = 1, limit = 50, search, status, priority, sortBy, sortOrder } = query;
+    const { tasks, total } = await taskRepository.findArchivedTasks(userId, {
+      page: Number(page) || 1,
+      limit: Number(limit) || 50,
+      search,
+      status,
+      priority,
+      sortBy,
+      sortOrder,
+    });
+
+    return {
+      tasks,
+      pagination: {
+        total,
+        page: Number(page) || 1,
+        limit: Number(limit) || 50,
+        totalPages: Math.ceil(total / (Number(limit) || 50)),
+      },
+    };
   }
 
-  async getActivityByResourceId(resourceId, query) {
-    const { logs } = await activityRepository.findByResourceId(resourceId, query);
-    return logs;
+  async getActivityByResourceId(resourceId, query = {}) {
+    const { page = 1, limit = 20 } = query;
+    const { logs, total } = await activityRepository.findByResourceId(resourceId, {
+      page: Number(page) || 1,
+      limit: Number(limit) || 20,
+    });
+
+    return {
+      logs,
+      pagination: {
+        total,
+        page: Number(page) || 1,
+        limit: Number(limit) || 20,
+        totalPages: Math.ceil(total / (Number(limit) || 20)),
+      },
+    };
   }
 
-  async getCommentsByTaskId(taskId) {
-    const { comments } = await commentRepository.findByTaskId(taskId, { limit: 100 });
-    return comments;
+  async getCommentsByTaskId(taskId, query = {}) {
+    const { page = 1, limit = 50 } = query;
+    const { comments, total } = await commentRepository.findByTaskId(taskId, {
+      page: Number(page) || 1,
+      limit: Number(limit) || 50,
+    });
+
+    return {
+      comments,
+      pagination: {
+        total,
+        page: Number(page) || 1,
+        limit: Number(limit) || 50,
+        totalPages: Math.ceil(total / (Number(limit) || 50)),
+      },
+    };
   }
 
   async deleteTask(taskId, userId) {
     const { task, project } = await this._resolveTaskContext(taskId, userId);
 
     return await withTransaction(async (session) => {
-      await projectRepository.removeTaskFromProject(project._id, taskId, session);
+      // Cascade delete comments and activity logs for this task
       await commentRepository.deleteManyByTask(taskId, session);
       await activityRepository.deleteManyByResourceIds([taskId], session);
       await taskRepository.deleteById(taskId, session);

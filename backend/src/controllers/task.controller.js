@@ -99,26 +99,65 @@ export const achievedTask = asyncHandler(async (req, res) => {
 });
 
 export const getMyTasks = asyncHandler(async (req, res) => {
-  const tasks = await taskService.getMyTasks(req.user._id);
-  res.status(200).json(tasks);
+  const result = await taskService.getMyTasks(req.user._id, req.query);
+  res.setHeader("X-Total-Count", result.pagination.total);
+  res.setHeader("X-Page", result.pagination.page);
+  res.setHeader("X-Limit", result.pagination.limit);
+  res.setHeader("X-Total-Pages", result.pagination.totalPages);
+
+  if (req.query.paginated === "true") {
+    res.status(200).json(result);
+  } else {
+    res.status(200).json(result.tasks);
+  }
 });
 
 export const getArchivedTasks = asyncHandler(async (req, res) => {
-  const tasks = await taskService.getArchivedTasks(req.user._id);
-  res.status(200).json(tasks);
+  const result = await taskService.getArchivedTasks(req.user._id, req.query);
+  res.setHeader("X-Total-Count", result.pagination.total);
+  res.setHeader("X-Page", result.pagination.page);
+  res.setHeader("X-Limit", result.pagination.limit);
+  res.setHeader("X-Total-Pages", result.pagination.totalPages);
+
+  if (req.query.paginated === "true") {
+    res.status(200).json(result);
+  } else {
+    res.status(200).json(result.tasks);
+  }
 });
 
 export const getActivityByResourceId = asyncHandler(async (req, res) => {
-  const activity = await taskService.getActivityByResourceId(
+  const result = await taskService.getActivityByResourceId(
     req.params.resourceId,
     req.query
   );
-  res.status(200).json(activity);
+  res.setHeader("X-Total-Count", result.pagination.total);
+  res.setHeader("X-Page", result.pagination.page);
+  res.setHeader("X-Limit", result.pagination.limit);
+  res.setHeader("X-Total-Pages", result.pagination.totalPages);
+
+  if (req.query.paginated === "true") {
+    res.status(200).json(result);
+  } else {
+    res.status(200).json(result.logs);
+  }
 });
 
 export const getCommentsByTaskId = asyncHandler(async (req, res) => {
-  const comments = await taskService.getCommentsByTaskId(req.params.taskId);
-  res.status(200).json(comments);
+  const result = await taskService.getCommentsByTaskId(
+    req.params.taskId,
+    req.query
+  );
+  res.setHeader("X-Total-Count", result.pagination.total);
+  res.setHeader("X-Page", result.pagination.page);
+  res.setHeader("X-Limit", result.pagination.limit);
+  res.setHeader("X-Total-Pages", result.pagination.totalPages);
+
+  if (req.query.paginated === "true") {
+    res.status(200).json(result);
+  } else {
+    res.status(200).json(result.comments);
+  }
 });
 
 export const deleteTask = asyncHandler(async (req, res) => {

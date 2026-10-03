@@ -7,8 +7,17 @@ export const createWorkspace = asyncHandler(async (req, res) => {
 });
 
 export const getWorkspaces = asyncHandler(async (req, res) => {
-  const workspaces = await workspaceService.getWorkspaces(req.user._id);
-  res.status(200).json(workspaces);
+  const result = await workspaceService.getWorkspaces(req.user._id, req.query);
+  res.setHeader("X-Total-Count", result.pagination.total);
+  res.setHeader("X-Page", result.pagination.page);
+  res.setHeader("X-Limit", result.pagination.limit);
+  res.setHeader("X-Total-Pages", result.pagination.totalPages);
+
+  if (req.query.paginated === "true") {
+    res.status(200).json(result);
+  } else {
+    res.status(200).json(result.workspaces);
+  }
 });
 
 export const getWorkspaceDetails = asyncHandler(async (req, res) => {
@@ -17,8 +26,24 @@ export const getWorkspaceDetails = asyncHandler(async (req, res) => {
 });
 
 export const getWorkspaceProjects = asyncHandler(async (req, res) => {
-  const result = await workspaceService.getWorkspaceProjects(req.params.workspaceId, req.user._id);
-  res.status(200).json(result);
+  const result = await workspaceService.getWorkspaceProjects(
+    req.params.workspaceId,
+    req.user._id,
+    req.query
+  );
+  res.setHeader("X-Total-Count", result.pagination.total);
+  res.setHeader("X-Page", result.pagination.page);
+  res.setHeader("X-Limit", result.pagination.limit);
+  res.setHeader("X-Total-Pages", result.pagination.totalPages);
+
+  if (req.query.paginated === "true") {
+    res.status(200).json(result);
+  } else {
+    res.status(200).json({
+      projects: result.projects,
+      workspace: result.workspace,
+    });
+  }
 });
 
 export const getWorkspaceStats = asyncHandler(async (req, res) => {

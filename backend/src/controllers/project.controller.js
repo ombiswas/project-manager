@@ -16,8 +16,24 @@ export const getProjectDetails = asyncHandler(async (req, res) => {
 });
 
 export const getProjectTasks = asyncHandler(async (req, res) => {
-  const result = await projectService.getProjectTasks(req.params.projectId, req.user._id);
-  res.status(200).json(result);
+  const result = await projectService.getProjectTasks(
+    req.params.projectId,
+    req.user._id,
+    req.query
+  );
+  res.setHeader("X-Total-Count", result.pagination.total);
+  res.setHeader("X-Page", result.pagination.page);
+  res.setHeader("X-Limit", result.pagination.limit);
+  res.setHeader("X-Total-Pages", result.pagination.totalPages);
+
+  if (req.query.paginated === "true") {
+    res.status(200).json(result);
+  } else {
+    res.status(200).json({
+      project: result.project,
+      tasks: result.tasks,
+    });
+  }
 });
 
 export const updateProject = asyncHandler(async (req, res) => {

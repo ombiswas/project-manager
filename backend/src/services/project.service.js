@@ -1,6 +1,8 @@
 import projectRepository from "../repositories/project.repository.js";
 import workspaceRepository from "../repositories/workspace.repository.js";
 import taskRepository from "../repositories/task.repository.js";
+import commentRepository from "../repositories/comment.repository.js";
+import activityRepository from "../repositories/activity.repository.js";
 import permissionService from "./permission.service.js";
 import { recordActivity } from "../utils/activity.js";
 import { withTransaction } from "../utils/transaction.js";
@@ -11,6 +13,12 @@ import {
 } from "../utils/errors.js";
 
 class ProjectService {
+  _validateProjectDates(startDate, dueDate) {
+    if (startDate && dueDate && new Date(dueDate) < new Date(startDate)) {
+      throw new BadRequestError("Due date cannot be earlier than start date");
+    }
+  }
+
   async createProject(workspaceId, userId, { title, description, status, startDate, dueDate, tags, members }) {
     const workspace = await workspaceRepository.findById(workspaceId);
     if (!workspace) {
@@ -25,6 +33,8 @@ class ProjectService {
     if (requesterRole !== "owner" && requesterRole !== "admin") {
       throw new ForbiddenError("Only Workspace Owners and Admins can create projects");
     }
+
+    this._validateProjectDates(startDate, dueDate);
 
     const tagArray = Array.isArray(tags)
       ? tags
@@ -56,7 +66,6 @@ class ProjectService {
         session
       );
 
-      await workspaceRepository.addProjectToWorkspace(workspaceId, newProject._id, session);
       await recordActivity(
         userId,
         "created_project",
@@ -80,7 +89,7 @@ class ProjectService {
     return project;
   }
 
-  async getProjectTasks(projectId, userId) {
+  async getProjectTasks(projectId, userId, query = {}) {
     const project = await projectRepository.findById(projectId);
     if (!project) {
       throw new NotFoundError("Project not found");
@@ -88,11 +97,27 @@ class ProjectService {
 
     this._assertProjectAccess(project, userId);
 
-    const { tasks } = await taskRepository.findByProject(projectId, {
-      limit: 500,
+    const { page = 1, limit = 50, search, status, priority, sortBy, sortOrder } = query;
+    const { tasks, total } = await taskRepository.findByProject(projectId, {
+      page: Number(page) || 1,
+      limit: Number(limit) || 50,
+      search,
+      status,
+      priority,
+      sortBy,
+      sortOrder,
     });
 
-    return { project, tasks };
+    return {
+      project,
+      tasks,
+      pagination: {
+        total,
+        page: Number(page) || 1,
+        limit: Number(limit) || 50,
+        totalPages: Math.ceil(total / (Number(limit) || 50)),
+      },
+    };
   }
 
   async updateProject(projectId, userId, updateData) {
@@ -112,8 +137,12 @@ class ProjectService {
     }
 
     const { title, description, status, startDate, dueDate, tags, members } = updateData;
-    const updateFields = {};
 
+    const effectiveStart = startDate !== undefined ? startDate : project.startDate;
+    const effectiveDue = dueDate !== undefined ? dueDate : project.dueDate;
+    this._validateProjectDates(effectiveStart, effectiveDue);
+
+    const updateFields = {};
     if (title !== undefined) updateFields.title = title;
     if (description !== undefined) updateFields.description = description;
     if (status !== undefined) updateFields.status = status;
@@ -158,8 +187,15 @@ class ProjectService {
     }
 
     return await withTransaction(async (session) => {
-      await workspaceRepository.removeProjectFromWorkspace(project.workspace, projectId, session);
-      await taskRepository.deleteManyByProject(projectId, session);
+      // Find all tasks in the project to cascade delete comments & activity logs
+      const taskIds = await taskRepository.findTaskIdsByProject(projectId);
+      if (taskIds.length > 0) {
+        await commentRepository.deleteManyByTasks(taskIds, session);
+        await activityRepository.deleteManyByResourceIds(taskIds, session);
+        await taskRepository.deleteManyByProject(projectId, session);
+      }
+
+      await activityRepository.deleteManyByResourceIds([projectId], session);
       await projectRepository.deleteById(projectId, session);
 
       return { message: "Project deleted successfully" };

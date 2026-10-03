@@ -3,8 +3,18 @@ import { TASK_STATUSES, TASK_PRIORITIES } from "../constants/enums.js";
 
 const taskSchema = new Schema(
   {
-    title: { type: String, required: true, trim: true },
-    description: { type: String, trim: true },
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 200,
+    },
+    description: {
+      type: String,
+      trim: true,
+      maxlength: 5000,
+      default: "",
+    },
     project: {
       type: Schema.Types.ObjectId,
       ref: "Project",
@@ -26,12 +36,14 @@ const taskSchema = new Schema(
     completedAt: { type: Date },
     estimatedHours: { type: Number, min: 0 },
     actualHours: { type: Number, min: 0 },
-    tags: [{ type: String }],
+    tags: [{ type: String, maxlength: 50 }],
     subtasks: [
       {
         title: {
           type: String,
           required: true,
+          trim: true,
+          maxlength: 200,
         },
         completed: {
           type: Boolean,
@@ -43,7 +55,6 @@ const taskSchema = new Schema(
         },
       },
     ],
-    comments: [{ type: Schema.Types.ObjectId, ref: "Comment" }],
     attachments: [
       {
         fileName: { type: String, required: true },
@@ -60,8 +71,10 @@ const taskSchema = new Schema(
   { timestamps: true }
 );
 
+taskSchema.index({ project: 1, isArchived: 1, createdAt: -1 });
+taskSchema.index({ assignees: 1, isArchived: 1, createdAt: -1 });
+taskSchema.index({ project: 1, isArchived: 1, updatedAt: -1 });
 taskSchema.index({ project: 1, status: 1, isArchived: 1 });
-taskSchema.index({ assignees: 1 });
 
 const Task = mongoose.model("Task", taskSchema);
 

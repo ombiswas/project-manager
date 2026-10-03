@@ -94,6 +94,7 @@ export const paginationQuerySchema = z
     priority: z.string().trim().optional(),
     sortBy: z.string().trim().optional(),
     sortOrder: z.enum(["asc", "desc"]).default("desc"),
+    paginated: z.string().optional(),
   })
   .partial();
 

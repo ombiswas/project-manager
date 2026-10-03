@@ -4,6 +4,8 @@ import workspaceRepository from "../repositories/workspace.repository.js";
 import projectRepository from "../repositories/project.repository.js";
 import taskRepository from "../repositories/task.repository.js";
 import userRepository from "../repositories/user.repository.js";
+import commentRepository from "../repositories/comment.repository.js";
+import activityRepository from "../repositories/activity.repository.js";
 import permissionService from "./permission.service.js";
 import { recordActivity } from "../utils/activity.js";
 import { withTransaction } from "../utils/transaction.js";
@@ -51,11 +53,25 @@ class WorkspaceService {
     });
   }
 
-  async getWorkspaces(userId) {
-    const { workspaces } = await workspaceRepository.findWorkspacesByUser(userId, {
-      limit: 100,
+  async getWorkspaces(userId, query = {}) {
+    const { page = 1, limit = 50, search, sortBy, sortOrder } = query;
+    const { workspaces, total } = await workspaceRepository.findWorkspacesByUser(userId, {
+      page: Number(page) || 1,
+      limit: Number(limit) || 50,
+      search,
+      sortBy,
+      sortOrder,
     });
-    return workspaces;
+
+    return {
+      workspaces,
+      pagination: {
+        total,
+        page: Number(page) || 1,
+        limit: Number(limit) || 50,
+        totalPages: Math.ceil(total / (Number(limit) || 50)),
+      },
+    };
   }
 
   async getWorkspaceDetails(workspaceId) {
@@ -66,7 +82,7 @@ class WorkspaceService {
     return workspace;
   }
 
-  async getWorkspaceProjects(workspaceId, userId) {
+  async getWorkspaceProjects(workspaceId, userId, query = {}) {
     const workspace = await workspaceRepository.findById(workspaceId);
     if (!workspace) {
       throw new NotFoundError("Workspace not found");
@@ -77,8 +93,14 @@ class WorkspaceService {
       throw new ForbiddenError("You are not a member of this workspace");
     }
 
-    const { projects } = await projectRepository.findByWorkspace(workspaceId, {
-      limit: 100,
+    const { page = 1, limit = 50, search, status, sortBy, sortOrder } = query;
+    const { projects, total } = await projectRepository.findByWorkspace(workspaceId, {
+      page: Number(page) || 1,
+      limit: Number(limit) || 50,
+      search,
+      status,
+      sortBy,
+      sortOrder,
     });
 
     // Owners and Admins can see all projects in the workspace
@@ -93,7 +115,16 @@ class WorkspaceService {
       });
     }
 
-    return { projects: visibleProjects, workspace };
+    return {
+      projects: visibleProjects,
+      workspace,
+      pagination: {
+        total,
+        page: Number(page) || 1,
+        limit: Number(limit) || 50,
+        totalPages: Math.ceil(total / (Number(limit) || 50)),
+      },
+    };
   }
 
   async getWorkspaceStats(workspaceId, userId) {
@@ -109,6 +140,7 @@ class WorkspaceService {
 
     const { projects } = await projectRepository.findByWorkspace(workspaceId, { limit: 500 });
     const visibleProjects = this._filterVisibleProjects(projects, requesterRole, userId);
+    // BATCH QUERY: Eliminates N+1 database round-trips
     const tasks = await this._fetchTasksForProjects(visibleProjects);
 
     const stats = this._computeOverviewStats(visibleProjects, tasks);
@@ -144,12 +176,8 @@ class WorkspaceService {
   async _fetchTasksForProjects(projects) {
     const projectIds = projects.map((p) => p._id);
     if (projectIds.length === 0) return [];
-    const allTasks = [];
-    for (const project of projects) {
-      const { tasks } = await taskRepository.findByProject(project._id, { limit: 500 });
-      allTasks.push(...tasks);
-    }
-    return allTasks;
+    // Single indexed batch query across all projects in the workspace
+    return await taskRepository.findTasksByProjects(projectIds, { isArchived: false });
   }
 
   _computeOverviewStats(projects, tasks) {
@@ -295,10 +323,17 @@ class WorkspaceService {
 
       // Cascading deletion ordered from children to parent to prevent orphaned records
       if (projectIds.length > 0) {
-        await taskRepository.deleteManyByProjects(projectIds, session);
+        const taskIds = await taskRepository.findTaskIdsByProjects(projectIds);
+        if (taskIds.length > 0) {
+          await commentRepository.deleteManyByTasks(taskIds, session);
+          await activityRepository.deleteManyByResourceIds(taskIds, session);
+          await taskRepository.deleteManyByProjects(projectIds, session);
+        }
+        await activityRepository.deleteManyByResourceIds(projectIds, session);
         await projectRepository.deleteManyByWorkspace(workspaceId, session);
       }
 
+      await activityRepository.deleteManyByResourceIds([workspaceId], session);
       await workspaceRepository.deleteManyInvites({ workspaceId }, session);
       await workspaceRepository.deleteById(workspaceId, session);
 
@@ -461,7 +496,7 @@ class WorkspaceService {
       throw new NotFoundError("Workspace not found");
     }
 
-    permissionService.assertMinRole(workspace, requesterId, "admin");
+    const isSelfRemoval = memberId.toString() === requesterId.toString();
 
     const targetMember = workspace.members.find(
       (m) => (m.user?._id || m.user).toString() === memberId.toString()
@@ -470,16 +505,30 @@ class WorkspaceService {
       throw new NotFoundError("Member not found in workspace");
     }
 
-    if (targetMember.role === "owner" || workspace.owner.toString() === memberId.toString()) {
-      throw new ForbiddenError("Cannot remove the workspace owner");
+    // Edge case: Sole owner leaving
+    const isOwner = targetMember.role === "owner" || workspace.owner.toString() === memberId.toString();
+    if (isSelfRemoval) {
+      if (isOwner) {
+        const ownerCount = workspace.members.filter(m => m.role === "owner").length;
+        if (ownerCount <= 1) {
+          throw new ForbiddenError("Cannot leave workspace as the sole owner. Please transfer ownership or delete the workspace.");
+        }
+      }
+    } else {
+      // Admin/Owner removing another member
+      permissionService.assertMinRole(workspace, requesterId, "admin");
+
+      if (isOwner) {
+        throw new ForbiddenError("Cannot remove the workspace owner");
+      }
     }
 
     await workspaceRepository.removeMember(workspaceId, targetMember._id);
     await recordActivity(requesterId, "removed_member", "Workspace", workspaceId, {
-      description: `Removed member from workspace`,
+      description: isSelfRemoval ? `Left workspace` : `Removed member from workspace`,
     });
 
-    return { message: "Member removed successfully" };
+    return { message: isSelfRemoval ? "Left workspace successfully" : "Member removed successfully" };
   }
 
   async changeMemberRole(workspaceId, requesterId, memberId, role) {
@@ -523,7 +572,10 @@ class WorkspaceService {
     }
 
     return await withTransaction(async (session) => {
-      await workspaceRepository.updateMemberRole(workspaceId, workspace.members.find(m => (m.user?._id || m.user).toString() === currentOwnerId.toString())._id, "admin", session);
+      const currentOwnerMember = workspace.members.find(m => (m.user?._id || m.user).toString() === currentOwnerId.toString());
+      if (currentOwnerMember) {
+        await workspaceRepository.updateMemberRole(workspaceId, currentOwnerMember._id, "admin", session);
+      }
       await workspaceRepository.updateMemberRole(workspaceId, newOwnerMember._id, "owner", session);
       await workspaceRepository.transferOwnership(workspaceId, newOwnerId, session);
 
