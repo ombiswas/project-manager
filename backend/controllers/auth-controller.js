@@ -1,338 +1,323 @@
-import User from "../models/user.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+
+import User from "../models/user.js";
 import Verification from "../models/verification.js";
 import { sendEmail } from "../libs/send-email.js";
 import aj from "../libs/arcjet.js";
 import { env } from "../src/config/env.js";
+import {
+  AppError,
+  BadRequestError,
+  UnauthorizedError,
+  ForbiddenError,
+  NotFoundError,
+  ConflictError,
+} from "../src/utils/errors.js";
+import { asyncHandler } from "../src/utils/async-handler.js";
 
-const registerUser = async (req, res) => {
-  try {
-    const { email, name, password } = req.body;
+/**
+ * Register a new user
+ * POST /api-v1/auth/register
+ */
+export const registerUser = asyncHandler(async (req, res) => {
+  const { email, name, password } = req.body;
 
+  // Protect with Arcjet if configured
+  if (env.ARCJET_KEY) {
     const decision = await aj.protect(req, { email, requested: 1 });
-    console.log("Arcjet decision", decision.isDenied());
-
     if (decision.isDenied()) {
-      res.writeHead(403, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ message: "Invalid email address" }));
+      throw new ForbiddenError("Registration request blocked by security policy");
     }
-
-    const existingUser = await User.findOne({ email });
-
-    if (existingUser) {
-      return res.status(400).json({
-        message: "Email address already in use",
-      });
-    }
-
-    const salt = await bcrypt.genSalt(10);
-
-    const hashPassword = await bcrypt.hash(password, salt);
-
-    const newUser = await User.create({
-      email,
-      password: hashPassword,
-      name,
-    });
-
-    const verificationToken = jwt.sign(
-      { userId: newUser._id, purpose: "email-verification" },
-      env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-
-    await Verification.create({
-      userId: newUser._id,
-      token: verificationToken,
-      expiresAt: new Date(Date.now() + 1 * 60 * 60 * 1000),
-    });
-
-    // send email
-    const verificationLink = `${env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
-    const emailBody = `<p>Click <a href="${verificationLink}">here</a> to verify your email</p>`;
-    const emailSubject = "Verify your email";
-
-    const isEmailSent = await sendEmail(email, emailSubject, emailBody);
-
-    if (!isEmailSent) {
-      return res.status(500).json({
-        message: "Failed to send verification email",
-      });
-    }
-
-    res.status(201).json({
-      message:
-        "Verification email sent to your email. Please check and verify your account.",
-    });
-  } catch (error) {
-    console.log(error);
-
-    res.status(500).json({ message: "Internal server error" });
   }
-};
 
-const loginUser = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    const user = await User.findOne({ email }).select("+password");
-
-    if (!user) {
-      return res.status(400).json({ message: "Invalid email or password" });
-    }
-
-    if (!user.isEmailVerified) {
-      const existingVerification = await Verification.findOne({
-        userId: user._id,
-      });
-
-      if (existingVerification && existingVerification.expiresAt > new Date()) {
-        return res.status(400).json({
-          message:
-            "Email not verified. Please check your email for the verification link.",
-        });
-      } else {
-        if (existingVerification) {
-          await Verification.findByIdAndDelete(existingVerification._id);
-        }
-
-        const verificationToken = jwt.sign(
-          { userId: user._id, purpose: "email-verification" },
-          env.JWT_SECRET,
-          { expiresIn: "1h" }
-        );
-
-        await Verification.create({
-          userId: user._id,
-          token: verificationToken,
-          expiresAt: new Date(Date.now() + 1 * 60 * 60 * 1000),
-        });
-
-        // send email
-        const verificationLink = `${env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
-        const emailBody = `<p>Click <a href="${verificationLink}">here</a> to verify your email</p>`;
-        const emailSubject = "Verify your email";
-
-        const isEmailSent = await sendEmail(email, emailSubject, emailBody);
-
-        if (!isEmailSent) {
-          return res.status(500).json({
-            message: "Failed to send verification email",
-          });
-        }
-
-        res.status(201).json({
-          message:
-            "Verification email sent to your email. Please check and verify your account.",
-        });
-      }
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      return res.status(400).json({ message: "Invalid email or password" });
-    }
-
-    const token = jwt.sign(
-      { userId: user._id, purpose: "login" },
-      env.JWT_SECRET,
-      { expiresIn: "30d" }
-    );
-
-    user.lastLogin = new Date();
-    await user.save();
-
-    const userData = user.toObject();
-    delete userData.password;
-
-    res.status(200).json({
-      message: "Login successful",
-      token,
-      user: userData,
-    });
-  } catch (error) {
-    console.log(error);
-
-    res.status(500).json({ message: "Internal server error" });
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    throw new ConflictError("Email address already in use");
   }
-};
 
-const verifyEmail = async (req, res) => {
-  try {
-    const { token } = req.body;
+  const salt = await bcrypt.genSalt(10);
+  const hashPassword = await bcrypt.hash(password, salt);
 
-    const payload = jwt.verify(token, env.JWT_SECRET);
+  const newUser = await User.create({
+    email,
+    password: hashPassword,
+    name,
+  });
 
-    if (!payload) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
+  const verificationToken = jwt.sign(
+    { userId: newUser._id, purpose: "email-verification" },
+    env.JWT_SECRET,
+    { expiresIn: "1h" }
+  );
 
-    const { userId, purpose } = payload;
+  // Clean up any stale tokens and create new verification record
+  await Verification.deleteMany({ userId: newUser._id });
+  await Verification.create({
+    userId: newUser._id,
+    token: verificationToken,
+    expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+  });
 
-    if (purpose !== "email-verification") {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
+  const verificationLink = `${env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+  const emailBody = `<p>Click <a href="${verificationLink}">here</a> to verify your email</p>`;
+  const emailSubject = "Verify your email";
 
-    const verification = await Verification.findOne({
-      userId,
-      token,
-    });
-
-    if (!verification) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const isTokenExpired = verification.expiresAt < new Date();
-
-    if (isTokenExpired) {
-      return res.status(401).json({ message: "Token expired" });
-    }
-
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    if (user.isEmailVerified) {
-      return res.status(400).json({ message: "Email already verified" });
-    }
-
-    user.isEmailVerified = true;
-    await user.save();
-
-    await Verification.findByIdAndDelete(verification._id);
-
-    res.status(200).json({ message: "Email verified successfully" });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Internal server error" });
+  const isEmailSent = await sendEmail(email, emailSubject, emailBody);
+  if (!isEmailSent) {
+    throw new AppError("Failed to send verification email", 500);
   }
-};
 
-const resetPasswordRequest = async (req, res) => {
-  try {
-    const { email } = req.body;
+  res.status(201).json({
+    message: "Verification email sent to your email. Please check and verify your account.",
+  });
+});
 
-    const user = await User.findOne({ email });
+/**
+ * Authenticate user and issue session token
+ * POST /api-v1/auth/login
+ */
+export const loginUser = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
 
-    if (!user) {
-      return res.status(400).json({ message: "User not found" });
-    }
+  const user = await User.findOne({ email }).select("+password");
+  if (!user) {
+    throw new BadRequestError("Invalid email or password");
+  }
 
-    if (!user.isEmailVerified) {
-      return res
-        .status(400)
-        .json({ message: "Please verify your email first" });
-    }
-
+  // Handle unverified email accounts
+  if (!user.isEmailVerified) {
     const existingVerification = await Verification.findOne({
       userId: user._id,
     });
 
     if (existingVerification && existingVerification.expiresAt > new Date()) {
-      return res.status(400).json({
-        message: "Reset password request already sent",
-      });
+      throw new BadRequestError(
+        "Email not verified. Please check your email for the verification link."
+      );
     }
 
-    if (existingVerification && existingVerification.expiresAt < new Date()) {
-      await Verification.findByIdAndDelete(existingVerification._id);
-    }
+    // Purge expired verification tokens
+    await Verification.deleteMany({ userId: user._id });
 
-    const resetPasswordToken = jwt.sign(
-      { userId: user._id, purpose: "reset-password" },
+    const verificationToken = jwt.sign(
+      { userId: user._id, purpose: "email-verification" },
       env.JWT_SECRET,
-      { expiresIn: "15m" }
+      { expiresIn: "1h" }
     );
 
     await Verification.create({
       userId: user._id,
-      token: resetPasswordToken,
-      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+      token: verificationToken,
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
     });
 
-    const resetPasswordLink = `${env.FRONTEND_URL}/reset-password?token=${resetPasswordToken}`;
-    const emailBody = `<p>Click <a href="${resetPasswordLink}">here</a> to reset your password</p>`;
-    const emailSubject = "Reset your password";
+    const verificationLink = `${env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+    const emailBody = `<p>Click <a href="${verificationLink}">here</a> to verify your email</p>`;
+    const emailSubject = "Verify your email";
 
     const isEmailSent = await sendEmail(email, emailSubject, emailBody);
-
     if (!isEmailSent) {
-      return res.status(500).json({
-        message: "Failed to send reset password email",
-      });
+      throw new AppError("Failed to send verification email", 500);
     }
 
-    res.status(200).json({ message: "Reset password email sent" });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-const verifyResetPasswordTokenAndResetPassword = async (req, res) => {
-  try {
-    const { token, newPassword, confirmPassword } = req.body;
-
-    const payload = jwt.verify(token, env.JWT_SECRET);
-
-    if (!payload) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const { userId, purpose } = payload;
-
-    if (purpose !== "reset-password") {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const verification = await Verification.findOne({
-      userId,
-      token,
+    // Stop execution and return verification notice; DO NOT log in unverified users!
+    return res.status(200).json({
+      message:
+        "Verification email sent to your email. Please check and verify your account.",
     });
-
-    if (!verification) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const isTokenExpired = verification.expiresAt < new Date();
-
-    if (isTokenExpired) {
-      return res.status(401).json({ message: "Token expired" });
-    }
-
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    if (newPassword !== confirmPassword) {
-      return res.status(400).json({ message: "Passwords do not match" });
-    }
-
-    const salt = await bcrypt.genSalt(10);
-
-    const hashPassword = await bcrypt.hash(newPassword, salt);
-
-    user.password = hashPassword;
-    await user.save();
-
-    await Verification.findByIdAndDelete(verification._id);
-
-    res.status(200).json({ message: "Password reset successfully" });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Internal server error" });
   }
-};
-export {
-  registerUser,
-  loginUser,
-  verifyEmail,
-  resetPasswordRequest,
-  verifyResetPasswordTokenAndResetPassword,
-};
+
+  // Validate password
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    throw new BadRequestError("Invalid email or password");
+  }
+
+  const token = jwt.sign(
+    { userId: user._id, purpose: "login" },
+    env.JWT_SECRET,
+    { expiresIn: "30d" }
+  );
+
+  user.lastLogin = new Date();
+  await user.save();
+
+  // Strip password hash and internal fields from returned user data
+  const userData = user.toObject();
+  delete userData.password;
+  delete userData.__v;
+
+  res.status(200).json({
+    message: "Login successful",
+    token,
+    user: userData,
+  });
+});
+
+/**
+ * Verify user email via token
+ * POST /api-v1/auth/verify-email
+ */
+export const verifyEmail = asyncHandler(async (req, res) => {
+  const { token } = req.body;
+
+  let payload;
+  try {
+    payload = jwt.verify(token, env.JWT_SECRET);
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      throw new UnauthorizedError("Verification token has expired. Please request a new one.");
+    }
+    throw new UnauthorizedError("Invalid verification token.");
+  }
+
+  const { userId, purpose } = payload;
+  if (purpose !== "email-verification") {
+    throw new UnauthorizedError("Invalid token purpose");
+  }
+
+  // Single-use token verification against database
+  const verification = await Verification.findOne({
+    userId,
+    token,
+  });
+
+  if (!verification) {
+    throw new UnauthorizedError("Invalid or already used verification token");
+  }
+
+  if (verification.expiresAt < new Date()) {
+    await Verification.findByIdAndDelete(verification._id);
+    throw new UnauthorizedError("Verification token has expired");
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new NotFoundError("User account not found");
+  }
+
+  if (user.isEmailVerified) {
+    await Verification.deleteMany({ userId });
+    throw new BadRequestError("Email is already verified");
+  }
+
+  user.isEmailVerified = true;
+  await user.save();
+
+  // Single-use guarantee: Invalidate all verification tokens for this user
+  await Verification.deleteMany({ userId });
+
+  res.status(200).json({ message: "Email verified successfully" });
+});
+
+/**
+ * Request password reset email
+ * POST /api-v1/auth/reset-password-request
+ */
+export const resetPasswordRequest = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new NotFoundError("No account found with this email address");
+  }
+
+  if (!user.isEmailVerified) {
+    throw new BadRequestError("Please verify your email first before resetting password");
+  }
+
+  const existingVerification = await Verification.findOne({
+    userId: user._id,
+  });
+
+  if (existingVerification && existingVerification.expiresAt > new Date()) {
+    throw new BadRequestError(
+      "A reset password link was already sent. Please check your email or wait for it to expire."
+    );
+  }
+
+  // Clear stale tokens
+  await Verification.deleteMany({ userId: user._id });
+
+  const resetPasswordToken = jwt.sign(
+    { userId: user._id, purpose: "reset-password" },
+    env.JWT_SECRET,
+    { expiresIn: "15m" }
+  );
+
+  await Verification.create({
+    userId: user._id,
+    token: resetPasswordToken,
+    expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
+  });
+
+  const resetPasswordLink = `${env.FRONTEND_URL}/reset-password?token=${resetPasswordToken}`;
+  const emailBody = `<p>Click <a href="${resetPasswordLink}">here</a> to reset your password</p>`;
+  const emailSubject = "Reset your password";
+
+  const isEmailSent = await sendEmail(email, emailSubject, emailBody);
+  if (!isEmailSent) {
+    throw new AppError("Failed to send reset password email", 500);
+  }
+
+  res.status(200).json({ message: "Reset password email sent" });
+});
+
+/**
+ * Verify reset token and set new password
+ * POST /api-v1/auth/reset-password
+ */
+export const verifyResetPasswordTokenAndResetPassword = asyncHandler(async (req, res) => {
+  const { token, newPassword, confirmPassword } = req.body;
+
+  let payload;
+  try {
+    payload = jwt.verify(token, env.JWT_SECRET);
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      throw new UnauthorizedError("Password reset token has expired. Please request a new one.");
+    }
+    throw new UnauthorizedError("Invalid password reset token.");
+  }
+
+  const { userId, purpose } = payload;
+  if (purpose !== "reset-password") {
+    throw new UnauthorizedError("Invalid token purpose");
+  }
+
+  // Single-use check against stored verification record
+  const verification = await Verification.findOne({
+    userId,
+    token,
+  });
+
+  if (!verification) {
+    throw new UnauthorizedError("Invalid or already used reset token");
+  }
+
+  if (verification.expiresAt < new Date()) {
+    await Verification.findByIdAndDelete(verification._id);
+    throw new UnauthorizedError("Password reset token has expired");
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new NotFoundError("User account not found");
+  }
+
+  if (newPassword !== confirmPassword) {
+    throw new BadRequestError("Passwords do not match");
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const hashPassword = await bcrypt.hash(newPassword, salt);
+
+  user.password = hashPassword;
+  await user.save();
+
+  // Single-use guarantee: Invalidate all reset tokens for this user
+  await Verification.deleteMany({ userId });
+
+  res.status(200).json({ message: "Password reset successfully" });
+});

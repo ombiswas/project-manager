@@ -18,7 +18,27 @@ const userSchema = new Schema(
     twoFAOtp: { type: String, select: false },
     twoFAOtpExpires: { type: Date, select: false },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      transform(doc, ret) {
+        delete ret.password;
+        delete ret.twoFAOtp;
+        delete ret.twoFAOtpExpires;
+        delete ret.__v;
+        return ret;
+      },
+    },
+    toObject: {
+      transform(doc, ret) {
+        delete ret.password;
+        delete ret.twoFAOtp;
+        delete ret.twoFAOtpExpires;
+        delete ret.__v;
+        return ret;
+      },
+    },
+  }
 );
 const User = mongoose.model("User", userSchema);
 

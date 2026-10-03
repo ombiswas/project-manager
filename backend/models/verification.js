@@ -19,6 +19,10 @@ const verificationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// MongoDB TTL index to automatically purge expired tokens
+verificationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+verificationSchema.index({ userId: 1, token: 1 });
+
 const Verification = mongoose.model("Verification", verificationSchema);
 
 export default Verification;

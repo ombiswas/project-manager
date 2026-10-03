@@ -1,39 +1,48 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.js";
 import { env } from "../src/config/env.js";
+import { UnauthorizedError } from "../src/utils/errors.js";
+import { asyncHandler } from "../src/utils/async-handler.js";
 
-const authMiddleware = async (req, res, next) => {
+const authMiddleware = asyncHandler(async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  // 1. Missing header
+  if (!authHeader) {
+    throw new UnauthorizedError("Authorization header missing");
+  }
+
+  // 2. Malformed header (must be 'Bearer <token>')
+  const parts = authHeader.split(" ");
+  if (parts.length !== 2 || parts[0] !== "Bearer" || !parts[1].trim()) {
+    throw new UnauthorizedError("Invalid authorization format. Expected 'Bearer <token>'");
+  }
+
+  const token = parts[1].trim();
+
+  // 3. JWT verification (expired vs invalid)
+  let decoded;
   try {
-    const token = req.headers.authorization.split(" ")[1]; //Bearer dhghjhdkjfg
-
-    if (!token) {
-      return res.status(401).json({
-        message: "Unauthorized",
-      });
-    }
-
-    const decoded = jwt.verify(token, env.JWT_SECRET);
-    const user = await User.findById(decoded.userId);
-
-    if (!user) {
-      return res.status(401).json({
-        message: "Unauthorized",
-      });
-    }
-
-    req.user = user;
-    next();
+    decoded = jwt.verify(token, env.JWT_SECRET);
   } catch (error) {
     if (error.name === "TokenExpiredError") {
-      return res.status(401).json({
-        message: "Token expired. Please log in again.",
-      });
+      throw new UnauthorizedError("Token expired. Please log in again.");
     }
-    console.log(error);
-    return res.status(401).json({
-      message: "Unauthorized",
-    });
+    throw new UnauthorizedError("Invalid token. Please authenticate again.");
   }
-};
+
+  if (!decoded || !decoded.userId) {
+    throw new UnauthorizedError("Invalid token payload");
+  }
+
+  // 4. Check for deleted or non-existent user
+  const user = await User.findById(decoded.userId);
+  if (!user) {
+    throw new UnauthorizedError("User account no longer exists");
+  }
+
+  req.user = user;
+  next();
+});
 
 export default authMiddleware;
