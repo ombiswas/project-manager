@@ -6,6 +6,7 @@ import Task from "../models/task.js";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "../libs/send-email.js";
 import { recordActivity } from "../libs/index.js";
+import { env } from "../src/config/env.js";
 
 const createWorkspace = async (req, res) => {
   try {
@@ -414,7 +415,7 @@ const inviteUserToWorkspace = async (req, res) => {
         workspaceId: workspaceId,
         role: role || "member",
       },
-      process.env.JWT_SECRET,
+      env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
@@ -426,7 +427,7 @@ const inviteUserToWorkspace = async (req, res) => {
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
-    const invitationLink = `${process.env.FRONTEND_URL}/workspace-invite/${workspace._id}?tk=${inviteToken}`;
+    const invitationLink = `${env.FRONTEND_URL}/workspace-invite/${workspace._id}?tk=${inviteToken}`;
 
     const emailContent = `
       <p>You have been invited to join ${workspace.name} workspace</p>
@@ -511,7 +512,7 @@ const acceptInviteByToken = async (req, res) => {
   try {
     const { token } = req.body;
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, env.JWT_SECRET);
 
     const { user, workspaceId, role } = decoded;
 

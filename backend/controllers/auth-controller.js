@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import Verification from "../models/verification.js";
 import { sendEmail } from "../libs/send-email.js";
 import aj from "../libs/arcjet.js";
+import { env } from "../src/config/env.js";
 
 const registerUser = async (req, res) => {
   try {
@@ -37,7 +38,7 @@ const registerUser = async (req, res) => {
 
     const verificationToken = jwt.sign(
       { userId: newUser._id, purpose: "email-verification" },
-      process.env.JWT_SECRET,
+      env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
@@ -48,7 +49,7 @@ const registerUser = async (req, res) => {
     });
 
     // send email
-    const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+    const verificationLink = `${env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
     const emailBody = `<p>Click <a href="${verificationLink}">here</a> to verify your email</p>`;
     const emailSubject = "Verify your email";
 
@@ -98,7 +99,7 @@ const loginUser = async (req, res) => {
 
         const verificationToken = jwt.sign(
           { userId: user._id, purpose: "email-verification" },
-          process.env.JWT_SECRET,
+          env.JWT_SECRET,
           { expiresIn: "1h" }
         );
 
@@ -109,7 +110,7 @@ const loginUser = async (req, res) => {
         });
 
         // send email
-        const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+        const verificationLink = `${env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
         const emailBody = `<p>Click <a href="${verificationLink}">here</a> to verify your email</p>`;
         const emailSubject = "Verify your email";
 
@@ -136,7 +137,7 @@ const loginUser = async (req, res) => {
 
     const token = jwt.sign(
       { userId: user._id, purpose: "login" },
-      process.env.JWT_SECRET,
+      env.JWT_SECRET,
       { expiresIn: "30d" }
     );
 
@@ -162,7 +163,7 @@ const verifyEmail = async (req, res) => {
   try {
     const { token } = req.body;
 
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const payload = jwt.verify(token, env.JWT_SECRET);
 
     if (!payload) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -243,7 +244,7 @@ const resetPasswordRequest = async (req, res) => {
 
     const resetPasswordToken = jwt.sign(
       { userId: user._id, purpose: "reset-password" },
-      process.env.JWT_SECRET,
+      env.JWT_SECRET,
       { expiresIn: "15m" }
     );
 
@@ -253,7 +254,7 @@ const resetPasswordRequest = async (req, res) => {
       expiresAt: new Date(Date.now() + 15 * 60 * 1000),
     });
 
-    const resetPasswordLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetPasswordToken}`;
+    const resetPasswordLink = `${env.FRONTEND_URL}/reset-password?token=${resetPasswordToken}`;
     const emailBody = `<p>Click <a href="${resetPasswordLink}">here</a> to reset your password</p>`;
     const emailSubject = "Reset your password";
 
@@ -276,7 +277,7 @@ const verifyResetPasswordTokenAndResetPassword = async (req, res) => {
   try {
     const { token, newPassword, confirmPassword } = req.body;
 
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const payload = jwt.verify(token, env.JWT_SECRET);
 
     if (!payload) {
       return res.status(401).json({ message: "Unauthorized" });

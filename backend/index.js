@@ -1,40 +1,30 @@
 import cors from "cors";
-import dotenv from "dotenv";
 import express from "express";
-import mongoose from "mongoose";
 import morgan from "morgan";
 
+import { env } from "./src/config/env.js";
+import { connectDB, closeDB } from "./src/config/database.js";
 import routes from "./routes/index.js";
-
-dotenv.config();
 
 const app = express();
 
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: env.FRONTEND_URL,
     methods: ["GET", "POST", "DELETE", "PUT"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.use(morgan("dev"));
-
-// db connection
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => console.log("BD Connected successfully."))
-  .catch((err) => console.log("Failed to connect to DB:", err));
-
 app.use(express.json());
-
-const PORT = process.env.PORT || 5000;
 
 app.get("/", async (req, res) => {
   res.status(200).json({
     message: "Welcome to TaskHub API",
   });
 });
-// http:localhost:500/api-v1/
+
+// http://localhost:5000/api-v1/
 app.use("/api-v1", routes);
 
 // error middleware
@@ -53,6 +43,46 @@ app.use((req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+let server;
+
+const startServer = async () => {
+  try {
+    await connectDB();
+    server = app.listen(env.PORT, () => {
+      console.log(`🚀 Server running on port ${env.PORT}`);
+    });
+  } catch (error) {
+    console.error("❌ Failed to start server:", error);
+    process.exit(1);
+  }
+};
+
+const handleShutdown = async (signal) => {
+  console.log(`\n🛑 Received ${signal}. Initiating graceful shutdown...`);
+  if (server) {
+    server.close(async () => {
+      console.log("HTTP server closed.");
+      try {
+        await closeDB();
+        process.exit(0);
+      } catch (err) {
+        console.error("Error during database shutdown:", err);
+        process.exit(1);
+      }
+    });
+  } else {
+    try {
+      await closeDB();
+    } catch (err) {
+      console.error("Error during database shutdown:", err);
+    }
+    process.exit(0);
+  }
+};
+
+process.on("SIGINT", () => handleShutdown("SIGINT"));
+process.on("SIGTERM", () => handleShutdown("SIGTERM"));
+
+startServer();
+
+export { app, server };

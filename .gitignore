@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Production builds
+dist/
+build/
+.react-router/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# Coverage and test results
+coverage/
+
+# OS generated files
+.DS_Store
+
+# IDE and Editor configurations
+.vscode/
+.idea/
+
+# Internal / Agent documentation to keep out of repository
+GEMINI.md
+DESIGN-x.ai.md
