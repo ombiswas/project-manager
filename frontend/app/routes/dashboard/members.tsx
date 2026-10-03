@@ -32,6 +32,9 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import { toast } from "sonner";
 
+import { ErrorState } from "@/components/error-state";
+import { getErrorMessage } from "@/lib/fetch-util";
+
 const Members = () => {
   const { user: currentUser } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -40,9 +43,12 @@ const Members = () => {
   const initialSearch = searchParams.get("search") || "";
   const [search, setSearch] = useState<string>(initialSearch);
 
-  const { data, isLoading } = useGetWorkspaceDetailsQuery(workspaceId!) as {
-    data: Workspace;
+  const { data, isLoading, isError, error, refetch } = useGetWorkspaceDetailsQuery(workspaceId!) as {
+    data: Workspace | undefined;
     isLoading: boolean;
+    isError: boolean;
+    error: unknown;
+    refetch: () => void;
   };
 
   const { mutate: removeMember } = useRemoveMemberMutation();
@@ -64,7 +70,31 @@ const Members = () => {
   }, [searchParams]);
 
   if (isLoading) return <Loader label="Loading workspace members..." />;
-  if (!data || !workspaceId) return <div>No workspace found</div>;
+
+  if (!workspaceId) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold">Workspace Members</h1>
+        <ErrorState
+          title="No workspace selected"
+          message="Please select a workspace to view its members."
+        />
+      </div>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold">Workspace Members</h1>
+        <ErrorState
+          title="Failed to load members"
+          message={getErrorMessage(error, "Could not load member details for this workspace.")}
+          onRetry={() => refetch()}
+        />
+      </div>
+    );
+  }
 
   const currentUserRole = data?.members?.find(
     (m) => m.user._id === currentUser?._id
@@ -74,7 +104,7 @@ const Members = () => {
     if (confirm("Are you sure you want to remove this member?")) {
       removeMember({ workspaceId, memberId }, {
         onSuccess: () => toast.success("Member removed successfully"),
-        onError: (err: any) => toast.error(err?.response?.data?.message || "Failed to remove member")
+        onError: (err: unknown) => toast.error(getErrorMessage(err, "Failed to remove member")),
       });
     }
   };
@@ -83,7 +113,7 @@ const Members = () => {
     if (confirm("Are you sure you want to transfer ownership? You will become an admin.")) {
       transferOwnership({ workspaceId, newOwnerId }, {
         onSuccess: () => toast.success("Ownership transferred successfully"),
-        onError: (err: any) => toast.error(err?.response?.data?.message || "Failed to transfer ownership")
+        onError: (err: unknown) => toast.error(getErrorMessage(err, "Failed to transfer ownership")),
       });
     }
   };
@@ -91,7 +121,7 @@ const Members = () => {
   const handleChangeRole = (memberId: string, role: string) => {
     changeRole({ workspaceId: workspaceId!, memberId, role }, {
       onSuccess: () => toast.success("Role updated successfully"),
-      onError: (err: any) => toast.error(err?.response?.data?.message || "Failed to update role")
+      onError: (err: unknown) => toast.error(getErrorMessage(err, "Failed to update role")),
     });
   };
 

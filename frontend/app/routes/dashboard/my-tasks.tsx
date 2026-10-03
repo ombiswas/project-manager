@@ -26,6 +26,9 @@ import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { cn } from "@/lib/utils";
 
+import { ErrorState } from "@/components/error-state";
+import { getErrorMessage } from "@/lib/fetch-util";
+
 const MyTasks = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -64,14 +67,18 @@ const MyTasks = () => {
     if (urlSearch !== search) setSearch(urlSearch);
   }, [searchParams]);
 
-  const { data: myTasks, isLoading } = useGetMyTasksQuery() as {
-    data: Task[];
+  const { data: myTasks, isLoading, isError, error, refetch } = useGetMyTasksQuery() as {
+    data: Task[] | undefined;
     isLoading: boolean;
+    isError: boolean;
+    error: unknown;
+    refetch: () => void;
   };
 
+  const tasksList = myTasks || [];
   const filteredTasks =
-    myTasks?.length > 0
-      ? myTasks
+    tasksList.length > 0
+      ? tasksList
         .filter((task) => {
           if (filter === "all") return true;
           if (filter === "todo") return task.status === "To Do";
@@ -106,6 +113,20 @@ const MyTasks = () => {
   const doneTasks = sortedTasks.filter((task) => task.status === "Done");
 
   if (isLoading) return <Loader label="Loading your tasks..." />;
+
+  if (isError) {
+    return (
+      <div className="space-y-6 pb-12">
+        <h1 className="text-2xl font-bold">My Tasks</h1>
+        <ErrorState
+          title="Failed to load tasks"
+          message={getErrorMessage(error, "Could not fetch your assigned tasks.")}
+          onRetry={() => refetch()}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 pb-12">
       <div className="flex items-start md:items-center justify-between">

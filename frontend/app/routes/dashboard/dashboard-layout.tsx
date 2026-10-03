@@ -11,11 +11,9 @@ import { toast } from "sonner";
 
 export const clientLoader = async () => {
     try {
-        const [workspaces] = await Promise.all([fetchData("/workspaces")]);
-        return { workspaces };
-
-    } catch (error) {
-        console.log(error);
+        const [workspaces] = await Promise.all([fetchData<Workspace[]>("/workspaces")]);
+        return { workspaces: workspaces || [] };
+    } catch {
         return { workspaces: [] };
     }
 };
@@ -53,12 +51,13 @@ const DashboardLayout = () => {
         let lastAlertTime = 0;
         const ALERT_DEBOUNCE = 1000; // 1 second debounce
 
-        const handleAccessDenied = (event: any) => {
+        const handleAccessDenied = (event: Event) => {
             const now = Date.now();
             if (now - lastAlertTime < ALERT_DEBOUNCE) return;
             lastAlertTime = now;
 
-            const { message } = event.detail;
+            const customEvent = event as CustomEvent<{ message?: string }>;
+            const message = customEvent.detail?.message || "Access denied or resource not found";
             toast.error(message, {
                 id: "access-denied-toast",
             });
@@ -71,8 +70,8 @@ const DashboardLayout = () => {
             }
         };
 
-        window.addEventListener("access-denied" as any, handleAccessDenied);
-        return () => window.removeEventListener("access-denied" as any, handleAccessDenied);
+        window.addEventListener("access-denied", handleAccessDenied);
+        return () => window.removeEventListener("access-denied", handleAccessDenied);
     }, [navigate, searchParams]);
 
     if (isLoading) {

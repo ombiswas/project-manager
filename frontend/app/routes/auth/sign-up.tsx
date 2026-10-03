@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router";
 import { useSignUpMutation } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/fetch-util";
 
 export type SignupFormData = z.infer<typeof signUpSchema>;
 
@@ -52,11 +53,8 @@ const SignUp = () => {
                 form.reset();
                 navigate("/sign-in");
             },
-            onError: (error: any) => {
-                const errorMessage =
-                    error.response?.data?.message || "An error occurred";
-                console.log(error);
-                toast.error(errorMessage);
+            onError: (error: unknown) => {
+                toast.error(getErrorMessage(error, "Failed to create account"));
             },
         });
     };

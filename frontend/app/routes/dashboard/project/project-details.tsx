@@ -1,5 +1,6 @@
 import { BackButton } from "@/components/back-button";
 import { Loader } from "@/components/loader";
+import { ErrorState } from "@/components/error-state";
 import { CreateTaskDialog } from "@/components/task/create-task-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +14,8 @@ import { useGetWorkspaceDetailsQuery } from "@/hooks/use-workspace";
 import { useAuth } from "@/provider/auth-context";
 import { getProjectProgress } from "@/lib";
 import { cn } from "@/lib/utils";
-import type { Project, Task, TaskStatus } from "@/types";
+import { getErrorMessage } from "@/lib/fetch-util";
+import type { Project, ProjectTasksResponse, Task, TaskStatus, Workspace } from "@/types";
 import { format } from "date-fns";
 import { AlertCircle, Calendar, CheckCircle, Clock, Plus, Settings, CircleDashed } from "lucide-react";
 import { useState } from "react";
@@ -31,29 +33,43 @@ const ProjectDetails = () => {
   const [isCreateTask, setIsCreateTask] = useState(false);
   const [taskFilter, setTaskFilter] = useState<TaskStatus | "All">("All");
 
-  const { data, isLoading } = UseProjectQuery(projectId!) as {
-    data: {
-      tasks: Task[];
-      project: Project;
-    };
+  const { data, isLoading, isError, error, refetch } = UseProjectQuery(projectId!) as {
+    data: ProjectTasksResponse | undefined;
+    isLoading: boolean;
+    isError: boolean;
+    error: unknown;
+    refetch: () => void;
+  };
+  const { data: workspaceData, isLoading: isLoadingWorkspace } = useGetWorkspaceDetailsQuery(workspaceId!) as {
+    data: Workspace | undefined;
     isLoading: boolean;
   };
-  const { data: workspaceData, isLoading: isLoadingWorkspace } = useGetWorkspaceDetailsQuery(workspaceId!) as any;
 
-  if (isLoading) return <Loader label="Loading project details..." />;
+  if (isLoading || isLoadingWorkspace) return <Loader label="Loading project details..." />;
 
-  if (!data) return null;
+  if (isError || !data?.project) {
+    return (
+      <div className="space-y-4 py-8">
+        <BackButton className="w-fit" />
+        <ErrorState
+          title="Failed to load project"
+          message={getErrorMessage(error, "The requested project could not be found or loaded.")}
+          onRetry={() => refetch()}
+        />
+      </div>
+    );
+  }
 
   const { project, tasks } = data;
-  const projectProgress = getProjectProgress(tasks);
+  const projectProgress = getProjectProgress(tasks || []);
 
   // Permission logic
-  const workspaceOwnerId = String(workspaceData?.owner?._id || workspaceData?.owner || "");
+  const workspaceOwnerId = typeof workspaceData?.owner === "string" ? workspaceData.owner : workspaceData?.owner?._id || "";
   const currentUserId = String(user?._id || "");
   const isWorkspaceOwner = workspaceOwnerId && currentUserId && workspaceOwnerId === currentUserId;
 
   const currentUserWorkspaceRole = isWorkspaceOwner ? "owner" : workspaceData?.members?.find(
-    (m: any) => String(m.user?._id || m.user) === currentUserId
+    (m) => String(m.user?._id || m.user) === currentUserId
   )?.role;
 
   const projectCreatorId = typeof project.createdBy === "string" 
@@ -62,7 +78,7 @@ const ProjectDetails = () => {
   const isCreatorOwner = workspaceOwnerId && projectCreatorId && workspaceOwnerId === projectCreatorId;
   
   const creatorMember = workspaceData?.members?.find(
-    (m: any) => String(m.user?._id || m.user) === projectCreatorId
+    (m) => String(m.user?._id || m.user) === projectCreatorId
   );
   const creatorRole = isCreatorOwner ? "owner" : (creatorMember?.role || "member");
 
@@ -237,7 +253,7 @@ const ProjectDetails = () => {
         open={isCreateTask}
         onOpenChange={setIsCreateTask}
         projectId={projectId!}
-        projectMembers={project.members as any}
+        projectMembers={project.members || []}
       />
     </div>
   );

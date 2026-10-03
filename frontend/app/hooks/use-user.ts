@@ -1,28 +1,33 @@
-import { fetchData, updateData } from "@/lib/fetch-util";
+import { fetchData, patchData } from "@/lib/fetch-util";
 import type {
   ChangePasswordFormData,
   ProfileFormData,
 } from "@/routes/user/profile";
-import { useMutation, useQuery, type QueryKey } from "@tanstack/react-query";
+import type { User } from "@/types";
+import { useMutation, useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
 
 const queryKey: QueryKey = ["user"];
 
 export const useUserProfileQuery = () => {
   return useQuery({
     queryKey,
-    queryFn: () => fetchData("/users/profile"),
+    queryFn: () => fetchData<User>("/users/profile"),
   });
 };
 
 export const useChangePassword = () => {
   return useMutation({
     mutationFn: (data: ChangePasswordFormData) =>
-      updateData("/users/change-password", data),
+      patchData<{ message: string }>("/users/change-password", data),
   });
 };
 
 export const useUpdateUserProfile = () => {
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: ProfileFormData) => updateData("/users/profile", data),
+    mutationFn: (data: Partial<ProfileFormData>) => patchData<User>("/users/profile", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
   });
 };

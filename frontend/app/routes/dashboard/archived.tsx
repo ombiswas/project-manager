@@ -1,11 +1,13 @@
 import { NoDataFound } from "@/components/no-data-found";
+import { ErrorState } from "@/components/error-state";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search, ArchiveRestore, Clock, Calendar } from "lucide-react";
 import { useState } from "react";
 import { useArchivedTasksQuery, useAchievedTaskMutation } from "@/hooks/use-task";
 import { Loader } from "@/components/loader";
+import { getErrorMessage } from "@/lib/fetch-util";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -14,14 +16,23 @@ import type { Task } from "@/types";
 
 const Archived = () => {
     const [search, setSearch] = useState("");
-    const { data: archivedTasks, isLoading } = useArchivedTasksQuery();
+    const { data: archivedTasks, isLoading, isError, error, refetch } = useArchivedTasksQuery() as {
+        data: Task[] | undefined;
+        isLoading: boolean;
+        isError: boolean;
+        error: unknown;
+        refetch: () => void;
+    };
     const { mutate: unarchiveTask, isPending: isUnarchiving } = useAchievedTaskMutation();
 
     const handleUnarchive = (taskId: string) => {
         unarchiveTask({ taskId }, {
             onSuccess: () => {
                 toast.success("Task unarchived successfully");
-            }
+            },
+            onError: (err: unknown) => {
+                toast.error(getErrorMessage(err, "Failed to unarchive task"));
+            },
         });
     };
 
@@ -37,6 +48,23 @@ const Archived = () => {
     };
 
     if (isLoading) return <Loader label="Loading archived tasks..." />;
+
+    if (isError) {
+        return (
+            <div className="space-y-4">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground">Archived Tasks</h1>
+                    </div>
+                </div>
+                <ErrorState
+                    title="Failed to load archived tasks"
+                    message={getErrorMessage(error, "Could not fetch your archived tasks.")}
+                    onRetry={() => refetch()}
+                />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-4">
@@ -59,7 +87,7 @@ const Archived = () => {
                                 placeholder="Search by task title or project name..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className="pl-10 h-10 bg-background border-muted-foreground/20 focus:border-primary transition-all"
+                                className="pl-9 bg-card border-none shadow-sm h-10"
                             />
                         </div>
                     </div>
@@ -75,7 +103,7 @@ const Archived = () => {
                         </div>
                     ) : (
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            {filteredTasks.map((task: any) => (
+                            {filteredTasks.map((task: Task) => (
                                 <Card key={task._id} className={cn(
                                     "group relative overflow-hidden bg-card hover:shadow-lg transition-all duration-300 border-l-4",
                                     priorityColors[task.priority] || "border-l-muted"
@@ -88,48 +116,43 @@ const Archived = () => {
                                                 </h3>
                                                 <div className="flex items-center gap-2">
                                                     <Badge variant="secondary" className="bg-primary/5 text-primary border-none text-[10px] font-semibold h-5">
-                                                        {task.project?.title}
+                                                        {task.project?.title || "No Project"}
+                                                    </Badge>
+                                                    <Badge variant="outline" className="text-[10px] font-medium h-5">
+                                                        {task.status}
                                                     </Badge>
                                                 </div>
                                             </div>
-                                            <div className={cn(
-                                                "px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider",
-                                                task.priority === "High" ? "bg-red-100 text-red-600" :
-                                                    task.priority === "Medium" ? "bg-orange-100 text-orange-600" :
-                                                        "bg-blue-100 text-blue-600"
-                                            )}>
-                                                {task.priority}
-                                            </div>
-                                        </div>
-
-                                        <div className="flex flex-wrap justify-between pt-1">
-                                            <div className="flex flex-col gap-0.5">
-                                                <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-tight">Status</span>
-                                                <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">
-                                                    <Clock className="size-3 text-muted-foreground" />
-                                                    {task.status}
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-col gap-0.5">
-                                                <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-tight">Archived On</span>
-                                                <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">
-                                                    <Calendar className="size-3 text-muted-foreground" />
-                                                    {format(new Date(task.updatedAt), "do MMM, yyyy")}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="pt-2 mt-auto">
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                className="w-full h-9 bg-background hover:bg-primary hover:text-primary-foreground border-muted-foreground/20 transition-all gap-2"
+                                                className="h-8 gap-1.5 text-xs font-semibold hover:bg-primary hover:text-primary-foreground border-primary/20 text-primary transition-all duration-200"
                                                 onClick={() => handleUnarchive(task._id)}
                                                 disabled={isUnarchiving}
                                             >
-                                                <ArchiveRestore className="size-4" />
-                                                <span className="text-xs font-semibold">Restore Task</span>
+                                                <ArchiveRestore className="size-3.5" />
+                                                <span>Restore</span>
                                             </Button>
+                                        </div>
+
+                                        {task.description && (
+                                            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                                                {task.description}
+                                            </p>
+                                        )}
+
+                                        <div className="pt-2 border-t flex items-center justify-between text-[11px] text-muted-foreground mt-auto">
+                                            <div className="flex items-center gap-1.5">
+                                                <Clock className="size-3" />
+                                                <span>Archived {format(new Date(task.updatedAt), "MMM d, yyyy")}</span>
+                                            </div>
+
+                                            {task.dueDate && (
+                                                <div className="flex items-center gap-1.5 font-medium">
+                                                    <Calendar className="size-3" />
+                                                    <span>Due {format(new Date(task.dueDate), "MMM d")}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -138,7 +161,7 @@ const Archived = () => {
                     )}
                 </CardContent>
             </Card>
-        </div >
+        </div>
     );
 };
 

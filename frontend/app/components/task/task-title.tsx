@@ -4,6 +4,7 @@ import { Button } from "../ui/button";
 import { Edit } from "lucide-react";
 import { useUpdateTaskTitleMutation } from "@/hooks/use-task";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/fetch-util";
 
 export const TaskTitle = ({
   title,
@@ -25,10 +26,8 @@ export const TaskTitle = ({
           setIsEditing(false);
           toast.success("Title updated successfully");
         },
-        onError: (error: any) => {
-          const errorMessage = error.response.data.message;
-          toast.error(errorMessage);
-          console.log(error);
+        onError: (error: unknown) => {
+          toast.error(getErrorMessage(error, "Failed to update title"));
         },
       }
     );

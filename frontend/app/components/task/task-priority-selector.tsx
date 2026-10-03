@@ -1,4 +1,4 @@
-import type { TaskPriority, TaskStatus } from "@/types";
+import type { TaskPriority } from "@/types";
 import {
   Select,
   SelectContent,
@@ -6,11 +6,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import {
-  useUpdateTaskPriorityMutation,
-  useUpdateTaskStatusMutation,
-} from "@/hooks/use-task";
+import { useUpdateTaskPriorityMutation } from "@/hooks/use-task";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/fetch-util";
 
 export const TaskPrioritySelector = ({
   priority,
@@ -30,10 +28,8 @@ export const TaskPrioritySelector = ({
         onSuccess: () => {
           toast.success("Priority updated successfully");
         },
-        onError: (error: any) => {
-          const errorMessage = error.response.data.message;
-          toast.error(errorMessage);
-          console.log(error);
+        onError: (error: unknown) => {
+          toast.error(getErrorMessage(error, "Failed to update priority"));
         },
       }
     );

@@ -8,6 +8,7 @@ import {
 } from "../ui/select";
 import { useUpdateTaskStatusMutation } from "@/hooks/use-task";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/fetch-util";
 
 export const TaskStatusSelector = ({
   status,
@@ -27,10 +28,8 @@ export const TaskStatusSelector = ({
         onSuccess: () => {
           toast.success("Status updated successfully");
         },
-        onError: (error: any) => {
-          const errorMessage = error.response.data.message;
-          toast.error(errorMessage);
-          console.log(error);
+        onError: (error: unknown) => {
+          toast.error(getErrorMessage(error, "Failed to update status"));
         },
       }
     );

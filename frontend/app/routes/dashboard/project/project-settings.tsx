@@ -1,14 +1,16 @@
 import { BackButton } from "@/components/back-button";
 import { Loader } from "@/components/loader";
+import { ErrorState } from "@/components/error-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ProjectStatus } from "@/types";
+import { ProjectStatus, type ProjectTasksResponse, type Workspace, type WorkspaceMember } from "@/types";
 import { UseProjectQuery, UseUpdateProject, UseDeleteProject } from "@/hooks/use-project";
 import { useGetWorkspaceDetailsQuery } from "@/hooks/use-workspace";
 import { useAuth } from "@/provider/auth-context";
+import { getErrorMessage } from "@/lib/fetch-util";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
@@ -26,25 +28,34 @@ const ProjectSettings = () => {
   }>();
   const navigate = useNavigate();
 
-  const { data, isLoading } = UseProjectQuery(projectId!) as any;
-  const { data: workspaceData, isLoading: isLoadingWorkspace } = useGetWorkspaceDetailsQuery(workspaceId!) as any;
+  const { data, isLoading, isError, error, refetch } = UseProjectQuery(projectId!) as {
+    data: ProjectTasksResponse | undefined;
+    isLoading: boolean;
+    isError: boolean;
+    error: unknown;
+    refetch: () => void;
+  };
+  const { data: workspaceData, isLoading: isLoadingWorkspace } = useGetWorkspaceDetailsQuery(workspaceId!) as {
+    data: Workspace | undefined;
+    isLoading: boolean;
+  };
   const { mutate: updateProject, isPending: isUpdating } = UseUpdateProject();
   const { mutate: deleteProject, isPending: isDeleting } = UseDeleteProject();
 
-  const createdBy = data?.project?.createdBy?._id || data?.project?.createdBy;
-  const workspaceOwnerId = String(workspaceData?.owner?._id || workspaceData?.owner || "");
+  const createdBy = data?.project?.createdBy;
+  const projectCreatorId = typeof createdBy === "string" ? createdBy : createdBy?._id || "";
+  const workspaceOwnerId = typeof workspaceData?.owner === "string" ? workspaceData.owner : workspaceData?.owner?._id || "";
   const currentUserId = String(currentUser?._id || "");
   const isWorkspaceOwner = workspaceOwnerId && currentUserId && workspaceOwnerId === currentUserId;
 
   const currentUserWorkspaceRole = isWorkspaceOwner ? "owner" : workspaceData?.members?.find(
-    (m: any) => String(m.user?._id || m.user) === currentUserId
+    (m) => String(m.user?._id || m.user) === currentUserId
   )?.role;
 
-  const projectCreatorId = String(createdBy || "");
   const isCreatorOwner = workspaceOwnerId && projectCreatorId && workspaceOwnerId === projectCreatorId;
   
   const creatorMember = workspaceData?.members?.find(
-    (m: any) => String(m.user?._id || m.user) === projectCreatorId
+    (m) => String(m.user?._id || m.user) === projectCreatorId
   );
   const creatorRole = isCreatorOwner ? "owner" : (creatorMember?.role || "member");
 
@@ -70,7 +81,11 @@ const ProjectSettings = () => {
       setDescription(data.project.description || "");
       setStatus(data.project.status);
       setTags(data.project.tags?.join(",") || "");
-      setProjectMembers(data.project.members.map((m: any) => m._id || m));
+      setProjectMembers(
+        data.project.members.map((m) =>
+          typeof m === "string" ? m : m._id
+        )
+      );
     }
   }, [data]);
 
@@ -82,19 +97,29 @@ const ProjectSettings = () => {
     );
   }
 
+  if (isError || !data?.project) {
+    return (
+      <div className="space-y-4 py-8">
+        <BackButton className="w-fit" />
+        <ErrorState
+          title="Project not found"
+          message={getErrorMessage(error, "Could not load settings for this project.")}
+          onRetry={() => refetch()}
+        />
+      </div>
+    );
+  }
+
   const handleUpdate = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
-    const projectData: any = { 
+    const projectData = { 
       title, 
       description, 
+      status: (status || ProjectStatus.PLANNING) as ProjectStatus,
       tags: tags.split(",").map((t) => t.trim()).filter((t) => t !== ""),
       members: projectMembers 
     };
-    
-    if (status) {
-      projectData.status = status as ProjectStatus;
-    }
 
     updateProject(
       {
@@ -105,8 +130,8 @@ const ProjectSettings = () => {
         onSuccess: () => {
           toast.success("Project updated successfully");
         },
-        onError: (error: any) => {
-          toast.error(error?.response?.data?.message || "Failed to update project");
+        onError: (err: unknown) => {
+          toast.error(getErrorMessage(err, "Failed to update project"));
         },
       }
     );
@@ -126,10 +151,8 @@ const ProjectSettings = () => {
         toast.success("Project deleted successfully");
         navigate(`/workspaces/${workspaceId}`);
       },
-      onError: (error: any) => {
-        if (error?.response?.status !== 403 && error?.response?.status !== 404) {
-          toast.error(error?.response?.data?.message || "Failed to delete project");
-        }
+      onError: (err: unknown) => {
+        toast.error(getErrorMessage(err, "Failed to delete project"));
       },
     });
   };
@@ -222,7 +245,7 @@ const ProjectSettings = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="border rounded-lg divide-y">
-              {workspaceMembers.map((member: any) => {
+              {workspaceMembers.map((member: WorkspaceMember) => {
                 const isProjectMember = projectMembers.includes(String(member.user._id));
 
                 return (

@@ -1,6 +1,5 @@
 import { workspaceSchema } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { use } from "react";
 import { useForm } from "react-hook-form";
 import type z from "zod";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
@@ -12,6 +11,8 @@ import { Button } from "../ui/button";
 import { useCreateWorkspace } from "@/hooks/use-workspace";
 import { toast } from "sonner";
 import { useNavigate } from "react-router";
+import type { Workspace } from "@/types";
+import { getErrorMessage } from "@/lib/fetch-util";
 
 interface CreateWorkspaceProps {
     isCreatingWorkspace: boolean;
@@ -49,20 +50,18 @@ export const CreateWorkspace = ({
 
     const onSubmit = (data: WorkspaceForm) => {
         mutate(data, {
-            onSuccess: (data: any) => {
+            onSuccess: (newWorkspace: Workspace) => {
                 setIsCreatingWorkspace(false);
                 toast.success("Workspace created successfully!");
                 
                 // Allow the dialog's close animation to finish before navigating and resetting
                 setTimeout(() => {
                     form.reset();
-                    navigate(`/workspaces/${data._id}`);
+                    navigate(`/workspaces/${newWorkspace._id}`);
                 }, 300);
             },
-            onError: (error: any) => {
-                const errorMessage = error?.response?.data?.message || "Failed to create workspace";
-                toast.error(errorMessage);
-                console.log(error);
+            onError: (error: unknown) => {
+                toast.error(getErrorMessage(error, "Failed to create workspace"));
             },
         });
     };

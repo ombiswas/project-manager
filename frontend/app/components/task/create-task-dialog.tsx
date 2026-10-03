@@ -7,13 +7,14 @@ import {
 } from "@/components/ui/dialog";
 import { useCreateTaskMutation } from "@/hooks/use-task";
 import { createTaskSchema } from "@/lib/schema";
-import type { ProjectMemberRole, User } from "@/types";
+import type { User } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod";
+import { getErrorMessage } from "@/lib/fetch-util";
 import { Button } from "../ui/button";
 import { Calendar } from "../ui/calendar";
 import { Checkbox } from "../ui/checkbox";
@@ -77,10 +78,8 @@ export const CreateTaskDialog = ({
           form.reset();
           onOpenChange(false);
         },
-        onError: (error: any) => {
-          const errorMessage = error.response.data.message;
-          toast.error(errorMessage);
-          console.log(error);
+        onError: (error: unknown) => {
+          toast.error(getErrorMessage(error, "Failed to create task"));
         },
       }
     );

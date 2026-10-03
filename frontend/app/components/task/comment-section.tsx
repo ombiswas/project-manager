@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { Loader } from "../loader";
+import { getErrorMessage } from "@/lib/fetch-util";
 
 export const CommentSection = ({
   taskId,
@@ -25,10 +26,7 @@ export const CommentSection = ({
   const [newComment, setNewComment] = useState("");
 
   const { mutate: addComment, isPending } = useAddCommentMutation();
-  const { data: comments, isLoading } = useGetCommentsByTaskIdQuery(taskId) as {
-    data: Comment[];
-    isLoading: boolean;
-  };
+  const { data: comments = [], isLoading, isError } = useGetCommentsByTaskIdQuery(taskId);
 
   const handleAddComment = () => {
     if (!newComment.trim()) return;
@@ -40,9 +38,8 @@ export const CommentSection = ({
           setNewComment("");
           toast.success("Comment added successfully");
         },
-        onError: (error: any) => {
-          toast.error(error.response.data.message);
-          console.log(error);
+        onError: (error: unknown) => {
+          toast.error(getErrorMessage(error, "Failed to add comment"));
         },
       }
     );

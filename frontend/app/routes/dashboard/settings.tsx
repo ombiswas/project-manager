@@ -12,6 +12,8 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
+import type { User } from "@/types";
+import { getErrorMessage } from "@/lib/fetch-util";
 
 const profileSchema = z.object({
     name: z.string().min(1, "Name is required"),
@@ -38,13 +40,12 @@ const Settings = () => {
 
     const onSubmit = (values: ProfileFormValues) => {
         updateProfile(values, {
-            onSuccess: (data: any) => {
-                // The backend returns the user object directly
+            onSuccess: (data: User) => {
                 updateUser(data);
                 toast.success("Profile updated successfully");
             },
-            onError: (error: any) => {
-                toast.error(error?.response?.data?.message || "Failed to update profile");
+            onError: (err: unknown) => {
+                toast.error(getErrorMessage(err, "Failed to update profile"));
             }
         });
     };

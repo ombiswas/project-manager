@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useForgotPasswordMutation } from '@/hooks/use-auth';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/fetch-util';
 
 type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 
@@ -31,10 +32,8 @@ const ForgotPassword = () => {
             onSuccess: () => {
                 setIsSuccess(true);
             },
-            onError: (error: any) => {
-                const errorMessage = error?.response?.data?.message;
-                console.log(error);
-                toast.error(errorMessage);
+            onError: (error: unknown) => {
+                toast.error(getErrorMessage(error, "Failed to send password reset email"));
             }
         });
     };

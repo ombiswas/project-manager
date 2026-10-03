@@ -10,8 +10,9 @@ import { Button } from '@/components/ui/button';
 import { Link, Links, useNavigate } from 'react-router';
 import { useLoginMutation } from '@/hooks/use-auth';
 import { toast } from 'sonner';
-import { Loader, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/provider/auth-context';
+import { getErrorMessage } from '@/lib/fetch-util';
 
 type SigninFormData = z.infer<typeof signInSchema>;
 
@@ -32,14 +33,11 @@ const SignIn = () => {
         mutate(values, {
             onSuccess: (data) => {
                 login(data);
-                console.log(data);
                 toast.success("Login successfully");
                 navigate("/dashboard");
             },
-            onError: (error: any) => {
-                const errorMessage = error.response?.data?.message || "An error occured";
-                console.log(error);
-                toast.error(errorMessage);
+            onError: (error: unknown) => {
+                toast.error(getErrorMessage(error, "An error occurred"));
             }
         });
     };

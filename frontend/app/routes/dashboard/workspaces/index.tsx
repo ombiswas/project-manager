@@ -27,13 +27,19 @@ import {
 } from "@/components/ui/dialog";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { ErrorState } from "@/components/error-state";
+import { getErrorMessage } from "@/lib/fetch-util";
+
 const Workspaces = () => {
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
   const [workspaceToDelete, setWorkspaceToDelete] = useState<Workspace | null>(null);
   
-  const { data: workspaces = [], isLoading } = useGetWorkspacesQuery() as {
+  const { data: workspaces = [], isLoading, isError, error, refetch } = useGetWorkspacesQuery() as {
     data: Workspace[];
     isLoading: boolean;
+    isError: boolean;
+    error: unknown;
+    refetch: () => void;
   };
   
   const { mutate: deleteWorkspace, isPending: isDeleting } = useDeleteWorkspaceMutation();
@@ -52,6 +58,29 @@ const Workspaces = () => {
 
   if (isLoading) {
     return <Loader label="Loading your workspaces..." />;
+  }
+
+  if (isError) {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl md:text-3xl font-bold">Workspaces</h2>
+          <Button onClick={() => setIsCreatingWorkspace(true)}>
+            <PlusCircle className="size-4 mr-2" />
+            New Workspace
+          </Button>
+        </div>
+        <ErrorState
+          title="Failed to load workspaces"
+          message={getErrorMessage(error, "Could not retrieve your workspaces.")}
+          onRetry={() => refetch()}
+        />
+        <CreateWorkspace
+          isCreatingWorkspace={isCreatingWorkspace}
+          setIsCreatingWorkspace={setIsCreatingWorkspace}
+        />
+      </div>
+    );
   }
 
   return (

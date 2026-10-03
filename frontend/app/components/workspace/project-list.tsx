@@ -29,7 +29,7 @@ export const ProjectList = ({
                     />
                 ) : (
                     projects.map((project) => {
-                        const projectProgress = getProjectProgress(project.tasks as any);
+                        const projectProgress = getProjectProgress(project.tasks);
 
                         return (
                             <ProjectCard

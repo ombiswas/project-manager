@@ -8,17 +8,20 @@ export interface User {
     profilePicture?: string;
 }
 
+export interface WorkspaceMember {
+    _id: string;
+    user: User;
+    role: "admin" | "member" | "owner" | "viewer";
+    joinedAt: Date;
+}
+
 export interface Workspace {
     _id: string;
     name: string;
     description?: string;
     owner: User | string;
     color: string;
-    members: {
-        user: User;
-        role: "admin" | "member" | "owner" | "viewer";
-        joinedAt: Date;
-    }[];
+    members: WorkspaceMember[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -41,6 +44,7 @@ export interface Project {
     progress: number;
     tasks: Task[];
     members: User[];
+    tags?: string[];
     createdAt: Date;
     updatedAt: Date;
     isArchived: boolean;
@@ -127,7 +131,10 @@ export interface ActivityLog {
     action: ActionType;
     resourceType: ResourceType;
     resourceId: string;
-    details: any;
+    details?: {
+        description?: string;
+        [key: string]: unknown;
+    };
     createdAt: Date;
 }
 
@@ -182,4 +189,40 @@ export interface WorkspaceProductivityData {
     name: string;
     completed: number;
     total: number;
+}
+
+export interface AuthResponse {
+    token: string;
+    user: User;
+}
+
+export interface WorkspaceProjectsResponse {
+    projects: Project[];
+    workspace: Workspace;
+}
+
+export interface ProjectTasksResponse {
+    project: Project;
+    tasks: Task[];
+}
+
+export interface TaskDetailResponse {
+    task: Task;
+    project: Project;
+}
+
+export interface WorkspaceStatsResponse {
+    stats: StatsCardProps;
+    taskTrendsData: TaskTrendsData[];
+    projectStatusData: ProjectStatusData[];
+    taskPriorityData: TaskPriorityData[];
+    workspaceProductivityData: WorkspaceProductivityData[];
+    upcomingTasks: Task[];
+    recentProjects: Project[];
+}
+
+export interface ApiErrorResponse {
+    status?: "fail" | "error";
+    message: string;
+    errors?: Array<{ field?: string; message: string }>;
 }

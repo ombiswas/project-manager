@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
+import { getErrorMessage } from "@/lib/fetch-util";
 
 export const TaskDescription = ({
   description,
@@ -26,10 +27,8 @@ export const TaskDescription = ({
           setIsEditing(false);
           toast.success("Description updated successfully");
         },
-        onError: (error: any) => {
-          const errorMessage = error.response.data.message;
-          toast.error(errorMessage);
-          console.log(error);
+        onError: (error: unknown) => {
+          toast.error(getErrorMessage(error, "Failed to update description"));
         },
       }
     );

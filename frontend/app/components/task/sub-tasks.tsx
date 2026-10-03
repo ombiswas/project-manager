@@ -9,6 +9,7 @@ import {
   useUpdateSubTaskMutation,
 } from "@/hooks/use-task";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/fetch-util";
 
 export const SubTasksDetails = ({
   subTasks,
@@ -31,10 +32,8 @@ export const SubTasksDetails = ({
         onSuccess: () => {
           toast.success("Sub task updated successfully");
         },
-        onError: (error: any) => {
-          const errMessage = error.response.data.message;
-          console.log(error);
-          toast.error(errMessage);
+        onError: (error: unknown) => {
+          toast.error(getErrorMessage(error, "Failed to update sub task"));
         },
       }
     );
@@ -48,10 +47,8 @@ export const SubTasksDetails = ({
           setNewSubTask("");
           toast.success("Sub task added successfully");
         },
-        onError: (error: any) => {
-          const errMessage = error.response.data.message;
-          console.log(error);
-          toast.error(errMessage);
+        onError: (error: unknown) => {
+          toast.error(getErrorMessage(error, "Failed to add sub task"));
         },
       }
     );

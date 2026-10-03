@@ -57,12 +57,18 @@ const profileSchema = z.object({
 
 export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 
+import { ErrorState } from "@/components/error-state";
+import { getErrorMessage } from "@/lib/fetch-util";
+
 export type ProfileFormData = z.infer<typeof profileSchema>;
 
 const Profile = () => {
-  const { data: user, isPending } = useUserProfileQuery() as {
-    data: User;
+  const { data: user, isPending, isError, error: fetchError, refetch } = useUserProfileQuery() as {
+    data: User | undefined;
     isPending: boolean;
+    isError: boolean;
+    error: unknown;
+    refetch: () => void;
   };
   const { logout, updateUser } = useAuth();
   const navigate = useNavigate();
@@ -92,7 +98,7 @@ const Profile = () => {
   const {
     mutate: changePassword,
     isPending: isChangingPassword,
-    error,
+    error: passwordError,
   } = useChangePassword();
 
   const handlePasswordChange = (values: ChangePasswordFormData) => {
@@ -108,11 +114,8 @@ const Profile = () => {
           navigate("/sign-in");
         }, 3000);
       },
-      onError: (error: any) => {
-        const errorMessage =
-          error.response?.data?.error || "Failed to update password";
-        toast.error(errorMessage);
-        console.log(error);
+      onError: (err: unknown) => {
+        toast.error(getErrorMessage(err, "Failed to update password"));
       },
     });
   };
@@ -121,22 +124,31 @@ const Profile = () => {
     updateUserProfile(
       { name: values.name, profilePicture: values.profilePicture || "" },
       {
-        onSuccess: (data: any) => {
-          // The backend returns the user object directly
+        onSuccess: (data: User) => {
           updateUser(data);
           toast.success("Profile updated successfully");
         },
-        onError: (error: any) => {
-          const errorMessage =
-            error.response?.data?.error || "Failed to update profile";
-          toast.error(errorMessage);
-          console.log(error);
+        onError: (err: unknown) => {
+          toast.error(getErrorMessage(err, "Failed to update profile"));
         },
       }
     );
   };
 
   if (isPending) return <Loader label="Loading profile information..." />;
+
+  if (isError || !user) {
+    return (
+      <div className="space-y-4 py-8 px-4 md:px-0 max-w-4xl mx-auto">
+        <BackButton />
+        <ErrorState
+          title="Failed to load profile"
+          message={getErrorMessage(fetchError, "Could not fetch your profile data.")}
+          onRetry={() => refetch()}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 pb-12">
@@ -251,10 +263,10 @@ const Profile = () => {
               onSubmit={form.handleSubmit(handlePasswordChange)}
               className="grid gap-4"
             >
-              {error && (
+              {passwordError && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error.message}</AlertDescription>
+                  <AlertDescription>{getErrorMessage(passwordError, "Failed to update password")}</AlertDescription>
                 </Alert>
               )}
 

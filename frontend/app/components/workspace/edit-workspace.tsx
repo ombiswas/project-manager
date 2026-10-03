@@ -16,6 +16,7 @@ import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { colorOptions } from "./create-workspace";
 import type { Workspace } from "@/types";
+import { getErrorMessage } from "@/lib/fetch-util";
 
 interface EditWorkspaceProps {
     isEditingWorkspace: boolean;
@@ -65,8 +66,8 @@ export const EditWorkspace = ({
                     toast.success("Ownership transferred successfully!");
                     setIsEditingWorkspace(false);
                 },
-                onError: (error: any) => {
-                    toast.error(error?.response?.data?.message || "Failed to transfer ownership");
+                onError: (error: unknown) => {
+                    toast.error(getErrorMessage(error, "Failed to transfer ownership"));
                 }
             });
         }
@@ -79,8 +80,8 @@ export const EditWorkspace = ({
                     toast.success("Workspace deleted successfully!");
                     navigate("/dashboard");
                 },
-                onError: (error: any) => {
-                    toast.error(error?.response?.data?.message || "Failed to delete workspace");
+                onError: (error: unknown) => {
+                    toast.error(getErrorMessage(error, "Failed to delete workspace"));
                 }
             });
         }
@@ -92,10 +93,8 @@ export const EditWorkspace = ({
                 setIsEditingWorkspace(false);
                 toast.success("Workspace updated successfully!");
             },
-            onError: (error: any) => {
-                const errorMessage = error?.response?.data?.message || "Failed to update workspace";
-                toast.error(errorMessage);
-                console.log(error);
+            onError: (error: unknown) => {
+                toast.error(getErrorMessage(error, "Failed to update workspace"));
             },
         });
     };
@@ -211,19 +210,27 @@ export const EditWorkspace = ({
                                 </div>
                                 <div className="flex gap-2 flex-wrap">
                                     {workspace.members
-                                        .filter(m => (m.user?._id || m.user) !== currentUser?._id)
-                                        .map(member => (
-                                            <Button
-                                                key={member.user?._id || member.user as any}
-                                                variant="outline"
-                                                size="sm"
-                                                className="text-xs h-9 bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all shadow-sm"
-                                                onClick={() => handleTransfer(member.user?._id || member.user as any)}
-                                                disabled={isTransferring}
-                                            >
-                                                Transfer to {member.user?.name || "Member"}
-                                            </Button>
-                                        ))}
+                                        .filter((m) => {
+                                            const mId = typeof m.user === "string" ? m.user : m.user?._id;
+                                            return mId && mId !== currentUser?._id;
+                                        })
+                                        .map((member) => {
+                                            const mId = typeof member.user === "string" ? member.user : member.user?._id;
+                                            if (!mId) return null;
+                                            const memberName = typeof member.user === "object" && member.user?.name ? member.user.name : "Member";
+                                            return (
+                                                <Button
+                                                    key={mId}
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-xs h-9 bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all shadow-sm"
+                                                    onClick={() => handleTransfer(mId)}
+                                                    disabled={isTransferring}
+                                                >
+                                                    Transfer to {memberName}
+                                                </Button>
+                                            );
+                                        })}
                                     {workspace.members.length <= 1 && (
                                         <p className="text-xs italic text-muted-foreground py-2">No other members available for transfer.</p>
                                     )}

@@ -1,4 +1,4 @@
-import type { User } from "@/types";
+import type { User, AuthResponse } from "@/types";
 import { createContext, useContext, useEffect, useState } from "react";
 import { queryClient } from "./react-query-provider";
 import { useLocation, useNavigate } from "react-router";
@@ -9,7 +9,7 @@ interface AuthContextType {
     user: User | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (data: any) => Promise<void>;
+    login: (data: AuthResponse) => Promise<void>;
     logout: () => Promise<void>;
     updateUser: (user: User) => void;
 }
@@ -27,7 +27,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const updateUser = (updatedUser: User) => {
         if (!updatedUser || !updatedUser._id) {
-            console.error("Invalid user data provided to updateUser");
             return;
         }
         setUser(updatedUser);
@@ -51,8 +50,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                         navigate("/sign-in");
                     }
                 }
-            } catch (error) {
-                console.error("Auth check failed:", error);
+            } catch {
+                setUser(null);
+                setIsAuthenticated(false);
             } finally {
                 setIsLoading(false);
             }
@@ -67,8 +67,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             navigate("/sign-in");
         };
 
-        const handleAccessDenied = (event: any) => {
-            const { message } = event.detail;
+        const handleAccessDenied = (event: Event) => {
+            const customEvent = event as CustomEvent<{ message?: string; status?: number }>;
+            const message = customEvent.detail?.message || "Access denied or resource not found";
             toast.error(message);
             navigate("/");
         };
@@ -82,7 +83,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         };
     }, []);
 
-    const login = async (data: any) => {
+    const login = async (data: AuthResponse) => {
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 

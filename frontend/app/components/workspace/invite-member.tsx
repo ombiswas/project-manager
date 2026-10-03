@@ -13,6 +13,7 @@ import { Check, Copy, Mail } from "lucide-react";
 import { Label } from "../ui/label";
 import { useInviteMemberMutation } from "@/hooks/use-workspace";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/fetch-util";
 
 interface InviteMemberDialogProps {
   isOpen: boolean;
@@ -56,9 +57,8 @@ export const InviteMemberDialog = ({
           setInviteTab("email");
           onOpenChange(false);
         },
-        onError: (error: any) => {
-          toast.error(error.response.data.message);
-          console.log(error);
+        onError: (error: unknown) => {
+          toast.error(getErrorMessage(error, "Failed to send invite"));
         },
       }
     );

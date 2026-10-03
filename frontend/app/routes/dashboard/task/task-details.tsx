@@ -1,5 +1,6 @@
 import { BackButton } from "@/components/back-button";
 import { Loader } from "@/components/loader";
+import { ErrorState } from "@/components/error-state";
 import { CommentSection } from "@/components/task/comment-section";
 import { SubTasksDetails } from "@/components/task/sub-tasks";
 import { TaskActivity } from "@/components/task/task-activity";
@@ -19,7 +20,8 @@ import {
 } from "@/hooks/use-task";
 import { useGetWorkspaceDetailsQuery } from "@/hooks/use-workspace";
 import { useAuth } from "@/provider/auth-context";
-import type { Project, Task } from "@/types";
+import { getErrorMessage } from "@/lib/fetch-util";
+import type { Project, Task, TaskDetailResponse, Workspace } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 import { Archive, ArchiveRestore, Eye, EyeOff, Trash2, AlertTriangle } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
@@ -46,26 +48,34 @@ const TaskDetails = () => {
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const { data, isLoading } = useTaskByIdQuery(taskId!) as {
-    data: {
-      task: Task;
-      project: Project;
-    };
+  const { data, isLoading, isError, error, refetch } = useTaskByIdQuery(taskId!) as {
+    data: TaskDetailResponse | undefined;
+    isLoading: boolean;
+    isError: boolean;
+    error: unknown;
+    refetch: () => void;
+  };
+  const { data: workspaceData, isLoading: isLoadingWorkspace } = useGetWorkspaceDetailsQuery(workspaceId!) as {
+    data: Workspace | undefined;
     isLoading: boolean;
   };
-  const { data: workspaceData, isLoading: isLoadingWorkspace } = useGetWorkspaceDetailsQuery(workspaceId!) as any;
 
   const { mutate: watchTask, isPending: isWatching } = useWatchTaskMutation();
   const { mutate: achievedTask, isPending: isAchieved } =
     useAchievedTaskMutation();
   const { mutate: deleteTask, isPending: isDeleting } = useDeleteTaskMutation();
 
-  if (isLoading) return <Loader label="Loading task details..." />;
+  if (isLoading || isLoadingWorkspace) return <Loader label="Loading task details..." />;
 
-  if (!data) {
+  if (isError || !data?.task) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-xl font-bold text-muted-foreground">Task not found</div>
+      <div className="max-w-7xl mx-auto space-y-4 py-8 px-4">
+        <BackButton className="w-fit" />
+        <ErrorState
+          title="Task not found"
+          message={getErrorMessage(error, "Could not load the requested task details.")}
+          onRetry={() => refetch()}
+        />
       </div>
     );
   }
@@ -76,21 +86,21 @@ const TaskDetails = () => {
   );
 
   // Permission logic
-  const workspaceOwnerId = String(workspaceData?.owner?._id || workspaceData?.owner || "");
+  const workspaceOwnerId = typeof workspaceData?.owner === "string" ? workspaceData.owner : workspaceData?.owner?._id || "";
   const currentUserId = String(user?._id || "");
   const isWorkspaceOwner = workspaceOwnerId && currentUserId && workspaceOwnerId === currentUserId;
 
   const currentUserWorkspaceRole = isWorkspaceOwner ? "owner" : workspaceData?.members?.find(
-    (m: any) => String(m.user?._id || m.user) === currentUserId
+    (m) => String(m.user?._id || m.user) === currentUserId
   )?.role;
 
-  const projectCreatorId = typeof project.createdBy === "string" 
+  const projectCreatorId = typeof project?.createdBy === "string" 
     ? project.createdBy 
-    : project.createdBy?._id || "";
+    : project?.createdBy?._id || "";
   const isCreatorOwner = workspaceOwnerId && projectCreatorId && workspaceOwnerId === projectCreatorId;
   
   const creatorMember = workspaceData?.members?.find(
-    (m: any) => String(m.user?._id || m.user) === projectCreatorId
+    (m) => String(m.user?._id || m.user) === projectCreatorId
   );
   const creatorRole = isCreatorOwner ? "owner" : (creatorMember?.role || "member");
 
@@ -133,8 +143,8 @@ const TaskDetails = () => {
         toast.success("Task deleted successfully");
         navigate(`/workspaces/${workspaceId}/projects/${projectId}`);
       },
-      onError: (error: any) => {
-        toast.error(error?.response?.data?.message || "Failed to delete task");
+      onError: (err: unknown) => {
+        toast.error(getErrorMessage(err, "Failed to delete task"));
       },
     });
   };
@@ -254,7 +264,7 @@ const TaskDetails = () => {
                   <TaskAssigneesSelector
                     task={task}
                     assignees={task.assignees || []}
-                    projectMembers={data.project.members as any}
+                    projectMembers={data.project.members || []}
                     canEdit={canManageTask}
                   />
                 </div>

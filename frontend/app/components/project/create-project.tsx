@@ -38,6 +38,7 @@ import { Checkbox } from "../ui/checkbox";
 import { Badge } from "../ui/badge";
 import { UseCreateProject } from "@/hooks/use-project";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/fetch-util";
 
 interface CreateProjectDialogProps {
   isOpen: boolean;
@@ -82,10 +83,8 @@ export const CreateProjectDialog = ({
           form.reset();
           onOpenChange(false);
         },
-        onError: (error: any) => {
-          const errorMessage = error.response.data.message;
-          toast.error(errorMessage);
-          console.log(error);
+        onError: (error: unknown) => {
+          toast.error(getErrorMessage(error, "Failed to create project"));
         },
       }
     );

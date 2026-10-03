@@ -11,6 +11,7 @@ import { useForm } from 'react-hook-form';
 import { Link, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { getErrorMessage } from '@/lib/fetch-util';
 
 type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>
 
@@ -19,7 +20,7 @@ const ResetPassword = () => {
 
     const token = searchParams.get("token");
 
-    const [isSucess, setIsSuccess] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
     const { mutate: resetPassword, isPending } = useResetPasswordMutation();
 
     const form = useForm<ResetPasswordFormData>({
@@ -40,12 +41,10 @@ const ResetPassword = () => {
             { ...values, token: token as string },
             {
                 onSuccess: () => { setIsSuccess(true); },
-                onError: (error: any) => {
-                    const errorMessage = error?.response?.data?.message;
-                    toast.error(errorMessage);
-                    console.log(error);
+                onError: (error: unknown) => {
+                    toast.error(getErrorMessage(error, "Failed to reset password"));
                 }
-            })
+            });
     };
 
     return (
@@ -65,7 +64,7 @@ const ResetPassword = () => {
                     </CardHeader>
                     <CardContent>
                         {
-                            isSucess ? (
+                            isSuccess ? (
                                 <div className='flex flex-col items-center justify-center'>
                                     <CheckCircle className='w-10 h-10 text-green-500' />
                                     <h1 className='text-2xl font-bold'>Password Reset Successful</h1>

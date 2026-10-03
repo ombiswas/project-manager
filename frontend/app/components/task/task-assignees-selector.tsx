@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Badge } from "../ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Label } from "../ui/label";
+import { getErrorMessage } from "@/lib/fetch-util";
 
 export const TaskAssigneesSelector = ({
   task,
@@ -48,8 +49,8 @@ export const TaskAssigneesSelector = ({
         onSuccess: () => {
           toast.success("Assignees updated successfully");
         },
-        onError: (error: any) => {
-          toast.error(error.response?.data?.message || "Failed to update assignees");
+        onError: (error: unknown) => {
+          toast.error(getErrorMessage(error, "Failed to update assignees"));
         },
       }
     );

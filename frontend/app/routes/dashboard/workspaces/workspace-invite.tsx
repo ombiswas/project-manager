@@ -13,27 +13,40 @@ import {
   useAcceptInviteByTokenMutation,
   useGetWorkspaceDetailsQuery,
 } from "@/hooks/use-workspace";
+import { getErrorMessage } from "@/lib/fetch-util";
 import type { Workspace } from "@/types";
-import React from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import { toast } from "sonner";
 
 const WorkspaceInvite = () => {
   const { workspaceId } = useParams();
-
   const [searchParams] = useSearchParams();
-
   const token = searchParams.get("tk");
-
   const navigate = useNavigate();
 
   if (!workspaceId) {
-    return <div>Workspace not found</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen pt-10 pb-20 px-4">
+        <Card className="max-w-md w-full">
+          <CardHeader>
+            <CardTitle>Workspace Not Found</CardTitle>
+            <CardDescription>
+              No workspace ID was specified in the invite link.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => navigate("/workspaces")} className="w-full">
+              Go to Workspaces
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
-  const { data: workspace, isLoading } = useGetWorkspaceDetailsQuery(
+  const { data: workspace, isLoading, isError } = useGetWorkspaceDetailsQuery(
     workspaceId!
-  ) as { data: Workspace; isLoading: boolean };
+  ) as { data: Workspace | undefined; isLoading: boolean; isError: boolean };
 
   const {
     mutate: acceptInviteByToken,
@@ -54,9 +67,8 @@ const WorkspaceInvite = () => {
           toast.success("Invitation accepted");
           navigate(`/workspaces/${workspaceId}`);
         },
-        onError: (error: any) => {
-          toast.error(error.response.data.message);
-          console.log(error);
+        onError: (err: unknown) => {
+          toast.error(getErrorMessage(err, "Failed to accept invitation"));
         },
       });
     } else {
@@ -65,9 +77,8 @@ const WorkspaceInvite = () => {
           toast.success("Invitation accepted");
           navigate(`/workspaces/${workspaceId}`);
         },
-        onError: (error: any) => {
-          toast.error(error.response.data.message);
-          console.log(error);
+        onError: (err: unknown) => {
+          toast.error(getErrorMessage(err, "Failed to accept invitation"));
         },
       });
     }
@@ -81,19 +92,19 @@ const WorkspaceInvite = () => {
   if (isLoading) {
     return (
       <div className="flex w-full min-h-screen items-center justify-center pt-10 pb-20 px-4">
-        <Loader />
+        <Loader label="Validating workspace invitation..." />
       </div>
     );
   }
 
-  if (!workspace) {
+  if (isError || !workspace) {
     return (
       <div className="flex items-center justify-center min-h-screen pt-10 pb-20 px-4">
-        <Card className="max-w-md">
+        <Card className="max-w-md w-full">
           <CardHeader>
-            <CardTitle>Invalid Invitation</CardTitle>
+            <CardTitle>Invalid or Expired Invitation</CardTitle>
             <CardDescription>
-              This workspace invitation is invalid or has expired.
+              This workspace invitation is invalid, has expired, or does not exist.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -105,6 +116,7 @@ const WorkspaceInvite = () => {
       </div>
     );
   }
+
   return (
     <div className="flex items-center justify-center min-h-screen pt-10 pb-20 px-4">
       <Card className="max-w-md w-full">
