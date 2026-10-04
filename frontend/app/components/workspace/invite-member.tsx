@@ -77,17 +77,19 @@ export const InviteMemberDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Invite to Workspace</DialogTitle>
+      <DialogContent className="bg-[#141517] border border-[#212327] rounded-[8px] text-white">
+        <DialogHeader className="pb-2">
+          <p className="caption-mono text-[10px] text-[#7d8187]">MEMBERSHIP</p>
+          <DialogTitle className="text-xl font-normal tracking-[-0.5px] text-white">Invite to Workspace</DialogTitle>
         </DialogHeader>
 
         <Tabs
           defaultValue="email"
           value={inviteTab}
           onValueChange={setInviteTab}
+          className="w-full"
         >
-          <TabsList>
+          <TabsList className="w-full grid grid-cols-2 mb-4">
             <TabsTrigger value="email" disabled={isPending}>
               Send Email
             </TabsTrigger>
@@ -98,104 +100,95 @@ export const InviteMemberDialog = ({
 
           <TabsContent value="email">
             <div className="grid gap-4">
-              <div className="grid gap-2">
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)}>
-                    <div className="flex flex-col space-y-6 w-full">
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email Address</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="Enter email" />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+                          Email Address
+                        </FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="colleague@company.com" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
 
-                      <FormField
-                        control={form.control}
-                        name="role"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Select Role</FormLabel>
-                            <FormControl>
-                              <div className="flex gap-3 flex-wrap">
-                                {ROLES.map((role) => (
-                                  <label
-                                    key={role}
-                                    className="flex items-center cursor-pointer gap-2"
-                                  >
-                                    <input
-                                      type="radio"
-                                      value={role}
-                                      className="peer hidden"
-                                      checked={field.value === role}
-                                      onChange={() => field.onChange(role)}
-                                    />
-                                    <span
-                                      className={cn(
-                                        "w-7 h-7 rounded-full  border-2 border-blue-300 flex items-center justify-center transition-all duration-300 hover:shadow-lg bg-blue-900 text-white",
-                                        field.value === role &&
-                                        "ring-2 ring-blue-500 ring-offset-2 "
-                                      )}
-                                    >
-                                      {field.value === role && (
-                                        <span className="w-3 h-3 rounded-full bg-white" />
-                                      )}
-                                    </span>
-                                    <span className="capitalize">{role}</span>
-                                  </label>
-                                ))}
-                              </div>
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                  <FormField
+                    control={form.control}
+                    name="role"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+                          Assign Role
+                        </FormLabel>
+                        <FormControl>
+                          <div className="flex gap-2 flex-wrap pt-1">
+                            {ROLES.map((role) => (
+                              <button
+                                key={role}
+                                type="button"
+                                onClick={() => field.onChange(role)}
+                                className={cn(
+                                  "px-3.5 py-1.5 rounded-full text-xs font-mono uppercase tracking-[1px] border transition-colors",
+                                  field.value === role
+                                    ? "bg-white text-[#0a0a0a] border-white font-normal"
+                                    : "bg-[#1a1c20] text-[#7d8187] border-[#212327] hover:border-[#363a3f] hover:text-white"
+                                )}
+                              >
+                                {role}
+                              </button>
+                            ))}
+                          </div>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
 
-                    <Button
-                      className="mt-6 w-full"
-                      size={"lg"}
-                      disabled={isPending}
-                    >
-                      <Mail className="w-4 h-4 mr-2" />
-                      Send
-                    </Button>
-                  </form>
-                </Form>
-              </div>
+                  <Button
+                    className="mt-6 w-full"
+                    disabled={isPending}
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    {isPending ? "Sending..." : "Send Invitation"}
+                  </Button>
+                </form>
+              </Form>
             </div>
           </TabsContent>
 
           <TabsContent value="link">
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <Label>Share this link to invite people</Label>
+            <div className="space-y-4 pt-1">
+              <div className="space-y-2">
+                <Label className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+                  Invite Link
+                </Label>
                 <div className="flex items-center space-x-2">
                   <Input
                     readOnly
                     value={`${window.location.origin}/workspace-invite/${workspaceId}`}
+                    className="font-mono text-xs"
                   />
-                  <Button onClick={handleCopyInviteLink} disabled={isPending}>
+                  <Button onClick={handleCopyInviteLink} disabled={isPending} variant="outline" className="shrink-0">
                     {linkCopied ? (
                       <>
-                        <Check className="mr-2 h-4 w-4" />
+                        <Check className="mr-1.5 h-3.5 w-3.5" />
                         Copied
                       </>
                     ) : (
                       <>
-                        <Copy className="mr-2 h-4 w-4" />
+                        <Copy className="mr-1.5 h-3.5 w-3.5" />
                         Copy
                       </>
                     )}
                   </Button>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Anyone with the link can join this workspace
+              <p className="text-xs text-[#7d8187]">
+                Anyone with this unique link can join this workspace as a member.
               </p>
             </div>
           </TabsContent>

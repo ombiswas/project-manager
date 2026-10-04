@@ -48,15 +48,17 @@ export const SidebarComponent = ({
     ];
 
     return (
-        <div
-            className={cn("flex flex-col border-r bg-sidebar transition-all duration-300",
-                isCollapsed ? "w-16 md:w-[80px]" : "w-16 md:w-[240px]"
+        <aside
+            className={cn("flex flex-col border-r border-[#212327] bg-[#0a0a0a] transition-all duration-200 shrink-0",
+                isCollapsed ? "w-16 md:w-[72px]" : "w-16 md:w-[240px]"
             )}
         >
-            <div className={cn("flex h-14 items-center border-b mb-4 justify-center md:justify-between", isCollapsed ? "md:px-2" : "md:px-4")}>
-                <Link to="/dashboard" className="flex items-center gap-2">
-                    <Wrench className="size-6 text-blue-600 min-w-6" />
-                    <span className={cn("font-semibold text-lg hidden", !isCollapsed && "md:block")}>
+            <div className={cn("flex h-14 items-center border-b border-[#212327] mb-3 justify-center md:justify-between", isCollapsed ? "md:px-2" : "md:px-4")}>
+                <Link to="/dashboard" className="flex items-center gap-2.5 group">
+                    <div className="size-7 rounded-full bg-white text-[#0a0a0a] flex items-center justify-center font-mono font-normal text-xs tracking-tight transition-transform duration-200 group-hover:scale-105">
+                        X
+                    </div>
+                    <span className={cn("font-normal text-white text-base tracking-tight hidden", !isCollapsed && "md:block")}>
                         TaskHub
                     </span>
                 </Link>
@@ -64,7 +66,7 @@ export const SidebarComponent = ({
                 <Button
                     variant={"ghost"}
                     size="icon"
-                    className="hidden md:flex h-8 w-8"
+                    className="hidden md:flex h-8 w-8 text-[#7d8187] hover:text-white"
                     onClick={() => setIsCollapsed(!isCollapsed)}
                 >
                     {isCollapsed ? (
@@ -74,31 +76,31 @@ export const SidebarComponent = ({
                     )}
                 </Button>
             </div>
-            <ScrollArea className="flex-1 px-3 py-2">
+            <ScrollArea className="flex-1 px-2.5 py-2">
                 <SidebarNav
                     items={navItems}
                     isCollapsed={isCollapsed}
-                    className={cn(isCollapsed && "items-center space-y-2")}
+                    className={cn(isCollapsed && "items-center space-y-1.5")}
                     currentWorkspace={currentWorkspace}
                 />
             </ScrollArea>
-            <div className={cn("p-4 mt-auto border-t flex", isCollapsed ? "justify-center md:px-2" : "justify-center md:justify-start md:px-4")}>
+            <div className={cn("p-3 mt-auto border-t border-[#212327] flex", isCollapsed ? "justify-center md:px-2" : "justify-center md:justify-start md:px-3")}>
                 <Button 
                     variant={"ghost"} 
                     className={cn(
-                        "h-10 w-10 p-0 justify-center", // mobile
-                        !isCollapsed && "md:w-full md:justify-start md:px-4 md:py-2", // desktop not collapsed
-                        isCollapsed && "md:w-10 md:justify-center md:p-0" // desktop collapsed
+                        "h-9 w-9 p-0 justify-center rounded-full text-[#7d8187] hover:text-white hover:bg-[#1a1c20]",
+                        !isCollapsed && "md:w-full md:justify-start md:px-3.5 md:py-2",
+                        isCollapsed && "md:w-9 md:justify-center md:p-0"
                     )} 
                     onClick={logout}
                     title={isCollapsed ? "Logout" : undefined}
                 >
-                    <LogOut className={cn("size-5", !isCollapsed && "md:mr-2")} />
-                    <span className={cn("hidden", !isCollapsed && "md:block")}>
+                    <LogOut className={cn("size-4", !isCollapsed && "md:mr-2.5")} />
+                    <span className={cn("hidden text-sm font-normal", !isCollapsed && "md:block")}>
                         Logout
                     </span>
                 </Button>
             </div>
-        </div>
+        </aside>
     )
 };

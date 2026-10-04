@@ -161,23 +161,26 @@ const ProjectSettings = () => {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-10 px-4 md:px-0">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <BackButton />
-        <h1 className="text-2xl font-bold">Project Settings</h1>
+        <div>
+          <p className="caption-mono text-[10px] text-[#7d8187]">CONFIGURATION</p>
+          <h1 className="text-2xl font-normal tracking-[-0.6px] text-white">Project Settings</h1>
+        </div>
       </div>
 
       <div className="grid gap-6">
-        <Card className="border-none shadow-sm">
-          <CardHeader>
-            <CardTitle>General Information</CardTitle>
-            <CardDescription>
-              Update your project's basic details and current status.
-            </CardDescription>
+        <Card className="bg-[#191919] border border-[#212327] rounded-[8px] p-6 shadow-none">
+          <CardHeader className="p-0 pb-5 border-b border-[#212327]">
+            <CardTitle className="text-base font-normal text-white">General Information</CardTitle>
+            <p className="text-xs text-[#7d8187]">
+              Update basic parameters and status for this project.
+            </p>
           </CardHeader>
           <form onSubmit={handleUpdate}>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Project Title</Label>
+            <div className="space-y-4 py-5">
+              <div className="space-y-1.5">
+                <Label htmlFor="title" className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">Project Title</Label>
                 <Input
                   id="title"
                   value={title}
@@ -187,8 +190,8 @@ const ProjectSettings = () => {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="description" className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">Description</Label>
                 <Textarea
                   id="description"
                   value={description}
@@ -198,13 +201,13 @@ const ProjectSettings = () => {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="status">Project Status</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="status" className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">Project Status</Label>
                 <Select value={status} onValueChange={(value) => setStatus(value as ProjectStatus)}>
-                  <SelectTrigger id="status">
+                  <SelectTrigger id="status" className="w-full">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-[#141517] border border-[#212327] rounded-[8px] text-white">
                     {Object.values(ProjectStatus).map((s) => (
                       <SelectItem key={s} value={s}>
                         {s}
@@ -214,8 +217,8 @@ const ProjectSettings = () => {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="tags">Tags</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="tags" className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">Tags</Label>
                 <Input
                   id="tags"
                   value={tags}
@@ -223,78 +226,78 @@ const ProjectSettings = () => {
                   placeholder="Enter tags separated by comma"
                 />
               </div>
-            </CardContent>
-            <CardFooter className="flex justify-end border-t bg-muted/50 px-6 py-4 rounded-b-lg">
+            </div>
+            <div className="flex justify-end pt-4 border-t border-[#212327]">
               <Button type="submit" disabled={isUpdating || !canUpdate}>
                 <Save className="size-4 mr-2" />
                 {isUpdating ? "Saving..." : "Save Changes"}
               </Button>
-            </CardFooter>
+            </div>
           </form>
         </Card>
 
-        <Card className="border-none shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="size-5" />
+        <Card className="bg-[#191919] border border-[#212327] rounded-[8px] p-6 shadow-none">
+          <CardHeader className="p-0 pb-5 border-b border-[#212327]">
+            <CardTitle className="text-base font-normal text-white flex items-center gap-2">
+              <Users className="size-4 text-[#7d8187]" />
               Project Members
             </CardTitle>
-            <CardDescription>
+            <p className="text-xs text-[#7d8187]">
               Manage who has access to this project.
-            </CardDescription>
+            </p>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="border rounded-lg divide-y">
+          <div className="space-y-3 py-5">
+            <div className="space-y-2">
               {workspaceMembers.map((member: WorkspaceMember) => {
                 const isProjectMember = projectMembers.includes(String(member.user._id));
 
                 return (
-                  <div key={member.user._id} className="flex items-center justify-between p-4 bg-card">
+                  <div key={member.user._id} className="flex items-center justify-between p-3 bg-[#141517] border border-[#212327] rounded-[8px] hover:border-[#363a3f] transition-colors">
                     <div className="flex items-center gap-3">
                       <Checkbox
                         id={`member-${member.user._id}`}
                         checked={isProjectMember}
                         onCheckedChange={(checked) => handleMemberToggle(String(member.user._id), checked as boolean)}
                       />
-                      <Avatar className="size-8">
+                      <Avatar className="size-7 rounded-full border border-[#212327] bg-[#1a1c20]">
                         <AvatarImage src={member.user.profilePicture} />
-                        <AvatarFallback>{member.user.name.charAt(0)}</AvatarFallback>
+                        <AvatarFallback className="text-[10px] font-mono bg-[#1a1c20] text-white">{member.user.name.charAt(0)}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <Label htmlFor={`member-${member.user._id}`} className="font-medium cursor-pointer">
+                        <Label htmlFor={`member-${member.user._id}`} className="text-sm font-normal text-white cursor-pointer">
                           {member.user.name}
                         </Label>
-                        <p className="text-xs text-muted-foreground">{member.user.email}</p>
+                        <p className="text-xs font-mono text-[#7d8187]">{member.user.email}</p>
                       </div>
                     </div>
                   </div>
                 );
               })}
             </div>
-          </CardContent>
-          <CardFooter className="flex justify-end border-t bg-muted/50 px-6 py-4 rounded-b-lg">
+          </div>
+          <div className="flex justify-end pt-4 border-t border-[#212327]">
             <Button onClick={handleUpdate} disabled={isUpdating || !canUpdate}>
               <Save className="size-4 mr-2" />
               {isUpdating ? "Saving..." : "Save Changes"}
             </Button>
-          </CardFooter>
+          </div>
         </Card>
 
-        <Card className="border-red-100 shadow-sm overflow-hidden">
-          <CardHeader className="bg-red-50/50">
-            <CardTitle className="text-red-600 flex items-center gap-2">
-              <AlertTriangle className="size-5" />
+        <Card className="border border-[#ff7a17]/30 bg-[#191919] rounded-[8px] p-6 shadow-none">
+          <CardHeader className="p-0 pb-4 border-b border-[#212327]">
+            <CardTitle className="text-xs font-mono uppercase tracking-[1.2px] text-[#ff7a17] flex items-center gap-2">
+              <AlertTriangle className="size-4" />
               Danger Zone
             </CardTitle>
-            <CardDescription className="text-red-600/70">
+            <p className="text-xs text-[#7d8187]">
               Irreversible actions related to this project.
-            </CardDescription>
+            </p>
           </CardHeader>
-          <CardContent className="py-6">
+          <div className="pt-5">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h4 className="font-bold text-sm">Delete this project</h4>
-                <p className="text-xs text-muted-foreground mt-1">
+                <h4 className="font-normal text-sm text-white">Delete this project</h4>
+                <p className="text-xs text-[#7d8187] mt-0.5">
                   Once deleted, all data including tasks, comments, and activity will be permanently removed.
                 </p>
               </div>
@@ -308,20 +311,20 @@ const ProjectSettings = () => {
                 Delete Project
               </Button>
             </div>
-          </CardContent>
+          </div>
         </Card>
       </div>
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="bg-[#141517] border border-[#212327] rounded-[8px] text-white">
           <DialogHeader>
-            <DialogTitle>Are you absolutely sure?</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-lg font-normal tracking-tight text-white">Are you absolutely sure?</DialogTitle>
+            <DialogDescription className="text-xs text-[#7d8187]">
               This action cannot be undone. This will permanently delete the project
-              <strong> {title}</strong> and all associated data.
+              <strong className="text-white"> {title}</strong> and all associated data.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-2 pt-2">
             <Button
               variant="outline"
               onClick={() => setIsDeleteDialogOpen(false)}

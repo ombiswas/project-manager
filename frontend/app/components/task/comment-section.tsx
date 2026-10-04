@@ -53,58 +53,59 @@ export const CommentSection = ({
     );
 
   return (
-    <div className="bg-card rounded-lg p-6 shadow-sm">
-      <h3 className="text-lg font-medium mb-4">Comments</h3>
+    <div className="bg-[#191919] rounded-[8px] border border-[#212327] p-6 shadow-none">
+      <h3 className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187] mb-4">Comments</h3>
 
-      <ScrollArea className="h-[300px] mb-4">
+      <ScrollArea className="h-[280px] mb-4 pr-3">
         {comments?.length > 0 ? (
           comments.map((comment) => (
-            <div key={comment._id} className="flex gap-4 py-2">
-              <Avatar className="size-8">
+            <div key={comment._id} className="flex gap-3 py-3 border-b border-[#212327]/60 last:border-0">
+              <Avatar className="size-7 rounded-full border border-[#212327] bg-[#1a1c20]">
                 <AvatarImage src={comment.author.profilePicture} />
-                <AvatarFallback>{comment.author.name.charAt(0)}</AvatarFallback>
+                <AvatarFallback className="text-[10px] font-mono bg-[#1a1c20] text-white">{comment.author.name.charAt(0)}</AvatarFallback>
               </Avatar>
 
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="font-medium text-sm">
+                  <span className="font-normal text-sm text-white">
                     {comment.author.name}
                   </span>
 
-                  <span className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(comment.createdAt, {
+                  <span className="text-xs font-mono text-[#7d8187]">
+                    {formatDistanceToNow(new Date(comment.createdAt), {
                       addSuffix: true,
                     })}
                   </span>
                 </div>
 
-                <p className="text-sm text-muted-foreground">{comment.text}</p>
+                <p className="text-xs text-[#dadbdf] leading-relaxed break-words">{comment.text}</p>
               </div>
             </div>
           ))
         ) : (
           <div className="flex items-center justify-center py-8">
-            <p className="text-sm text-muted-foreground">No comment yet</p>
+            <p className="text-xs font-mono text-[#7d8187]">NO COMMENTS YET</p>
           </div>
         )}
       </ScrollArea>
 
-      <Separator className="my-4" />
+      <Separator className="my-4 bg-[#212327]" />
 
       {canComment && (
-        <div className="mt-4">
+        <div className="mt-4 space-y-3">
           <Textarea
-            placeholder="Add a comment"
+            placeholder="Write a comment..."
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
+            rows={3}
           />
 
-          <div className="flex justify-end mt-4">
+          <div className="flex justify-end">
             <Button
               disabled={!newComment.trim() || isPending}
               onClick={handleAddComment}
             >
-              Post Comment
+              {isPending ? "Posting..." : "Post Comment"}
             </Button>
           </div>
         </div>

@@ -74,7 +74,7 @@ const Members = () => {
   if (!workspaceId) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Workspace Members</h1>
+        <h1 className="text-2xl font-normal tracking-tight text-ink">Workspace Members</h1>
         <ErrorState
           title="No workspace selected"
           message="Please select a workspace to view its members."
@@ -86,7 +86,7 @@ const Members = () => {
   if (isError || !data) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Workspace Members</h1>
+        <h1 className="text-2xl font-normal tracking-tight text-ink">Workspace Members</h1>
         <ErrorState
           title="Failed to load members"
           message={getErrorMessage(error, "Could not load member details for this workspace.")}
@@ -133,92 +133,99 @@ const Members = () => {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start md:items-center justify-between">
-        <h1 className="text-2xl font-bold">Workspace Members</h1>
+    <div className="space-y-6 pb-12">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-normal tracking-tight text-ink">Workspace Members</h1>
+          <p className="caption-mono text-mute mt-1">
+            {filteredMembers?.length} active {filteredMembers?.length === 1 ? "member" : "members"} in {data.name}
+          </p>
+        </div>
       </div>
 
       <Input
-        placeholder="Search members ...."
+        placeholder="Search members..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="max-w-md"
+        className="max-w-md rounded-full bg-canvas-card border-hairline focus-visible:border-canvas-mid text-sm"
       />
 
       <Tabs defaultValue="list">
         <TabsList>
           <TabsTrigger value="list">List View</TabsTrigger>
-          <TabsTrigger value="board">Board View</TabsTrigger>
+          <TabsTrigger value="board">Grid View</TabsTrigger>
         </TabsList>
 
         <TabsContent value="list">
-          <Card>
-            <CardHeader>
-              <CardTitle>Members</CardTitle>
-              <CardDescription>
+          <Card className="bg-canvas-card border border-hairline rounded-[8px] overflow-hidden">
+            <CardHeader className="p-4 md:p-5 border-b border-hairline">
+              <CardTitle className="text-base font-normal tracking-tight text-ink">Members</CardTitle>
+              <CardDescription className="caption-mono text-mute mt-0.5">
                 {filteredMembers?.length} members in your workspace
               </CardDescription>
             </CardHeader>
 
-            <CardContent>
-              <div className="divide-y">
+            <CardContent className="p-0">
+              <div className="divide-y divide-hairline">
                 {filteredMembers.map((member) => (
                   <div
                     key={member.user._id}
-                    className="flex flex-col md:flex-row items-center justify-between p-4 gap-3"
+                    className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 gap-3 hover:bg-canvas-soft/40 transition-colors"
                   >
-                    <div className="flex items-center space-x-4 flex-1">
-                      <Avatar className="bg-gray-500">
+                    <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                      <Avatar className="size-9 border border-hairline bg-canvas-soft">
                         <AvatarImage src={member.user.profilePicture} />
-                        <AvatarFallback>
+                        <AvatarFallback className="text-xs font-mono text-body">
                           {member.user.name.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <p className="font-medium flex items-center gap-2">
-                          {member.user.name}
+                      <div className="min-w-0">
+                        <p className="text-sm font-normal text-ink flex items-center gap-2">
+                          <span className="truncate">{member.user.name}</span>
                           {member.user._id === currentUser?._id && (
-                            <Badge variant="outline" className="text-[10px] h-4">You</Badge>
+                            <Badge variant="outline" className="text-[10px] font-mono h-4">You</Badge>
                           )}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-xs text-mute truncate font-light">
                           {member.user.email}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-4 ml-11 md:ml-0">
-                      <div className="flex items-center space-x-2">
+                    <div className="flex items-center gap-3 ml-12 md:ml-0 shrink-0">
+                      <div className="flex items-center gap-2">
                         <Badge
                           variant={
                             ["admin", "owner"].includes(member.role)
                               ? "destructive"
                               : "secondary"
                           }
-                          className="capitalize"
+                          className="capitalize text-[10px] font-mono h-5"
                         >
                           {member.role}
                         </Badge>
-                        <Badge variant={"outline"}>{data.name}</Badge>
+                        <Badge variant="outline" className="text-[10px] font-mono h-5 hidden sm:inline-flex">
+                          {data.name}
+                        </Badge>
                       </div>
 
                       {member.user._id !== currentUser?._id && 
                        (currentUserRole === "owner" || currentUserRole === "admin") && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
+                            <Button variant="ghost" size="icon" className="size-8 rounded-full text-mute hover:text-ink hover:bg-canvas-soft">
+                              <MoreHorizontal className="size-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuLabel className="caption-mono text-mute">Actions</DropdownMenuLabel>
                             
                             {currentUserRole === "owner" && (
                               <DropdownMenuItem 
                                 onClick={() => handleTransferOwnership(member.user._id)}
-                                className="text-blue-600 cursor-pointer"
+                                className="cursor-pointer text-accent-breeze focus:text-accent-breeze"
                               >
-                                <ShieldCheck className="mr-2 h-4 w-4" />
+                                <ShieldCheck className="mr-2 size-3.5" />
                                 Transfer Ownership
                               </DropdownMenuItem>
                             )}
@@ -226,16 +233,17 @@ const Members = () => {
                             {((currentUserRole === "owner") || 
                               (currentUserRole === "admin" && member.role !== "owner")) && (
                               <>
-                                <div className="p-2 border-t mt-1">
-                                  <p className="text-[10px] uppercase font-bold text-muted-foreground mb-2 px-2">Change Role</p>
+                                <DropdownMenuSeparator />
+                                <div className="p-1">
+                                  <p className="caption-mono text-mute px-2 py-1 text-[10px]">Change Role</p>
                                   {["admin", "member", "viewer"].map((role) => (
                                     <DropdownMenuItem
                                       key={role}
                                       onClick={() => handleChangeRole(member.user._id, role)}
                                       disabled={member.role === role}
-                                      className="capitalize cursor-pointer"
+                                      className="capitalize cursor-pointer text-xs"
                                     >
-                                      <UserCog className="mr-2 h-4 w-4 opacity-50" />
+                                      <UserCog className="mr-2 size-3.5 opacity-50" />
                                       {role}
                                     </DropdownMenuItem>
                                   ))}
@@ -243,9 +251,9 @@ const Members = () => {
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem 
                                   onClick={() => handleRemoveMember(member.user._id)}
-                                  className="text-red-600 cursor-pointer"
+                                  className="text-accent-sunset focus:text-accent-sunset cursor-pointer text-xs"
                                 >
-                                  <UserMinus className="mr-2 h-4 w-4" />
+                                  <UserMinus className="mr-2 size-3.5" />
                                   Remove Member
                                 </DropdownMenuItem>
                               </>
@@ -262,46 +270,46 @@ const Members = () => {
         </TabsContent>
 
         <TabsContent value="board">
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredMembers.map((member) => (
-              <Card key={member.user._id} className="relative group">
-                <CardContent className="p-6 flex flex-col items-center text-center">
-                  <Avatar className="bg-gray-500 size-20 mb-4">
+              <Card key={member.user._id} className="bg-canvas-card border border-hairline hover:border-canvas-mid rounded-[8px] transition-colors">
+                <CardContent className="p-5 flex flex-col items-center text-center">
+                  <Avatar className="size-16 mb-3 border border-hairline bg-canvas-soft">
                     <AvatarImage src={member.user.profilePicture} />
-                    <AvatarFallback className="uppercase">
+                    <AvatarFallback className="uppercase font-mono text-sm text-body">
                       {member.user.name.substring(0, 2)}
                     </AvatarFallback>
                   </Avatar>
 
-                  <h3 className="text-lg font-medium mb-1">
+                  <h3 className="text-sm font-normal text-ink mb-0.5 truncate max-w-full">
                     {member.user.name}
                     {member.user._id === currentUser?._id && " (You)"}
                   </h3>
 
-                  <p className="text-sm text-gray-500 mb-4 truncate w-full px-2">
+                  <p className="text-xs text-mute mb-3.5 truncate w-full px-1 font-light">
                     {member.user.email}
                   </p>
 
-                  <div className="flex flex-col gap-2 w-full">
+                  <div className="flex flex-col gap-2.5 w-full items-center">
                     <Badge
                       variant={
                         ["admin", "owner"].includes(member.role)
                           ? "destructive"
                           : "secondary"
                       }
-                      className="mx-auto"
+                      className="text-[10px] font-mono capitalize h-5"
                     >
                       {member.role}
                     </Badge>
 
                     {member.user._id !== currentUser?._id && 
                      (currentUserRole === "owner" || currentUserRole === "admin") && (
-                      <div className="pt-2 flex flex-wrap justify-center gap-x-3 gap-y-1">
+                      <div className="pt-2 border-t border-hairline w-full flex flex-wrap justify-center gap-2">
                         {currentUserRole === "owner" && (
                           <Button 
-                            variant="link" 
+                            variant="ghost" 
                             size="sm" 
-                            className="text-blue-600 h-auto p-0 text-[10px]"
+                            className="rounded-full text-accent-breeze hover:text-accent-breeze hover:bg-canvas-soft h-7 px-2.5 text-xs font-mono"
                             onClick={() => handleTransferOwnership(member.user._id)}
                           >
                             Transfer
@@ -313,8 +321,8 @@ const Members = () => {
                           <>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="link" size="sm" className="text-muted-foreground h-auto p-0 text-[10px]">
-                                  Role <ChevronDown className="size-2 ml-1" />
+                                <Button variant="ghost" size="sm" className="rounded-full text-mute hover:text-ink hover:bg-canvas-soft h-7 px-2.5 text-xs font-mono">
+                                  Role <ChevronDown className="size-3 ml-1" />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent>
@@ -322,7 +330,7 @@ const Members = () => {
                                   <DropdownMenuItem
                                     key={role}
                                     onClick={() => handleChangeRole(member.user._id, role)}
-                                    className="capitalize text-xs"
+                                    className="capitalize text-xs font-mono"
                                   >
                                     {role}
                                   </DropdownMenuItem>
@@ -331,9 +339,9 @@ const Members = () => {
                             </DropdownMenu>
 
                             <Button 
-                              variant="link" 
+                              variant="ghost" 
                               size="sm" 
-                              className="text-red-600 h-auto p-0 text-[10px]"
+                              className="rounded-full text-accent-sunset hover:text-accent-sunset hover:bg-canvas-soft h-7 px-2.5 text-xs font-mono"
                               onClick={() => handleRemoveMember(member.user._id)}
                             >
                               Remove

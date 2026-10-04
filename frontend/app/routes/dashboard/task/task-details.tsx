@@ -152,14 +152,15 @@ const TaskDetails = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-12">
       {/* Header section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6">
-        <div className="flex flex-col gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#212327] pb-5">
+        <div className="flex flex-col gap-2">
           <BackButton className="w-fit" />
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{task.title}</h1>
+          <div className="flex items-center gap-3 mt-1">
+            <p className="caption-mono text-xs text-[#7d8187]">TASK</p>
+            <h1 className="text-2xl font-normal tracking-[-0.6px] text-white">{task.title}</h1>
             {task.isArchived && (
-              <Badge variant="secondary" className="bg-amber-50 text-amber-700 hover:bg-amber-50 border-amber-200">
-                Archived
+              <Badge variant="outline" className="font-mono text-[10px] text-[#ffc285] border-[#ffc285]/30 bg-[#ffc285]/10">
+                ARCHIVED
               </Badge>
             )}
           </div>
@@ -168,24 +169,24 @@ const TaskDetails = () => {
         <div className="flex items-center gap-2">
           {canWatch && (
             <Button
-                variant="outline"
-                size="sm"
-                onClick={handleWatchTask}
-                className="flex items-center gap-2 shadow-sm"
-                disabled={isWatching}
-              >
-                {isUserWatching ? (
-                  <>
-                    <EyeOff className="size-4" />
-                    <span>Unwatch</span>
-                  </>
-                ) : (
-                  <>
-                    <Eye className="size-4" />
-                    <span>Watch</span>
-                  </>
-                )}
-              </Button>
+              variant="outline"
+              size="sm"
+              onClick={handleWatchTask}
+              className="flex items-center gap-2"
+              disabled={isWatching}
+            >
+              {isUserWatching ? (
+                <>
+                  <EyeOff className="size-3.5" />
+                  <span>Unwatch</span>
+                </>
+              ) : (
+                <>
+                  <Eye className="size-3.5" />
+                  <span>Watch</span>
+                </>
+              )}
+            </Button>
           )}
 
           {canManageTask && (
@@ -193,17 +194,17 @@ const TaskDetails = () => {
               variant="outline"
               size="sm"
               onClick={handleAchievedTask}
-              className="flex items-center gap-2 shadow-sm"
+              className="flex items-center gap-2"
               disabled={isAchieved}
             >
               {task.isArchived ? (
                 <>
-                  <ArchiveRestore className="size-4" />
+                  <ArchiveRestore className="size-3.5" />
                   <span>Unarchive</span>
                 </>
               ) : (
                 <>
-                  <Archive className="size-4" />
+                  <Archive className="size-3.5" />
                   <span>Archive</span>
                 </>
               )}
@@ -212,41 +213,41 @@ const TaskDetails = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left main content */}
         <div className="lg:col-span-8 space-y-6">
-          <div className="bg-card rounded-xl border p-6 shadow-sm space-y-8">
-            <div className="flex flex-col md:flex-row justify-between items-start gap-6 border-b pb-6">
+          <div className="bg-[#191919] rounded-[8px] border border-[#212327] p-6 shadow-none space-y-6">
+            <div className="flex flex-col md:flex-row justify-between items-start gap-4 border-b border-[#212327] pb-5">
               <div className="space-y-3 flex-1 w-full overflow-hidden">
-                <div className="flex items-center gap-4 flex-wrap">
+                <div className="flex items-center gap-3 flex-wrap">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Priority</span>
+                    <span className="text-[10px] font-mono uppercase tracking-[1px] text-[#7d8187]">Priority</span>
                     <TaskPrioritySelector priority={task.priority} taskId={task._id} canEdit={canManageTask} />
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Status</span>
+                    <span className="text-[10px] font-mono uppercase tracking-[1px] text-[#7d8187]">Status</span>
                     <TaskStatusSelector status={task.status} taskId={task._id} canEdit={canUpdateStatus} />
                   </div>
                 </div>
 
-                <div className="pt-2">
+                <div className="pt-1">
                   <TaskTitle title={task.title} taskId={task._id} canEdit={canManageTask} />
                 </div>
 
-                <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
-                  <span className="font-medium">Task ID:</span>
-                  <span className="font-mono bg-muted px-1.5 py-0.5 rounded uppercase">{task._id.slice(-6)}</span>
-                  <span className="mx-1">•</span>
+                <div className="flex items-center gap-2 text-xs font-mono text-[#7d8187] pt-1">
+                  <span>ID:</span>
+                  <span className="text-white bg-[#1a1c20] px-2 py-0.5 rounded-full border border-[#212327]">{task._id.slice(-6)}</span>
+                  <span>•</span>
                   <span>Created {formatDistanceToNow(new Date(task.createdAt), { addSuffix: true })}</span>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-3">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+            <div className="space-y-2">
+              <h3 className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
                 Description
               </h3>
-              <div className="bg-muted/10 rounded-lg p-2 border border-muted/50 min-h-[100px]">
+              <div className="bg-[#141517] rounded-[8px] p-4 border border-[#212327] min-h-[90px]">
                 <TaskDescription
                   description={task.description || "No description provided."}
                   taskId={task._id}
@@ -255,9 +256,9 @@ const TaskDetails = () => {
               </div>
             </div>
 
-            <div className="pt-4 border-t">
-              <div className="space-y-4">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+            <div className="pt-4 border-t border-[#212327]">
+              <div className="space-y-3">
+                <h3 className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
                   Assignees
                 </h3>
                 <div className="max-w-md">
@@ -271,47 +272,48 @@ const TaskDetails = () => {
               </div>
             </div>
 
-            <div className="pt-6 border-t">
+            <div className="pt-4 border-t border-[#212327]">
               <SubTasksDetails subTasks={task.subtasks || []} taskId={task._id} canEdit={canManageSubtasks} />
             </div>
           </div>
 
-            <CommentSection 
-              taskId={task._id} 
-              members={data.project.members}
-              canComment={canComment} 
-            />
+          <CommentSection 
+            taskId={task._id} 
+            members={data.project.members}
+            canComment={canComment} 
+          />
         </div>
 
         {/* Right sidebar */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="bg-card rounded-xl border p-6 shadow-sm space-y-6">
+          <div className="bg-[#191919] rounded-[8px] border border-[#212327] p-5 shadow-none space-y-4">
             <Watchers watchers={task.watchers || []} />
           </div>
           
-          <div className="bg-card rounded-xl border p-6 shadow-sm space-y-4">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground border-b pb-2">
+          <div className="bg-[#191919] rounded-[8px] border border-[#212327] p-5 shadow-none space-y-3">
+            <h3 className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187] border-b border-[#212327] pb-2">
               Task Activity
             </h3>
             <TaskActivity resourceId={task._id} />
           </div>
 
           {canDeleteTask && (
-            <div className="bg-red-50/50 rounded-xl border border-red-100 p-6 shadow-sm">
-              <h3 className="text-sm font-bold text-red-700 uppercase tracking-wider border-b border-red-100 pb-2">
+            <div className="bg-[#191919] rounded-[8px] border border-[#ff7a17]/30 p-5 space-y-3 shadow-none">
+              <h3 className="text-xs font-mono uppercase tracking-[1.2px] text-[#ff7a17] border-b border-[#212327] pb-2 flex items-center gap-1.5">
+                <AlertTriangle className="size-3.5" />
                 Danger Zone
               </h3>
-              <p className="text-xs text-red-600/70">
-                Actions that can't be undone. Delete this task permanently from the project.
+              <p className="text-xs text-[#7d8187]">
+                Permanently delete this task and its history from the project.
               </p>
               <Button
                 variant="destructive"
                 size="sm"
-                className="w-full shadow-sm"
+                className="w-full mt-2"
                 onClick={() => setIsDeleteDialogOpen(true)}
                 disabled={isDeleting}
               >
-                <Trash2 className="size-4 mr-2" />
+                <Trash2 className="size-3.5 mr-2" />
                 Delete Task
               </Button>
             </div>
@@ -320,15 +322,14 @@ const TaskDetails = () => {
       </div>
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="bg-[#141517] border border-[#212327] rounded-[8px] text-white">
           <DialogHeader>
-            <DialogTitle>Delete Task?</DialogTitle>
-            <DialogDescription>
-              This action cannot be undone. This will permanently delete the task
-              <strong> {task.title}</strong> and all its comments and activity history.
+            <DialogTitle className="text-lg font-normal tracking-tight text-white">Delete Task?</DialogTitle>
+            <DialogDescription className="text-xs text-[#7d8187]">
+              This action cannot be undone. This will permanently delete <strong className="text-white">{task.title}</strong> and all associated activity.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-2 pt-2">
             <Button
               variant="outline"
               onClick={() => setIsDeleteDialogOpen(false)}

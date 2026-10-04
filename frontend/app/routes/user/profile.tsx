@@ -154,27 +154,27 @@ const Profile = () => {
     <div className="space-y-8 pb-12">
       <div className="px-4 md:px-0">
         <BackButton />
-        <h3 className="text-lg font-medium mt-6">Profile Information</h3>
-        <p className="text-sm text-muted-foreground">
+        <h3 className="text-xl font-normal tracking-tight text-ink mt-6">Profile Information</h3>
+        <p className="caption-mono text-mute mt-1">
           Manage your account settings and preferences.
         </p>
       </div>
 
-      <Separator />
+      <Separator className="bg-hairline" />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
-          <CardDescription>Update your personal details.</CardDescription>
+      <Card className="bg-canvas-card border border-hairline rounded-[8px]">
+        <CardHeader className="p-5 border-b border-hairline">
+          <CardTitle className="text-base font-normal tracking-tight text-ink">Personal Information</CardTitle>
+          <CardDescription className="caption-mono text-mute mt-0.5">Update your personal details.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-5">
           <Form {...profileForm}>
             <form
               onSubmit={profileForm.handleSubmit(handleProfileFormSubmit)}
               className="grid gap-4"
             >
-              <div className="flex items-center space-x-4 mb-6">
-                <Avatar className="h-20 w-20 bg-gray-600">
+              <div className="flex items-center space-x-4 mb-4">
+                <Avatar className="h-16 w-16 border border-hairline bg-canvas-soft">
                   <AvatarImage
                     src={
                       profileForm.watch("profilePicture") ||
@@ -182,7 +182,7 @@ const Profile = () => {
                     }
                     alt={user?.name}
                   />
-                  <AvatarFallback className="text-xl">
+                  <AvatarFallback className="text-base font-mono text-body">
                     {user?.name?.charAt(0) || "U"}
                   </AvatarFallback>
                 </Avatar>
@@ -191,18 +191,16 @@ const Profile = () => {
                     id="avatar-upload"
                     type="file"
                     accept="image/*"
-                    // onChange={handleAvatarChange}
-                    // disabled={uploading || isUpdatingProfile}
                     style={{ display: "none" }}
                   />
                   <Button
                     type="button"
                     size="sm"
                     variant="outline"
+                    className="rounded-full font-mono text-xs h-8"
                     onClick={() =>
                       document.getElementById("avatar-upload")?.click()
                     }
-                  // disabled={uploading || isUpdatingProfile}
                   >
                     Change Avatar
                   </Button>
@@ -212,35 +210,36 @@ const Profile = () => {
                 control={profileForm.control}
                 name="name"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="max-w-md">
                     <FormLabel>Full Name</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} className="rounded-full bg-canvas-card border-hairline focus-visible:border-canvas-mid text-sm h-9" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <div className="grid gap-2">
+              <div className="grid gap-2 max-w-md">
                 <Label htmlFor="email">Email Address</Label>
                 <Input
                   id="email"
                   type="email"
                   defaultValue={user?.email}
                   disabled
+                  className="rounded-full bg-canvas-soft border-hairline text-mute cursor-not-allowed text-sm h-9"
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="caption-mono text-mute text-[11px]">
                   Your email address cannot be changed.
                 </p>
               </div>
               <Button
                 type="submit"
-                className="w-fit"
+                className="w-fit rounded-full font-mono text-xs mt-2"
                 disabled={isUpdatingProfile || isPending}
               >
                 {isUpdatingProfile ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
                     Saving...
                   </>
                 ) : (
@@ -252,12 +251,12 @@ const Profile = () => {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Security</CardTitle>
-          <CardDescription>Update your password.</CardDescription>
+      <Card className="bg-canvas-card border border-hairline rounded-[8px]">
+        <CardHeader className="p-5 border-b border-hairline">
+          <CardTitle className="text-base font-normal tracking-tight text-ink">Security</CardTitle>
+          <CardDescription className="caption-mono text-mute mt-0.5">Update your password.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-5">
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(handlePasswordChange)}
@@ -270,7 +269,7 @@ const Profile = () => {
                 </Alert>
               )}
 
-              <div className="grid gap-2">
+              <div className="grid gap-3 max-w-md">
                 <FormField
                   control={form.control}
                   name="currentPassword"
@@ -282,6 +281,7 @@ const Profile = () => {
                           id="current-password"
                           type="password"
                           placeholder="********"
+                          className="rounded-full bg-canvas-card border-hairline focus-visible:border-canvas-mid text-sm h-9"
                           {...field}
                         />
                       </FormControl>
@@ -301,6 +301,7 @@ const Profile = () => {
                           id="new-password"
                           type="password"
                           placeholder="********"
+                          className="rounded-full bg-canvas-card border-hairline focus-visible:border-canvas-mid text-sm h-9"
                           {...field}
                         />
                       </FormControl>
@@ -320,6 +321,7 @@ const Profile = () => {
                           id="confirm-password"
                           placeholder="********"
                           type="password"
+                          className="rounded-full bg-canvas-card border-hairline focus-visible:border-canvas-mid text-sm h-9"
                           {...field}
                         />
                       </FormControl>
@@ -331,12 +333,12 @@ const Profile = () => {
 
               <Button
                 type="submit"
-                className="mt-2 w-fit"
+                className="mt-2 w-fit rounded-full font-mono text-xs"
                 disabled={isPending || isChangingPassword}
               >
                 {isPending || isChangingPassword ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
                     Updating...
                   </>
                 ) : (

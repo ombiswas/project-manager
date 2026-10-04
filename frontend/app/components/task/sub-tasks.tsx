@@ -55,16 +55,16 @@ export const SubTasksDetails = ({
   };
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+    <div className="space-y-3">
+      <h3 className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
         Sub Tasks
       </h3>
 
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {subTasks.length > 0 ? (
-          <div className="border rounded-md divide-y overflow-hidden">
+          <div className="space-y-1.5">
             {subTasks.map((subTask) => (
-              <div key={subTask._id} className="flex items-center space-x-3 p-3 hover:bg-muted/30 transition-colors">
+              <div key={subTask._id} className="flex items-center space-x-3 p-2.5 rounded-[6px] bg-[#141517] border border-[#212327] hover:border-[#363a3f] transition-colors">
                 <Checkbox
                   id={subTask._id}
                   checked={subTask.completed}
@@ -78,8 +78,8 @@ export const SubTasksDetails = ({
                 <label
                   htmlFor={subTask._id}
                   className={cn(
-                    "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1",
-                    subTask.completed ? "line-through text-muted-foreground" : ""
+                    "text-xs font-normal leading-none cursor-pointer flex-1",
+                    subTask.completed ? "line-through text-[#7d8187]" : "text-white"
                   )}
                 >
                   {subTask.title}
@@ -88,14 +88,16 @@ export const SubTasksDetails = ({
             ))}
           </div>
         ) : (
-          <div className="text-sm text-muted-foreground italic p-3 border rounded-md bg-muted/20">No sub tasks added yet</div>
+          <div className="text-xs font-mono text-[#7d8187] p-3 rounded-[6px] border border-[#212327] bg-[#141517]">
+            NO SUB TASKS ADDED
+          </div>
         )}
       </div>
 
       {canEdit && (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pt-1">
           <Input
-            placeholder="Add a new sub task..."
+            placeholder="Add sub task..."
             value={newSubTask}
             onChange={(e) => setNewSubTask(e.target.value)}
             className="flex-1"

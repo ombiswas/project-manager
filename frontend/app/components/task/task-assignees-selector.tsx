@@ -59,37 +59,36 @@ export const TaskAssigneesSelector = ({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
-          <Users className="size-4" />
+        <h4 className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187] flex items-center gap-2">
+          <Users className="size-3.5" />
           Assignees
         </h4>
       </div>
 
       <div className="flex flex-wrap gap-2 items-center">
         {assignees.length === 0 && !canEdit && (
-          <span className="text-xs text-muted-foreground italic">No assignees</span>
+          <span className="text-xs font-mono text-[#7d8187]">NO ASSIGNEES</span>
         )}
         
         {assignees.filter(a => !!a).map((assignee) => (
-          <Badge
+          <span
             key={assignee._id}
-            variant="secondary"
-            className="flex items-center gap-1.5 pl-1 py-1 pr-2 rounded-full border-muted/50"
+            className="inline-flex items-center gap-1.5 pl-1.5 py-1 pr-2.5 rounded-full bg-[#1a1c20] border border-[#212327] text-white"
           >
-            <Avatar className="size-5">
+            <Avatar className="size-5 rounded-full border border-[#212327]">
               <AvatarImage src={assignee.profilePicture} />
-              <AvatarFallback className="text-[10px] bg-slate-100">
+              <AvatarFallback className="text-[9px] font-mono bg-[#141517] text-white">
                 {assignee.name?.charAt(0) || "U"}
               </AvatarFallback>
             </Avatar>
-            <span className="text-xs font-medium">{assignee.name || "Unknown"}</span>
+            <span className="text-xs font-normal text-white">{assignee.name || "Unknown"}</span>
             {canEdit && (
               <X 
-                className="size-3 cursor-pointer hover:text-red-500 transition-colors ml-0.5" 
+                className="size-3 cursor-pointer text-[#7d8187] hover:text-[#ff7a17] transition-colors ml-0.5" 
                 onClick={() => handleToggle(assignee._id, false)}
               />
             )}
-          </Badge>
+          </span>
         ))}
 
         {canEdit && (
@@ -98,22 +97,22 @@ export const TaskAssigneesSelector = ({
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="h-8 w-8 rounded-full p-0 border-dashed hover:border-primary hover:text-primary transition-all"
+                className="h-7 w-7 rounded-full p-0"
               >
-                <Plus className="size-4" />
+                <Plus className="size-3.5" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-64 p-0 shadow-xl border-muted/40" align="start">
-              <div className="p-2 border-b bg-muted/20">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">
+            <PopoverContent className="w-64 p-0 bg-[#141517] border border-[#212327] rounded-[8px] text-white" align="start">
+              <div className="p-2.5 border-b border-[#212327]">
+                <span className="text-[10px] font-mono uppercase tracking-[1.2px] text-[#7d8187] px-1">
                   Project Members
                 </span>
               </div>
-              <div className="p-1 max-h-64 overflow-y-auto">
+              <div className="p-1 max-h-60 overflow-y-auto">
                 {projectMembers.filter(m => !!m).map((member) => (
                   <div
                     key={member._id}
-                    className="flex items-center gap-2 p-2 hover:bg-accent hover:text-accent-foreground rounded-md cursor-pointer transition-colors"
+                    className="flex items-center gap-2 p-2 hover:bg-[#1a1c20] rounded-[6px] cursor-pointer transition-colors"
                     onClick={() => handleToggle(member._id, !selectedIds.includes(member._id))}
                   >
                     <Checkbox
@@ -129,22 +128,22 @@ export const TaskAssigneesSelector = ({
                       className="flex-1 flex items-center gap-2 cursor-pointer"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <Avatar className="size-6 shadow-sm">
+                      <Avatar className="size-6 border border-[#212327]">
                         <AvatarImage src={member.profilePicture} />
-                        <AvatarFallback className="text-[10px]">
+                        <AvatarFallback className="text-[9px] font-mono bg-[#1a1c20] text-white">
                           {member.name?.charAt(0) || "U"}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium leading-none">{member.name || "Unknown"}</span>
-                        <span className="text-[10px] text-muted-foreground leading-tight">{member.email}</span>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs font-normal text-white truncate">{member.name || "Unknown"}</span>
+                        <span className="text-[10px] font-mono text-[#7d8187] truncate">{member.email}</span>
                       </div>
                     </Label>
                   </div>
                 ))}
                 {projectMembers.length === 0 && (
-                  <p className="text-xs text-center py-4 text-muted-foreground italic">
-                    No members found in this project.
+                  <p className="text-xs font-mono text-center py-4 text-[#7d8187]">
+                    NO MEMBERS FOUND
                   </p>
                 )}
               </div>

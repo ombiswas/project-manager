@@ -65,9 +65,10 @@ const Dashboard = () => {
     }
 
     return (
-        <div className="space-y-8 2xl:space-y-12 pb-8">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold">Dashboard</h1>
+        <div className="space-y-6 pb-8">
+            <div className="flex flex-col space-y-1">
+                <p className="caption-mono text-xs text-[#7d8187]">OVERVIEW</p>
+                <h1 className="text-2xl font-normal tracking-[-0.6px] text-white">Dashboard</h1>
             </div>
 
             <StatsCard data={data.stats} />

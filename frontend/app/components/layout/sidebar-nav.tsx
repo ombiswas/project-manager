@@ -26,7 +26,7 @@ export const SidebarNav = ({
     const navigate = useNavigate();
 
     return (
-        <nav className={cn("flex flex-col gap-y-2", className)} {...props}>
+        <nav className={cn("flex flex-col gap-y-1", className)} {...props}>
             {items.map((el) => {
                 const Icon = el.icon;
                 const isActive = location.pathname === el.href;
@@ -44,18 +44,20 @@ export const SidebarNav = ({
                 return (
                     <Button
                         key={el.href}
-                        variant={isActive ? "outline" : "ghost"}
+                        variant="ghost"
                         className={cn(
-                            "h-10 w-10 p-0 justify-center", // mobile
-                            !isCollapsed && "md:w-full md:justify-start md:px-4 md:py-2", // desktop not collapsed
-                            isCollapsed && "md:w-10 md:justify-center md:p-0", // desktop collapsed
-                            isActive && "bg-blue-800/20 text-blue-600 font-medium"
+                            "h-9 w-9 p-0 justify-center rounded-full text-[#7d8187] transition-all duration-200 cursor-pointer",
+                            !isCollapsed && "md:w-full md:justify-start md:px-3.5 md:py-2 md:rounded-full",
+                            isCollapsed && "md:w-9 md:justify-center md:p-0",
+                            isActive
+                                ? "bg-[#1a1c20] border border-white/20 text-white font-normal"
+                                : "hover:bg-[#1a1c20] hover:text-white hover:border-transparent"
                         )}
                         title={isCollapsed ? el.title : undefined}
                         onClick={handleClick}
                     >
-                        <Icon className={cn("size-4", !isCollapsed && "md:mr-2")} />
-                        <span className={cn("hidden", !isCollapsed && "md:block")}>
+                        <Icon className={cn("size-4 shrink-0", !isCollapsed && "md:mr-2.5", isActive ? "text-white" : "text-[#7d8187]")} />
+                        <span className={cn("hidden text-sm font-normal", !isCollapsed && "md:block")}>
                             {el.title}
                         </span>
                     </Button>

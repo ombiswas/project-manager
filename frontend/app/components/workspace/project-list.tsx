@@ -17,9 +17,11 @@ export const ProjectList = ({
     onCreateProject,
 }: ProjectListProps) => {
     return (
-        <div>
-            <h3 className="text-xl font-medium mb-4">Projects</h3>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-4">
+            <h2 className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+                Projects
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {projects.length === 0 ? (
                     <NoDataFound
                         title="No projects found"

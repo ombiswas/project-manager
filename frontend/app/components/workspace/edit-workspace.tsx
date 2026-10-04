@@ -101,28 +101,30 @@ export const EditWorkspace = ({
 
     return (
         <Dialog open={isEditingWorkspace} onOpenChange={setIsEditingWorkspace} modal={true}>
-            <DialogContent className="max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                <DialogHeader className="pb-4">
-                    <DialogTitle className="text-xl font-bold">Workspace Settings</DialogTitle>
+            <DialogContent className="bg-[#141517] border border-[#212327] rounded-[8px] text-white max-h-[90vh] overflow-y-auto">
+                <DialogHeader className="pb-2">
+                    <p className="caption-mono text-[10px] text-[#7d8187]">SETTINGS</p>
+                    <DialogTitle className="text-xl font-normal tracking-[-0.5px] text-white">Workspace Settings</DialogTitle>
                 </DialogHeader>
 
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                        <div className="space-y-5">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <div className="space-y-4 py-2">
                             <FormField
                                 control={form.control}
                                 name="name"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-sm font-semibold">Workspace Name</FormLabel>
+                                        <FormLabel className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+                                            Workspace Name
+                                        </FormLabel>
                                         <FormControl>
                                             <Input 
                                                 placeholder="Enter workspace name" 
-                                                className="h-11 bg-muted/30 border-muted-foreground/20 focus:bg-background transition-all" 
                                                 {...field} 
                                             />
                                         </FormControl>
-                                        <FormMessage />
+                                        <FormMessage className="text-xs text-[#ff7a17]" />
                                     </FormItem>
                                 )}
                             />
@@ -131,15 +133,16 @@ export const EditWorkspace = ({
                                 name="description"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-sm font-semibold">Description</FormLabel>
+                                        <FormLabel className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+                                            Description
+                                        </FormLabel>
                                         <FormControl>
                                             <Textarea
                                                 {...field}
                                                 placeholder="What is this workspace about?"
-                                                className="bg-muted/30 border-muted-foreground/20 focus:bg-background transition-all resize-none"
-                                                rows={4} />
+                                                rows={3} />
                                         </FormControl>
-                                        <FormMessage />
+                                        <FormMessage className="text-xs text-[#ff7a17]" />
                                     </FormItem>
                                 )}
                             />
@@ -148,24 +151,26 @@ export const EditWorkspace = ({
                                 name="color"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-sm font-semibold">Workspace Theme</FormLabel>
+                                        <FormLabel className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+                                            Accent Color
+                                        </FormLabel>
                                         <FormControl>
-                                            <div className="flex gap-3 flex-wrap pt-1">
+                                            <div className="flex gap-2.5 flex-wrap pt-1">
                                                 {colorOptions.map((color) => (
                                                     <div
                                                         key={color}
                                                         onClick={() => field.onChange(color)}
                                                         className={cn(
-                                                            "w-8 h-8 rounded-full cursor-pointer hover:scale-110 transition-all duration-200 border-2 border-transparent",
+                                                            "w-7 h-7 rounded-full cursor-pointer transition-all border border-white/10 hover:scale-105",
                                                             field.value === color &&
-                                                            "ring-2 ring-offset-2 ring-primary border-white"
+                                                            "ring-2 ring-white ring-offset-2 ring-offset-[#141517]"
                                                         )}
                                                         style={{ backgroundColor: color }}
                                                     ></div>
                                                 ))}
                                             </div>
                                         </FormControl>
-                                        <FormMessage />
+                                        <FormMessage className="text-xs text-[#ff7a17]" />
                                     </FormItem>
                                 )}
                             />
@@ -174,14 +179,13 @@ export const EditWorkspace = ({
                         <div className="flex items-center justify-end gap-3 pt-2">
                             <Button 
                                 type="button" 
-                                variant="ghost" 
+                                variant="outline" 
                                 onClick={() => setIsEditingWorkspace(false)} 
                                 disabled={isPending}
-                                className="font-medium"
                             >
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={isPending} className="px-8 font-semibold">
+                            <Button type="submit" disabled={isPending}>
                                 {isPending ? "Saving..." : "Save Changes"}
                             </Button>
                         </div>
@@ -189,23 +193,23 @@ export const EditWorkspace = ({
                 </Form>
 
                 {isOwner && (
-                    <div className="mt-10 pt-8 border-t space-y-8 pb-4">
+                    <div className="mt-6 pt-6 border-t border-[#212327] space-y-4">
                         <div className="space-y-1">
-                            <h3 className="text-xs font-bold text-red-600 uppercase tracking-widest flex items-center gap-2">
+                            <h3 className="text-xs font-mono uppercase tracking-[1.2px] text-[#ff7a17] flex items-center gap-2">
                                 <ShieldCheck className="size-4" />
                                 Danger Zone
                             </h3>
-                            <p className="text-xs text-muted-foreground">
-                                High-impact administrative actions. Please proceed with caution.
+                            <p className="text-xs text-[#7d8187]">
+                                High-impact administrative actions. Proceed with caution.
                             </p>
                         </div>
 
-                        <div className="space-y-6">
-                            <div className="p-5 rounded-xl border border-red-100 bg-red-50/20 space-y-4">
+                        <div className="space-y-4">
+                            <div className="p-4 rounded-[8px] border border-[#212327] bg-[#191919] space-y-3">
                                 <div>
-                                    <h4 className="text-sm font-bold text-slate-900">Transfer Ownership</h4>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        Grant owner status to another member. You will be demoted to an Admin.
+                                    <h4 className="text-sm font-normal text-white">Transfer Ownership</h4>
+                                    <p className="text-xs text-[#7d8187] mt-0.5">
+                                        Grant owner status to another member. You will become an admin.
                                     </p>
                                 </div>
                                 <div className="flex gap-2 flex-wrap">
@@ -223,7 +227,7 @@ export const EditWorkspace = ({
                                                     key={mId}
                                                     variant="outline"
                                                     size="sm"
-                                                    className="text-xs h-9 bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all shadow-sm"
+                                                    className="text-xs h-8"
                                                     onClick={() => handleTransfer(mId)}
                                                     disabled={isTransferring}
                                                 >
@@ -232,23 +236,23 @@ export const EditWorkspace = ({
                                             );
                                         })}
                                     {workspace.members.length <= 1 && (
-                                        <p className="text-xs italic text-muted-foreground py-2">No other members available for transfer.</p>
+                                        <p className="text-xs font-mono text-[#7d8187] py-1">NO OTHER MEMBERS AVAILABLE</p>
                                     )}
                                 </div>
                             </div>
 
-                            <div className="p-5 rounded-xl border border-red-200 bg-red-50/40 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                                <div className="space-y-1">
-                                    <h4 className="text-sm font-bold text-red-800">Delete Workspace</h4>
-                                    <p className="text-xs text-red-700/70 max-w-xs">
-                                        This will permanently remove this workspace and all associated projects, tasks, and data.
+                            <div className="p-4 rounded-[8px] border border-[#ff7a17]/30 bg-[#191919] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="space-y-0.5">
+                                    <h4 className="text-sm font-normal text-white">Delete Workspace</h4>
+                                    <p className="text-xs text-[#7d8187] max-w-sm">
+                                        Permanently delete this workspace and all associated projects and tasks.
                                     </p>
                                 </div>
                                 <Button
                                     variant="destructive"
                                     onClick={handleDelete}
                                     disabled={isDeleting}
-                                    className="sm:w-auto w-full font-bold shadow-sm"
+                                    className="sm:w-auto w-full"
                                 >
                                     {isDeleting ? "Deleting..." : "Delete Workspace"}
                                 </Button>

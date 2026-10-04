@@ -16,18 +16,18 @@ export const TaskActivity = ({ resourceId }: { resourceId: string }) => {
   if (isPending) return <Loader />;
 
   return (
-    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+    <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
       {data?.length === 0 ? (
-        <p className="text-sm text-muted-foreground italic">No activity yet</p>
+        <p className="text-xs text-mute font-mono italic px-1">No activity yet</p>
       ) : (
         data?.map((activity) => (
-          <div key={activity._id} className="flex gap-3 items-start">
+          <div key={activity._id} className="flex gap-2.5 items-start">
             {getActivityIcon(activity.action)}
 
-            <div className="flex flex-col flex-1 overflow-hidden">
-              <p className="text-sm text-foreground break-words whitespace-pre-wrap">
-                <span className="font-semibold">{activity.user.name}</span>{" "}
-                <span className="text-muted-foreground">{activity.details?.description}</span>
+            <div className="flex flex-col flex-1 overflow-hidden pt-0.5">
+              <p className="text-sm text-ink break-words whitespace-pre-wrap font-normal leading-snug">
+                <span className="text-white">{activity.user?.name || "User"}</span>{" "}
+                <span className="text-mute font-mono text-xs">{activity.details?.description}</span>
               </p>
             </div>
           </div>

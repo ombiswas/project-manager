@@ -85,17 +85,20 @@ const Workspaces = () => {
 
   return (
     <>
-      <div className="space-y-8">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl md:text-3xl font-bold">Workspaces</h2>
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <p className="caption-mono text-xs text-[#7d8187]">ORGANIZATION</p>
+            <h1 className="text-2xl font-normal tracking-[-0.6px] text-white">Workspaces</h1>
+          </div>
 
-          <Button onClick={() => setIsCreatingWorkspace(true)}>
+          <Button onClick={() => setIsCreatingWorkspace(true)} className="w-fit">
             <PlusCircle className="size-4 mr-2" />
             New Workspace
           </Button>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
           {workspaces.map((ws) => (
             <WorkspaceCard 
               key={ws._id} 
@@ -105,12 +108,14 @@ const Workspaces = () => {
           ))}
 
           {workspaces.length === 0 && (
-            <NoDataFound
-              title="No workspaces found"
-              description="Create a new workspace to get started"
-              buttonText="Create Workspace"
-              buttonAction={() => setIsCreatingWorkspace(true)}
-            />
+            <div className="col-span-full">
+              <NoDataFound
+                title="No workspaces found"
+                description="Create a new workspace to get started"
+                buttonText="Create Workspace"
+                buttonAction={() => setIsCreatingWorkspace(true)}
+              />
+            </div>
           )}
         </div>
       </div>
@@ -121,15 +126,17 @@ const Workspaces = () => {
       />
 
       <Dialog open={!!workspaceToDelete} onOpenChange={(open) => !open && setWorkspaceToDelete(null)}>
-        <DialogContent>
+        <DialogContent className="bg-[#141517] border border-[#212327] rounded-[8px] text-white">
           <DialogHeader>
-            <DialogTitle>Delete Workspace</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete the workspace <strong>{workspaceToDelete?.name}</strong>? 
+            <DialogTitle className="text-lg font-normal tracking-tight text-white">
+              Delete Workspace
+            </DialogTitle>
+            <DialogDescription className="text-xs text-[#7d8187]">
+              Are you sure you want to delete <span className="text-white font-medium">{workspaceToDelete?.name}</span>? 
               This action cannot be undone and will permanently delete all projects and tasks inside it.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0 pt-2">
             <Button variant="outline" onClick={() => setWorkspaceToDelete(null)} disabled={isDeleting}>
               Cancel
             </Button>
@@ -158,53 +165,52 @@ const WorkspaceCard = ({
 
   return (
     <Card 
-      className="transition-all hover:shadow-md hover:-translate-y-1 h-full flex flex-col cursor-pointer"
+      className="bg-[#191919] border border-[#212327] rounded-[8px] p-5 shadow-none transition-colors hover:border-[#363a3f] h-full flex flex-col cursor-pointer group"
       onClick={() => navigate(`/workspaces/${workspace._id}`)}
     >
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <div className="flex gap-2">
-            <WorkspaceAvatar name={workspace.name} color={workspace.color} />
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <WorkspaceAvatar name={workspace.name} color={workspace.color} />
 
-            <div>
-              <CardTitle>{workspace.name}</CardTitle>
-              <span className="text-xs text-muted-foreground">
-                Created at {format(workspace.createdAt, "MMM d, yyyy h:mm a")}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="flex items-center text-muted-foreground">
-              <Users className="size-4 mr-1" />
-              <span className="text-xs">{workspace.members.length}</span>
-            </div>
-            {isOwner && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete();
-                }}
-              >
-                <Trash className="size-4" />
-              </Button>
-            )}
+          <div className="min-w-0">
+            <h3 className="text-sm font-normal text-white group-hover:text-white/80 transition-colors truncate">
+              {workspace.name}
+            </h3>
+            <span className="font-mono text-[11px] text-[#7d8187]">
+              {format(new Date(workspace.createdAt), "MMM d, yyyy")}
+            </span>
           </div>
         </div>
 
-        <CardDescription className="line-clamp-2 mt-2">
-          {workspace.description || "No description"}
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent className="flex-1 flex items-end">
-        <div className="text-sm text-muted-foreground w-full">
-          View workspace details and projects
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center text-[#7d8187] font-mono text-xs">
+            <Users className="size-3.5 mr-1" />
+            <span>{workspace.members.length}</span>
+          </div>
+          {isOwner && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-7 w-7 rounded-full text-[#7d8187] hover:text-[#ff7a17] hover:bg-[#1a1c20]"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+            >
+              <Trash className="size-3.5" />
+            </Button>
+          )}
         </div>
-      </CardContent>
+      </div>
+
+      <p className="text-xs text-[#7d8187] line-clamp-2 flex-1 mb-4">
+        {workspace.description || "No description provided."}
+      </p>
+
+      <div className="pt-3 border-t border-[#212327] flex items-center justify-between font-mono text-[11px] text-[#7d8187] uppercase tracking-[1px]">
+        <span>WORKSPACE</span>
+        <span className="text-white group-hover:underline">VIEW &rarr;</span>
+      </div>
     </Card>
   );
 };

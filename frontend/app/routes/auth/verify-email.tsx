@@ -33,51 +33,67 @@ const VerifyEmail = () => {
     }, [searchParams, token, mutate]);
 
     return (
-        <div className='flex flex-col items-center justify-center min-h-screen pt-10 pb-20 px-4'>
-            <h1 className='text-2xl font-bold'>Verify Email</h1>
-            <p className='text-sm text-gray-500'>Verifying your email...</p>
+        <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0a] py-12 px-4">
+            <div className="w-full max-w-sm space-y-6">
+                <div className="text-center space-y-1.5">
+                    <p className="caption-mono text-xs text-[#7d8187]">VERIFICATION</p>
+                    <h1 className="text-2xl font-normal tracking-[-0.6px] text-white">Email Verification</h1>
+                    <p className="text-sm font-normal text-[#7d8187]">
+                        {isVerifying ? "Verifying your email address..." : isSuccess ? "Your email has been confirmed" : "Verification encountered an issue"}
+                    </p>
+                </div>
 
-            <Card className='w-full max-w-md'>
+                <Card className="border border-[#212327] bg-[#141517] p-6 rounded-[8px] shadow-none">
+                    <CardContent className="p-0">
+                        <div className="flex flex-col justify-center items-center py-6 text-center space-y-3">
+                            {isVerifying ? (
+                                <>
+                                    <div className="w-12 h-12 rounded-full border border-[#212327] bg-[#1a1c20] flex items-center justify-center">
+                                        <Loader className="w-5 h-5 text-white animate-spin" />
+                                    </div>
+                                    <h3 className="text-base font-normal text-white">Verifying email...</h3>
+                                    <p className="text-xs text-[#7d8187]">
+                                        Please wait while we verify your token.
+                                    </p>
+                                </>
+                            ) : isSuccess ? (
+                                <>
+                                    <div className="w-12 h-12 rounded-full border border-[#212327] bg-[#1a1c20] flex items-center justify-center">
+                                        <CheckCircle className="w-6 h-6 text-white" />
+                                    </div>
+                                    <h3 className="text-base font-normal text-white">Email Verified</h3>
+                                    <p className="text-xs text-[#7d8187]">
+                                        Your email has been verified successfully.
+                                    </p>
 
-                <CardContent>
-                    <div className="flex flex-col justify-center items-center py-6">
-                        {isVerifying ? (
-                            <>
-                                <Loader className='w-10 h-10 text-gray-500 animate-spin' />
-                                <h3 className='text-lg font-semibold'>Verifying email...</h3>
-                                <p className='text-sm text-gray-500'>
-                                    Please wait while we verify your email.
-                                </p>
-                            </>
-                        ) : isSuccess ? (
-                            <>
-                                <CheckCircle className="w-10 h-10 text-green-500" />
-                                <h3 className='text-lg font-semibold'>Email Verified</h3>
-                                <p className='text-sm text-gray-500'>
-                                    Your email has been verified successfully.
-                                </p>
+                                    <div className="pt-2 w-full">
+                                        <Link to="/sign-in" className="w-full block">
+                                            <Button variant="default" className="w-full">Back to Sign in</Button>
+                                        </Link>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="w-12 h-12 rounded-full border border-[#212327] bg-[#1a1c20] flex items-center justify-center">
+                                        <XCircle className="w-6 h-6 text-[#ff7a17]" />
+                                    </div>
+                                    <h3 className="text-base font-normal text-white">Verification Failed</h3>
+                                    <p className="text-xs text-[#7d8187]">
+                                        Your email verification link has expired or is invalid.
+                                    </p>
 
-                                <Link to="/sign-in" className='text-sm text-blue-500 mt-6'>
-                                    <Button variant="outline"> Back to Sign in</Button>
-                                </Link>
-                            </>
-                        ) : (
-                            <>
-                                <XCircle className="w-10 h-10 text-red-500" />
-                                <h3 className='text-lg font-semibold'>Email Verification Failed</h3>
-                                <p className='text-sm text-gray-500'>
-                                    Your email verification failed. Please try again.
-                                </p>
-
-                                <Link to="/sign-in" className='text-sm text-blue-500 mt-6'>
-                                    <Button variant="outline"> Back to Sign in</Button>
-                                </Link>
-                            </>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
-        </div >
+                                    <div className="pt-2 w-full">
+                                        <Link to="/sign-in" className="w-full block">
+                                            <Button variant="outline" className="w-full">Back to Sign in</Button>
+                                        </Link>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
     );
 };
 

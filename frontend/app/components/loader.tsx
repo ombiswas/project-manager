@@ -6,13 +6,12 @@ interface LoaderProps {
 
 export const Loader = ({ label = "Loading..." }: LoaderProps) => {
     return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] w-full gap-4 animate-in fade-in duration-500">
+        <div className="flex flex-col items-center justify-center min-h-[50vh] w-full gap-3 animate-in fade-in duration-200">
             <div className="relative flex items-center justify-center">
-                <div className="absolute inset-0 rounded-full bg-blue-100 dark:bg-blue-900/20 blur-xl animate-pulse" />
-                <Loader2 className="w-12 h-12 animate-spin text-blue-600 relative z-10" />
+                <Loader2 className="w-6 h-6 animate-spin text-white stroke-[1.5]" />
             </div>
             {label && (
-                <p className="text-sm font-medium text-muted-foreground animate-pulse tracking-wide">
+                <p className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
                     {label}
                 </p>
             )}

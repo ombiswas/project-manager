@@ -50,62 +50,66 @@ export const StatisticsCharts = ({
 }: StatisticsChartsProps) => {
   return (
     <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mb-8">
-      <Card className="lg:col-span-2">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
+      <Card className="lg:col-span-2 bg-[#191919] border border-[#212327] rounded-[8px] shadow-none">
+        <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-[#212327]">
           <div className="space-y-0.5">
-            <CardTitle className="text-base font-medium">Task Trends</CardTitle>
-            <CardDescription>Daily task status changes</CardDescription>
+            <CardTitle className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+              Task Trends
+            </CardTitle>
+            <p className="text-xs text-[#dadbdf]">Daily task status activity</p>
           </div>
-          <ChartLine className="size-5 text-muted-foreground" />
+          <ChartLine className="size-4 text-[#7d8187]" />
         </CardHeader>
-        <CardContent className="w-full overflow-x-auto md:overflow-x-hidden">
+        <CardContent className="w-full pt-4 overflow-x-auto md:overflow-x-hidden">
           <div className="min-w-[350px]">
             <ChartContainer
-              className="h-[300px]"
+              className="h-[280px]"
               config={{
-                completed: { color: "#10b981" }, // green
-                inProgress: { color: "#f59e0b" }, // blue
-                todo: { color: "#3b82f6" }, // gray
+                completed: { label: "Completed", color: "#ffffff" },
+                inProgress: { label: "In Progress", color: "#a0c3ec" },
+                todo: { label: "To Do", color: "#7d8187" },
               }}
             >
               <LineChart data={taskTrendsData}>
                 <XAxis
                   dataKey={"name"}
-                  stroke="#888888"
-                  fontSize={12}
+                  stroke="#7d8187"
+                  fontSize={11}
                   tickLine={false}
                   axisLine={false}
+                  className="font-mono"
                 />
                 <YAxis
-                  stroke="#888888"
-                  fontSize={12}
+                  stroke="#7d8187"
+                  fontSize={11}
                   tickLine={false}
                   axisLine={false}
+                  className="font-mono"
                 />
 
-                <CartesianGrid strokeDasharray={"3 3"} vertical={false} />
+                <CartesianGrid stroke="#212327" strokeDasharray={"3 3"} vertical={false} />
                 <ChartTooltip />
 
                 <Line
                   type="monotone"
                   dataKey={"completed"}
-                  stroke="#10b981"
+                  stroke="#ffffff"
                   strokeWidth={2}
-                  dot={{ r: 4 }}
+                  dot={{ r: 3, fill: "#ffffff" }}
                 />
                 <Line
                   type="monotone"
                   dataKey="inProgress"
-                  stroke="#3b82f6"
+                  stroke="#a0c3ec"
                   strokeWidth={2}
-                  dot={{ r: 4 }}
+                  dot={{ r: 3, fill: "#a0c3ec" }}
                 />
                 <Line
                   type="monotone"
                   dataKey="todo"
-                  stroke="#6b7280"
+                  stroke="#7d8187"
                   strokeWidth={2}
-                  dot={{ r: 4 }}
+                  dot={{ r: 3, fill: "#7d8187" }}
                 />
 
                 <ChartLegend content={<ChartLegendContent />} />
@@ -116,27 +120,26 @@ export const StatisticsCharts = ({
       </Card>
 
       {/* project status  */}
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
+      <Card className="bg-[#191919] border border-[#212327] rounded-[8px] shadow-none">
+        <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-[#212327]">
           <div className="space-y-0.5">
-            <CardTitle className="text-base font-medium">
+            <CardTitle className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
               Project Status
             </CardTitle>
-            <CardDescription>Project status breakdown</CardDescription>
+            <p className="text-xs text-[#dadbdf]">Active portfolio distribution</p>
           </div>
 
-          <ChartPie className="size-5 text-muted-foreground" />
+          <ChartPie className="size-4 text-[#7d8187]" />
         </CardHeader>
 
-        <CardContent className="w-full overflow-x-auto md:overflow-x-hidden">
+        <CardContent className="w-full pt-4 overflow-x-auto md:overflow-x-hidden">
           <div className="min-w-[350px]">
             <ChartContainer
-              className="h-[300px]"
+              className="h-[280px]"
               config={{
-                Completed: { color: "#10b981" },
-                "In Progress": { color: "#3b82f6" },
-                Planning: { color: "#f59e0b" },
+                Completed: { label: "Completed", color: "#ffffff" },
+                "In Progress": { label: "In Progress", color: "#a0c3ec" },
+                Planning: { label: "Planning", color: "#c4b5fd" },
               }}
             >
               <PieChart>
@@ -148,15 +151,22 @@ export const StatisticsCharts = ({
                   nameKey="name"
                   innerRadius={60}
                   outerRadius={80}
-                  paddingAngle={2}
+                  paddingAngle={3}
                   label={({ name, percent = 0 }) =>
                     `${name} (${(percent * 100).toFixed(0)}%)`
                   }
                   labelLine={false}
+                  className="font-mono text-[11px]"
                 >
-                  {projectStatusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
+                  {projectStatusData.map((entry, index) => {
+                    const color =
+                      entry.name === "Completed"
+                        ? "#ffffff"
+                        : entry.name === "In Progress"
+                        ? "#a0c3ec"
+                        : "#c4b5fd";
+                    return <Cell key={`cell-${index}`} fill={color} stroke="#191919" strokeWidth={2} />;
+                  })}
                 </Pie>
                 <ChartTooltip />
                 <ChartLegend content={<ChartLegendContent />} />
@@ -167,24 +177,24 @@ export const StatisticsCharts = ({
       </Card>
 
       {/* task priority  */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
+      <Card className="bg-[#191919] border border-[#212327] rounded-[8px] shadow-none">
+        <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-[#212327]">
           <div className="space-y-0.5">
-            <CardTitle className="text-base font-medium">
+            <CardTitle className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
               Task Priority
             </CardTitle>
-            <CardDescription>Task priority breakdown</CardDescription>
+            <p className="text-xs text-[#dadbdf]">Priority load balancing</p>
           </div>
         </CardHeader>
 
-        <CardContent className="w-full overflow-x-auto md:overflow-x-hidden">
+        <CardContent className="w-full pt-4 overflow-x-auto md:overflow-x-hidden">
           <div className="min-w-[350px]">
             <ChartContainer
-              className="h-[300px]"
+              className="h-[280px]"
               config={{
-                High: { color: "#ef4444" },
-                Medium: { color: "#f59e0b" },
-                Low: { color: "#6b7280" },
+                High: { label: "High", color: "#ff7a17" },
+                Medium: { label: "Medium", color: "#a0c3ec" },
+                Low: { label: "Low", color: "#7d8187" },
               }}
             >
               <PieChart>
@@ -194,17 +204,24 @@ export const StatisticsCharts = ({
                   cy="50%"
                   innerRadius={60}
                   outerRadius={80}
-                  paddingAngle={2}
+                  paddingAngle={3}
                   dataKey="value"
                   nameKey="name"
                   label={({ name, percent = 0 }) =>
                     `${name} ${(percent * 100).toFixed(0)}%`
                   }
                   labelLine={false}
+                  className="font-mono text-[11px]"
                 >
-                  {taskPriorityData?.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
+                  {taskPriorityData?.map((entry, index) => {
+                    const color =
+                      entry.name === "High"
+                        ? "#ff7a17"
+                        : entry.name === "Medium"
+                        ? "#a0c3ec"
+                        : "#7d8187";
+                    return <Cell key={`cell-${index}`} fill={color} stroke="#191919" strokeWidth={2} />;
+                  })}
                 </Pie>
                 <ChartTooltip />
                 <ChartLegend content={<ChartLegendContent />} />
@@ -215,54 +232,56 @@ export const StatisticsCharts = ({
       </Card>
 
       {/* Workspace Productivity Chart */}
-      <Card className="lg:col-span-2">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
+      <Card className="lg:col-span-2 bg-[#191919] border border-[#212327] rounded-[8px] shadow-none">
+        <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-[#212327]">
           <div className="space-y-0.5">
-            <CardTitle className="text-base font-medium">
+            <CardTitle className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
               Workspace Productivity
             </CardTitle>
-            <CardDescription>Task completion by project</CardDescription>
+            <p className="text-xs text-[#dadbdf]">Task completion volume by project</p>
           </div>
-          <ChartBarBig className="h-5 w-5 text-muted-foreground" />
+          <ChartBarBig className="h-4 w-4 text-[#7d8187]" />
         </CardHeader>
-        <CardContent className="w-full overflow-x-auto md:overflow-x-hidden">
+        <CardContent className="w-full pt-4 overflow-x-auto md:overflow-x-hidden">
           <div className="min-w-[350px]">
             <ChartContainer
-              className="h-[300px]"
+              className="h-[280px]"
               config={{
-                completed: { color: "#3b82f6" },
-                total: { color: "red" },
+                completed: { label: "Completed", color: "#a0c3ec" },
+                total: { label: "Total Tasks", color: "#363a3f" },
               }}
             >
               <BarChart
                 data={workspaceProductivityData}
-                barGap={0}
-                barSize={20}
+                barGap={4}
+                barSize={16}
               >
                 <XAxis
                   dataKey="name"
-                  stroke="#888888"
-                  fontSize={12}
+                  stroke="#7d8187"
+                  fontSize={11}
                   tickLine={false}
                   axisLine={false}
+                  className="font-mono"
                 />
                 <YAxis
-                  stroke="#888888"
-                  fontSize={12}
+                  stroke="#7d8187"
+                  fontSize={11}
                   tickLine={false}
                   axisLine={false}
+                  className="font-mono"
                 />
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <CartesianGrid stroke="#212327" strokeDasharray="3 3" vertical={false} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar
                   dataKey="total"
-                  fill="#000"
+                  fill="#363a3f"
                   radius={[4, 4, 0, 0]}
                   name="Total Tasks"
                 />
                 <Bar
                   dataKey="completed"
-                  fill="#3b82f6"
+                  fill="#a0c3ec"
                   radius={[4, 4, 0, 0]}
                   name="Completed Tasks"
                 />

@@ -35,36 +35,39 @@ export const WorkspaceHeader = ({
   const canEditWorkspace = ["owner", "admin"].includes(currentUserRole || "");
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 pb-2">
       <div className="space-y-3">
-        <div className="flex flex-col-reverse md:flex-row md:justify-between md:items-center gap-3">
-          <div className="flex md:items-center gap-3">
+        <div className="flex flex-col-reverse md:flex-row md:justify-between md:items-center gap-4">
+          <div className="flex md:items-center gap-3.5">
             {workspace.color && (
               <WorkspaceAvatar color={workspace.color} name={workspace.name} />
             )}
 
-            <h2 className="text-xl md:text-2xl font-semibold">
-              {workspace.name}
-            </h2>
+            <div>
+              <p className="caption-mono text-[10px] text-[#7d8187]">WORKSPACE</p>
+              <h1 className="text-2xl font-normal tracking-[-0.6px] text-white">
+                {workspace.name}
+              </h1>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3 justify-between md:justify-start mb-4 md:mb-0">
+          <div className="flex items-center gap-2.5 flex-wrap">
             {canEditWorkspace && (
-              <Button variant={"outline"} size="icon" onClick={onEditWorkspace} title="Workspace Settings">
+              <Button variant="outline" size="icon" onClick={onEditWorkspace} title="Workspace Settings" className="rounded-full">
                 <Settings className="size-4" />
               </Button>
             )}
             
             {canInviteMember && (
-              <Button variant={"outline"} onClick={onInviteMember}>
-                <UserPlus className="size-4 mr-2" />
+              <Button variant="outline" onClick={onInviteMember}>
+                <UserPlus className="size-3.5 mr-2" />
                 Invite
               </Button>
             )}
 
             {canCreateProject && (
               <Button onClick={onCreateProject}>
-                <Plus className="size-4 mr-2" />
+                <Plus className="size-3.5 mr-2" />
                 Create Project
               </Button>
             )}
@@ -72,28 +75,28 @@ export const WorkspaceHeader = ({
         </div>
 
         {workspace.description && (
-          <p className="text-sm md:text-base text-muted-foreground">
+          <p className="text-sm text-[#dadbdf] max-w-3xl">
             {workspace.description}
           </p>
         )}
       </div>
 
       {members.length > 0 && (
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Members</span>
+        <div className="flex items-center gap-3 pt-1">
+          <span className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">MEMBERS</span>
 
-          <div className="flex space-x-2">
+          <div className="flex items-center -space-x-1.5">
             {members.map((member) => (
               <Avatar
                 key={member._id}
-                className="relative h-8 w-8 rounded-full  border-2 border-background overflow-hidden"
+                className="relative h-7 w-7 rounded-full border border-[#212327] bg-[#1a1c20]"
                 title={member.user.name}
               >
                 <AvatarImage
                   src={member.user.profilePicture}
                   alt={member.user.name}
                 />
-                <AvatarFallback>{member.user.name.charAt(0)}</AvatarFallback>
+                <AvatarFallback className="text-[11px] font-mono text-white bg-[#1a1c20]">{member.user.name.charAt(0)}</AvatarFallback>
               </Avatar>
             ))}
           </div>

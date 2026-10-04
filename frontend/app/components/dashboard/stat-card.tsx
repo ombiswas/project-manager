@@ -9,50 +9,69 @@ import {
 
 export const StatsCard = ({ data }: { data: StatsCardProps }) => {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">Total Projects</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{data.totalProjects}</div>
-          <p className="text-xs text-muted-foreground">
-            {data.totalProjectInProgress} in progress
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <Card className="bg-[#191919] border border-[#212327] rounded-[8px] p-5 shadow-none hover:border-[#363a3f] transition-colors">
+        <div className="flex flex-col justify-between space-y-3">
+          <p className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+            Total Projects
           </p>
-        </CardContent>
+          <div>
+            <div className="font-mono text-3xl font-normal tracking-tight text-white">
+              {data.totalProjects}
+            </div>
+            <p className="text-xs text-[#7d8187] mt-1">
+              <span className="text-[#dadbdf] font-mono">{data.totalProjectInProgress}</span> in progress
+            </p>
+          </div>
+        </div>
       </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{data.totalTasks}</div>
-          <p className="text-xs text-muted-foreground">
-            {data.totalTaskCompleted} completed
+
+      <Card className="bg-[#191919] border border-[#212327] rounded-[8px] p-5 shadow-none hover:border-[#363a3f] transition-colors">
+        <div className="flex flex-col justify-between space-y-3">
+          <p className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+            Total Tasks
           </p>
-        </CardContent>
+          <div>
+            <div className="font-mono text-3xl font-normal tracking-tight text-white">
+              {data.totalTasks}
+            </div>
+            <p className="text-xs text-[#7d8187] mt-1">
+              <span className="text-[#dadbdf] font-mono">{data.totalTaskCompleted}</span> completed
+            </p>
+          </div>
+        </div>
       </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">To Do</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{data.totalTaskToDo}</div>
-          <p className="text-xs text-muted-foreground">
-            Tasks waiting to be done
+
+      <Card className="bg-[#191919] border border-[#212327] rounded-[8px] p-5 shadow-none hover:border-[#363a3f] transition-colors">
+        <div className="flex flex-col justify-between space-y-3">
+          <p className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+            To Do
           </p>
-        </CardContent>
+          <div>
+            <div className="font-mono text-3xl font-normal tracking-tight text-white">
+              {data.totalTaskToDo}
+            </div>
+            <p className="text-xs text-[#7d8187] mt-1">
+              Tasks waiting to be done
+            </p>
+          </div>
+        </div>
       </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{data.totalTaskInProgress}</div>
-          <p className="text-xs text-muted-foreground">
-            Tasks currently in progress
+
+      <Card className="bg-[#191919] border border-[#212327] rounded-[8px] p-5 shadow-none hover:border-[#363a3f] transition-colors">
+        <div className="flex flex-col justify-between space-y-3">
+          <p className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+            In Progress
           </p>
-        </CardContent>
+          <div>
+            <div className="font-mono text-3xl font-normal tracking-tight text-white">
+              {data.totalTaskInProgress}
+            </div>
+            <p className="text-xs text-[#7d8187] mt-1">
+              Tasks currently in progress
+            </p>
+          </div>
+        </div>
       </Card>
     </div>
   );

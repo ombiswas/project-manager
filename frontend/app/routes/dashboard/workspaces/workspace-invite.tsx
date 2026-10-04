@@ -118,21 +118,21 @@ const WorkspaceInvite = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen pt-10 pb-20 px-4">
-      <Card className="max-w-md w-full">
-        <CardHeader>
+    <div className="flex items-center justify-center min-h-screen bg-[#0a0a0a] py-12 px-4">
+      <Card className="max-w-md w-full bg-[#141517] border border-[#212327] rounded-[8px] p-6 shadow-none">
+        <CardHeader className="p-0 pb-4">
+          <p className="caption-mono text-xs text-[#7d8187] mb-2">WORKSPACE INVITATION</p>
           <div className="flex items-center gap-3 mb-2">
             <WorkspaceAvatar name={workspace.name} color={workspace.color} />
-            <CardTitle>{workspace.name}</CardTitle>
+            <h2 className="text-xl font-normal tracking-tight text-white">{workspace.name}</h2>
           </div>
-          <CardDescription>
-            You've been invited to join the "<strong>{workspace.name}</strong>"
-            workspace.
-          </CardDescription>
+          <p className="text-sm text-[#dadbdf]">
+            You have been invited to join the <span className="text-white font-medium">{workspace.name}</span> workspace.
+          </p>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="p-0 space-y-5">
           {workspace.description && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs text-[#7d8187] bg-[#1a1c20] p-3 rounded-[8px] border border-[#212327]">
               {workspace.description}
             </p>
           )}

@@ -25,48 +25,52 @@ export const ProjectCard = ({
   workspaceId,
 }: ProjectCardProps) => {
   return (
-    <Link to={`/workspaces/${workspaceId}/projects/${project._id}`}>
-      <Card className="transition-all duration-300 hover:shadow-md hover:translate-y-1 h-full flex flex-col">
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between gap-4">
-            <CardTitle className="text-lg font-bold line-clamp-1">{project.title}</CardTitle>
+    <Link to={`/workspaces/${workspaceId}/projects/${project._id}`} className="group block h-full">
+      <Card className="bg-[#191919] border border-[#212327] rounded-[8px] p-5 shadow-none hover:border-[#363a3f] transition-colors h-full flex flex-col justify-between">
+        <div>
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <h3 className="text-base font-normal text-white group-hover:text-white/80 transition-colors line-clamp-1">
+              {project.title}
+            </h3>
             <span
               className={cn(
-                "text-[10px] px-2 py-1 rounded-full font-bold whitespace-nowrap uppercase tracking-tight",
+                "px-2.5 py-0.5 rounded-full shrink-0",
                 getTaskStatusColor(project.status)
               )}
             >
               {project.status}
             </span>
           </div>
-          <CardDescription className="line-clamp-2 min-h-[2.5rem]">
-            {project.description || "No description provided"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="mt-auto space-y-4">
+
+          <p className="text-xs text-[#7d8187] line-clamp-2 min-h-[2rem] mb-4">
+            {project.description || "No description provided."}
+          </p>
+        </div>
+
+        <div className="space-y-4 pt-2">
           <div className="space-y-1.5">
-            <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-              <span>Progress</span>
-              <span className="text-blue-600">{progress}%</span>
+            <div className="flex justify-between text-[11px] font-mono uppercase tracking-[1px]">
+              <span className="text-[#7d8187]">PROGRESS</span>
+              <span className="text-white">{progress}%</span>
             </div>
 
             <Progress value={progress} className="h-1.5" />
           </div>
 
-          <div className="flex items-center justify-between pt-2 border-t">
-            <div className="flex items-center text-xs gap-1.5 text-muted-foreground font-medium">
-              <span className="text-foreground font-bold">{project.tasks.length}</span>
-              <span>Tasks</span>
+          <div className="flex items-center justify-between pt-3 border-t border-[#212327]">
+            <div className="flex items-center text-xs font-mono text-[#7d8187] gap-1.5">
+              <span className="text-white">{project.tasks.length}</span>
+              <span>TASKS</span>
             </div>
 
             {project.dueDate && (
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium bg-muted/50 px-2 py-1 rounded-md">
-                <CalendarDays className="size-3.5" />
+              <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#7d8187] bg-[#1a1c20] border border-[#212327] px-2 py-0.5 rounded-full">
+                <CalendarDays className="size-3 text-[#7d8187]" />
                 <span>{format(new Date(project.dueDate), "MMM d, yyyy")}</span>
               </div>
             )}
           </div>
-        </CardContent>
+        </div>
       </Card>
     </Link>
   );

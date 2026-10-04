@@ -204,11 +204,11 @@ export const CreateTaskDialog = ({
                             <Button
                               variant={"outline"}
                               className={
-                                "w-full justify-start text-left font-normal" +
-                                (!field.value ? "text-muted-foreground" : "")
+                                "w-full justify-start text-left font-normal rounded-full border-hairline bg-canvas-card hover:bg-canvas-soft text-sm " +
+                                (!field.value ? "text-mute" : "text-ink")
                               }
                             >
-                              <CalendarIcon className="size-4 mr-2" />
+                              <CalendarIcon className="size-4 mr-2 text-mute" />
                               {field.value ? (
                                 format(new Date(field.value), "PPPP")
                               ) : (
@@ -251,23 +251,27 @@ export const CreateTaskDialog = ({
                             <PopoverTrigger asChild>
                               <Button
                                 variant="outline"
-                                className="w-full justify-start text-left font-normal min-h-11"
+                                className="w-full justify-start text-left font-normal rounded-full border-hairline bg-canvas-card hover:bg-canvas-soft text-sm min-h-10"
                               >
                                 {selectedMembers.length === 0 ? (
-                                  <span className="text-muted-foreground">
+                                  <span className="text-mute">
                                     Select assignees
                                   </span>
                                 ) : selectedMembers.length <= 2 ? (
-                                  selectedMembers
-                                    .map((m) => {
-                                      const member = projectMembers.find(
-                                        (pm) => pm._id === m
-                                      );
-                                      return `${member?.name}`;
-                                    })
-                                    .join(", ")
+                                  <span className="text-ink">
+                                    {selectedMembers
+                                      .map((m) => {
+                                        const member = projectMembers.find(
+                                          (pm) => pm._id === m
+                                        );
+                                        return `${member?.name}`;
+                                      })
+                                      .join(", ")}
+                                  </span>
                                 ) : (
-                                  `${selectedMembers.length} assignees selected`
+                                  <span className="text-ink font-mono text-xs">
+                                    {`${selectedMembers.length} assignees selected`}
+                                  </span>
                                 )}
                               </Button>
                             </PopoverTrigger>
@@ -276,13 +280,13 @@ export const CreateTaskDialog = ({
                               className="w-sm max-h-60 overflow-y-auto p-2"
                               align="start"
                             >
-                              <div className="flex flex-col gap-2">
+                              <div className="flex flex-col gap-1.5">
                                 {projectMembers.filter(m => !!m).map((member) => {
                                   const isSelected = selectedMembers.includes(member._id);
                                   return (
                                     <div
                                       key={member._id}
-                                      className="flex items-center gap-2 p-2 border rounded"
+                                      className="flex items-center gap-2.5 px-3 py-2 rounded-[6px] border border-hairline hover:border-canvas-mid bg-canvas-card transition-colors"
                                     >
                                       <Checkbox
                                         checked={isSelected}
@@ -302,7 +306,7 @@ export const CreateTaskDialog = ({
                                         }}
                                         id={`member-${member._id}`}
                                       />
-                                      <span className="truncate flex-1">
+                                      <span className="truncate flex-1 text-sm text-body">
                                         {member.name || "Unknown"}
                                       </span>
                                     </div>
@@ -321,7 +325,7 @@ export const CreateTaskDialog = ({
             </div>
 
             <DialogFooter>
-              <Button type="submit" disabled={isPending}>
+              <Button type="submit" disabled={isPending} className="rounded-full">
                 {isPending ? "Creating..." : "Create Task"}
               </Button>
             </DialogFooter>

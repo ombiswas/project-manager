@@ -15,15 +15,15 @@ export const NoDataFound = ({
   buttonAction,
 }: NoDataFoundProps) => {
   return (
-    <div className="col-span-full text-center py-12 2xl:py-24 bg-muted/40 rounded-lg">
-      <LayoutGrid className="size-12 mx-auto text-muted-foreground" />
-      <h3 className="mt-4 text-lg font-semibold">{title}</h3>
+    <div className="col-span-full text-center py-12 px-6 bg-[#1a1c20] border border-[#212327] rounded-[8px]">
+      <LayoutGrid className="size-10 mx-auto text-[#7d8187] stroke-1" />
+      <h3 className="mt-4 text-base font-normal text-white">{title}</h3>
 
-      <p className="mt-2 text-sm text-muted-foreground max-w-sm mx-auto">
+      <p className="mt-2 text-sm font-normal text-[#7d8187] max-w-sm mx-auto">
         {description}
       </p>
       {buttonText && buttonAction && (
-        <Button onClick={buttonAction} className="mt-4">
+        <Button onClick={buttonAction} variant="outline" className="mt-5">
           <CirclePlus className="size-4 mr-2" />
           {buttonText}
         </Button>

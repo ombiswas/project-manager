@@ -92,26 +92,26 @@ export const CreateProjectDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[540px]">
-        <DialogHeader>
-          <DialogTitle>Create Project</DialogTitle>
-          <DialogDescription>
-            Create a new project to get started
-          </DialogDescription>
+      <DialogContent className="sm:max-w-[540px] bg-[#141517] border border-[#212327] rounded-[8px] text-white max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="pb-2">
+          <p className="caption-mono text-[10px] text-[#7d8187]">PROJECT SETUP</p>
+          <DialogTitle className="text-xl font-normal tracking-[-0.5px] text-white">Create Project</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Project Title</FormLabel>
+                  <FormLabel className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+                    Project Title
+                  </FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Project Title" />
+                    <Input {...field} placeholder="Autonomous Navigation, Core Engine..." />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-xs text-[#ff7a17]" />
                 </FormItem>
               )}
             />
@@ -120,15 +120,17 @@ export const CreateProjectDialog = ({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Project Description</FormLabel>
+                  <FormLabel className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+                    Project Description
+                  </FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}
-                      placeholder="Project Description"
+                      placeholder="Objectives and scope of this project"
                       rows={3}
                     />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-xs text-[#ff7a17]" />
                 </FormItem>
               )}
             />
@@ -137,14 +139,16 @@ export const CreateProjectDialog = ({
               name="status"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Project Status</FormLabel>
+                  <FormLabel className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+                    Project Status
+                  </FormLabel>
                   <FormControl>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select Project Status" />
                       </SelectTrigger>
 
-                      <SelectContent>
+                      <SelectContent className="bg-[#141517] border border-[#212327] rounded-[8px] text-white">
                         {Object.values(ProjectStatus).map((status) => (
                           <SelectItem key={status} value={status}>
                             {status}
@@ -153,7 +157,7 @@ export const CreateProjectDialog = ({
                       </SelectContent>
                     </Select>
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-xs text-[#ff7a17]" />
                 </FormItem>
               )}
             />
@@ -164,27 +168,27 @@ export const CreateProjectDialog = ({
                 name="startDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Start Date</FormLabel>
+                    <FormLabel className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">Start Date</FormLabel>
                     <FormControl>
                       <Popover modal={true}>
                         <PopoverTrigger asChild>
                           <Button
                             variant={"outline"}
                             className={
-                              "w-full justify-start text-left font-normal" +
-                              (!field.value ? "text-muted-foreground" : "")
+                              "w-full justify-start text-left font-normal " +
+                              (!field.value ? "text-[#7d8187]" : "text-white")
                             }
                           >
-                            <CalendarIcon className="size-4 mr-2" />
+                            <CalendarIcon className="size-4 mr-2 text-[#7d8187]" />
                             {field.value ? (
-                              format(new Date(field.value), "PPPP")
+                              format(new Date(field.value), "PP")
                             ) : (
-                              <span>Pick a date</span>
+                              <span>Pick date</span>
                             )}
                           </Button>
                         </PopoverTrigger>
 
-                        <PopoverContent>
+                        <PopoverContent className="bg-[#141517] border border-[#212327] rounded-[8px] text-white p-0">
                           <Calendar
                             mode="single"
                             selected={
@@ -197,7 +201,7 @@ export const CreateProjectDialog = ({
                         </PopoverContent>
                       </Popover>
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs text-[#ff7a17]" />
                   </FormItem>
                 )}
               />
@@ -206,27 +210,27 @@ export const CreateProjectDialog = ({
                 name="dueDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Due Date</FormLabel>
+                    <FormLabel className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">Due Date</FormLabel>
                     <FormControl>
                       <Popover modal={true}>
                         <PopoverTrigger asChild>
                           <Button
                             variant={"outline"}
                             className={
-                              "w-full justify-start text-left font-normal" +
-                              (!field.value ? "text-muted-foreground" : "")
+                              "w-full justify-start text-left font-normal " +
+                              (!field.value ? "text-[#7d8187]" : "text-white")
                             }
                           >
-                            <CalendarIcon className="size-4 mr-2" />
+                            <CalendarIcon className="size-4 mr-2 text-[#7d8187]" />
                             {field.value ? (
-                              format(new Date(field.value), "PPPP")
+                              format(new Date(field.value), "PP")
                             ) : (
-                              <span>Pick a date</span>
+                              <span>Pick date</span>
                             )}
                           </Button>
                         </PopoverTrigger>
 
-                        <PopoverContent>
+                        <PopoverContent className="bg-[#141517] border border-[#212327] rounded-[8px] text-white p-0">
                           <Calendar
                             mode="single"
                             selected={
@@ -239,7 +243,7 @@ export const CreateProjectDialog = ({
                         </PopoverContent>
                       </Popover>
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs text-[#ff7a17]" />
                   </FormItem>
                 )}
               />
@@ -250,11 +254,11 @@ export const CreateProjectDialog = ({
               name="tags"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tags</FormLabel>
+                  <FormLabel className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">Tags</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Tags separated by comma" />
+                    <Input {...field} placeholder="infrastructure, ml, api..." />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-xs text-[#ff7a17]" />
                 </FormItem>
               )}
             />
@@ -267,16 +271,16 @@ export const CreateProjectDialog = ({
 
                 return (
                   <FormItem>
-                    <FormLabel>Members</FormLabel>
+                    <FormLabel className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">Members</FormLabel>
                     <FormControl>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
                             variant={"outline"}
-                            className="w-full justify-start text-left font-normal min-h-11"
+                            className="w-full justify-start text-left font-normal"
                           >
                             {selectedMembers.length === 0 ? (
-                              <span className="text-muted-foreground">
+                              <span className="text-[#7d8187]">
                                 Select Members
                               </span>
                             ) : selectedMembers.length <= 3 ? (
@@ -294,7 +298,7 @@ export const CreateProjectDialog = ({
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent
-                          className="w-full max-w-60 p-2 overflow-y-auto"
+                          className="w-full max-w-60 p-2 overflow-y-auto bg-[#141517] border border-[#212327] rounded-[8px] text-white"
                           align="start"
                         >
                           <div className="flex flex-col gap-1">

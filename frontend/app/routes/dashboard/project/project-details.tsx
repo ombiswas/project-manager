@@ -12,9 +12,9 @@ import { UseProjectQuery } from "@/hooks/use-project";
 import { useUpdateTaskStatusMutation } from "@/hooks/use-task";
 import { useGetWorkspaceDetailsQuery } from "@/hooks/use-workspace";
 import { useAuth } from "@/provider/auth-context";
-import { getProjectProgress } from "@/lib";
-import { cn } from "@/lib/utils";
+import { getProjectProgress, getTaskStatusColor } from "@/lib";
 import { getErrorMessage } from "@/lib/fetch-util";
+import { cn } from "@/lib/utils";
 import type { Project, ProjectTasksResponse, Task, TaskStatus, Workspace } from "@/types";
 import { format } from "date-fns";
 import { AlertCircle, Calendar, CheckCircle, Clock, Plus, Settings, CircleDashed } from "lucide-react";
@@ -100,14 +100,15 @@ const ProjectDetails = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex flex-col gap-2">
           <BackButton className="w-fit" />
-          <div className="mt-4">
-            <h1 className="text-2xl md:text-3xl font-bold">{project.title}</h1>
+          <div className="mt-2">
+            <p className="caption-mono text-xs text-[#7d8187]">PROJECT</p>
+            <h1 className="text-2xl font-normal tracking-[-0.6px] text-white">{project.title}</h1>
             {project.description && (
-              <p className="text-sm text-muted-foreground mt-4 max-w-2xl">
+              <p className="text-sm text-[#dadbdf] mt-2 max-w-2xl">
                 {project.description}
               </p>
             )}
@@ -115,12 +116,12 @@ const ProjectDetails = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-4">
-          <div className="flex items-center gap-3 w-full sm:w-64">
-            <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-              Progress:
+          <div className="flex items-center gap-3 w-full sm:w-64 bg-[#191919] border border-[#212327] rounded-[8px] p-3">
+            <span className="text-xs font-mono uppercase tracking-[1px] text-[#7d8187] whitespace-nowrap">
+              PROGRESS
             </span>
-            <Progress value={projectProgress} className="h-2 flex-1" />
-            <span className="text-sm font-bold text-blue-600 min-w-[3rem] text-right">
+            <Progress value={projectProgress} className="h-1.5 flex-1" />
+            <span className="font-mono text-xs text-white min-w-[2.5rem] text-right">
               {projectProgress}%
             </span>
           </div>
@@ -129,7 +130,7 @@ const ProjectDetails = () => {
             {canEditTasks && (
               <Button 
                 onClick={() => setIsCreateTask(true)} 
-                className="flex-1 sm:flex-none shadow-sm"
+                className="flex-1 sm:flex-none"
               >
                 <Plus className="size-4 mr-2" />
                 Add Task
@@ -140,7 +141,7 @@ const ProjectDetails = () => {
               <Button
                 variant="outline"
                 size="icon"
-                className="shadow-sm"
+                className="rounded-full"
                 onClick={() => navigate(`/workspaces/${workspaceId}/projects/${projectId}/settings`)}
                 title="Project Settings"
               >
@@ -154,7 +155,7 @@ const ProjectDetails = () => {
       <div className="flex items-center justify-between">
         <Tabs defaultValue="all" className="w-full">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <TabsList className="bg-muted/50 p-1">
+            <TabsList className="bg-[#141517] border border-[#212327]">
               <TabsTrigger value="all" onClick={() => setTaskFilter("All")}>
                 All Tasks
               </TabsTrigger>
@@ -173,18 +174,17 @@ const ProjectDetails = () => {
             </TabsList>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Overview:
+              <span className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+                OVERVIEW
               </span>
-              <div className="flex gap-1">
-                <Badge variant="outline" className="bg-background/50 text-[10px]">
+              <div className="flex gap-1.5">
+                <Badge variant="outline" className="font-mono text-[10px] uppercase">
                   {tasks.filter((task) => task.status === "To Do").length} To Do
                 </Badge>
-                <Badge variant="outline" className="bg-background/50 text-[10px]">
-                  {tasks.filter((task) => task.status === "In Progress").length}{" "}
-                  In Progress
+                <Badge variant="outline" className="font-mono text-[10px] uppercase">
+                  {tasks.filter((task) => task.status === "In Progress").length} In Progress
                 </Badge>
-                <Badge variant="outline" className="bg-background/50 text-[10px]">
+                <Badge variant="outline" className="font-mono text-[10px] uppercase">
                   {tasks.filter((task) => task.status === "Done").length} Done
                 </Badge>
               </div>
@@ -277,13 +277,13 @@ const TaskColumn = ({
   canEditTasks,
 }: TaskColumnProps) => {
   return (
-    <div className={cn("space-y-4", isFullWidth && "w-full")}>
+    <div className={cn("space-y-3", isFullWidth && "w-full")}>
       {!isFullWidth && (
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+          <h2 className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
             {title}
           </h2>
-          <Badge variant="secondary" className="rounded-full px-2 py-0 h-5 text-[10px]">
+          <Badge variant="outline" className="font-mono text-[10px]">
             {tasks.length}
           </Badge>
         </div>
@@ -291,13 +291,13 @@ const TaskColumn = ({
 
       <div
         className={cn(
-          "space-y-4",
-          isFullWidth && "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          "space-y-3",
+          isFullWidth && "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
         )}
       >
         {tasks.length === 0 ? (
-          <div className="text-center py-12 bg-muted/20 border border-dashed rounded-lg text-sm text-muted-foreground">
-            No tasks in this stage
+          <div className="text-center py-12 bg-[#141517] border border-[#212327] rounded-[8px] text-xs font-mono text-[#7d8187]">
+            NO TASKS IN STAGE
           </div>
         ) : (
           tasks.map((task) => (
@@ -326,89 +326,71 @@ const TaskCard = ({ task, onClick, canEditTasks }: { task: Task; onClick: () => 
     });
   };
 
-  const completedSubtasks = task.subtasks?.filter(st => st.completed).length || 0;
-  const totalSubtasks = task.subtasks?.length || 0;
-  const progressPercent = totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
-
-  // Determine the accent color based on status
-  const getAccentColor = () => {
-    if (task.status === "Done") return "border-l-green-500";
-    if (task.status === "In Progress") return "border-l-blue-500";
-    return "border-l-slate-300";
-  };
-
   return (
     <Card
       onClick={onClick}
-      className={cn(
-        "group relative cursor-pointer hover:shadow-lg transition-all duration-300 bg-card border border-l-[4px] shadow-sm flex flex-col gap-4 p-5 rounded-xl",
-        getAccentColor()
-      )}
+      className="group relative cursor-pointer bg-[#191919] border border-[#212327] rounded-[8px] p-4 shadow-none hover:border-[#363a3f] transition-colors flex flex-col gap-3"
     >
       {/* Top Row: Badges & Buttons */}
       <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2 flex-wrap">
-          <Badge
-            variant="secondary"
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span
             className={cn(
-              "text-[11px] font-semibold tracking-tight border-none px-2.5 py-0.5",
-              task.status === "Done" && "bg-green-100 text-green-700 hover:bg-green-100",
-              task.status === "In Progress" && "bg-blue-100 text-blue-700 hover:bg-blue-100",
-              task.status === "To Do" && "bg-slate-100 text-slate-700 hover:bg-slate-100"
+              "px-2 py-0.5 rounded-full",
+              getTaskStatusColor(task.status)
             )}
           >
-            {task.status === "Done" ? "Completed" : task.status}
-          </Badge>
+            {task.status}
+          </span>
 
-          <Badge
-            variant="secondary"
+          <span
             className={cn(
-              "text-[11px] font-semibold tracking-tight border-none px-2.5 py-0.5",
-              task.priority === "High" && "bg-red-100 text-red-700 hover:bg-red-100",
-              task.priority === "Medium" && "bg-orange-100 text-orange-700 hover:bg-orange-100",
-              task.priority === "Low" && "bg-slate-100 text-slate-700 hover:bg-slate-100"
+              "text-[10px] font-mono uppercase tracking-[1px] px-2 py-0.5 rounded-full border",
+              task.priority === "High" && "text-[#ff7a17] border-[#ff7a17]/30 bg-[#ff7a17]/10",
+              task.priority === "Medium" && "text-[#a0c3ec] border-[#a0c3ec]/30 bg-[#a0c3ec]/10",
+              task.priority === "Low" && "text-[#7d8187] border-[#212327] bg-[#1a1c20]"
             )}
           >
-            {task.priority} Priority
-          </Badge>
+            {task.priority}
+          </span>
         </div>
 
         {canEditTasks && (
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute right-4 top-4 bg-card/80 backdrop-blur-sm rounded-full p-0.5">
+          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity absolute right-3 top-3 bg-[#141517] border border-[#212327] rounded-full p-0.5">
             {task.status !== "To Do" && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-7 rounded-full hover:bg-slate-100 hover:text-slate-600"
+                className="size-6 rounded-full text-[#7d8187] hover:text-white hover:bg-[#1a1c20]"
                 onClick={(e) => handleStatusUpdate(e, "To Do")}
                 disabled={isUpdating}
                 title="Mark as To Do"
               >
-                <CircleDashed className="size-3.5" />
+                <CircleDashed className="size-3" />
               </Button>
             )}
             {task.status !== "In Progress" && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-7 rounded-full hover:bg-blue-50 hover:text-blue-600"
+                className="size-6 rounded-full text-[#7d8187] hover:text-[#a0c3ec] hover:bg-[#1a1c20]"
                 onClick={(e) => handleStatusUpdate(e, "In Progress")}
                 disabled={isUpdating}
                 title="Mark as In Progress"
               >
-                <Clock className="size-3.5" />
+                <Clock className="size-3" />
               </Button>
             )}
             {task.status !== "Done" && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-7 rounded-full hover:bg-green-50 hover:text-green-600"
+                className="size-6 rounded-full text-[#7d8187] hover:text-white hover:bg-[#1a1c20]"
                 onClick={(e) => handleStatusUpdate(e, "Done")}
                 disabled={isUpdating}
                 title="Mark as Done"
               >
-                <CheckCircle className="size-3.5" />
+                <CheckCircle className="size-3" />
               </Button>
             )}
           </div>
@@ -417,62 +399,60 @@ const TaskCard = ({ task, onClick, canEditTasks }: { task: Task; onClick: () => 
 
       {/* Title & Description */}
       <div>
-        <h4 className="font-bold text-[15px] line-clamp-2 leading-tight mb-1.5 text-foreground" title={task.title}>
+        <h3 className="font-normal text-sm text-white line-clamp-2 leading-snug group-hover:text-white/80 transition-colors" title={task.title}>
           {task.title}
-        </h4>
+        </h3>
         {task.description && (
-          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed" title={task.description}>
+          <p className="text-xs text-[#7d8187] line-clamp-2 mt-1 leading-relaxed" title={task.description}>
             {task.description}
           </p>
         )}
       </div>
 
-      {/* Divider */}
-      <div className="border-t border-muted/40 my-1"></div>
-
       {/* Dates */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pt-2 border-t border-[#212327] text-xs font-mono">
         <div className="flex flex-col">
-          <span className="text-[11px] text-muted-foreground font-medium mb-1">Start Date</span>
-          <span className="text-sm font-bold text-foreground">
-            {task.createdAt ? format(new Date(task.createdAt), "do MMM yyyy") : "N/A"}
+          <span className="text-[10px] text-[#7d8187] uppercase tracking-[0.5px]">Start</span>
+          <span className="text-white">
+            {task.createdAt ? format(new Date(task.createdAt), "MMM d") : "N/A"}
           </span>
         </div>
         <div className="flex flex-col text-right">
-          <span className="text-[11px] text-muted-foreground font-medium mb-1">Due Date</span>
+          <span className="text-[10px] text-[#7d8187] uppercase tracking-[0.5px]">Due</span>
           <span className={cn(
-            "text-sm font-bold",
             new Date(task.dueDate) < new Date() && task.status !== "Done" 
-              ? "text-red-600" 
-              : "text-foreground"
+              ? "text-[#ff7a17]" 
+              : "text-white"
           )}>
-            {task.dueDate ? format(new Date(task.dueDate), "do MMM yyyy") : "N/A"}
+            {task.dueDate ? format(new Date(task.dueDate), "MMM d") : "N/A"}
           </span>
         </div>
       </div>
 
       {/* Profiles */}
-      <div className="flex items-center mt-1">
-        <div className="flex -space-x-2">
-          {task.assignees?.slice(0, 3).map((member) => (
-            <Avatar
-              key={member._id}
-              className="size-8 border-2 border-background shadow-sm"
-              title={member.name}
-            >
-              <AvatarImage src={member.profilePicture} />
-              <AvatarFallback className="text-[10px] bg-slate-100 font-bold text-slate-600">
-                {member.name.charAt(0)}
-              </AvatarFallback>
-            </Avatar>
-          ))}
-          {task.assignees && task.assignees.length > 3 && (
-            <div className="size-8 rounded-full bg-slate-100 flex items-center justify-center text-[11px] font-bold border-2 border-background shadow-sm text-slate-600">
-              +{task.assignees.length - 3}
-            </div>
-          )}
+      {task.assignees && task.assignees.length > 0 && (
+        <div className="flex items-center pt-1">
+          <div className="flex -space-x-1.5">
+            {task.assignees?.slice(0, 3).map((member) => (
+              <Avatar
+                key={member._id}
+                className="size-6 border border-[#212327] bg-[#1a1c20]"
+                title={member.name}
+              >
+                <AvatarImage src={member.profilePicture} />
+                <AvatarFallback className="text-[9px] font-mono bg-[#1a1c20] text-white">
+                  {member.name.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+            ))}
+            {task.assignees.length > 3 && (
+              <div className="size-6 rounded-full bg-[#1a1c20] flex items-center justify-center text-[9px] font-mono border border-[#212327] text-[#7d8187]">
+                +{task.assignees.length - 3}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </Card>
   );
 };

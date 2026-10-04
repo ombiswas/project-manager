@@ -10,20 +10,22 @@ export const publicRoutes = [
     "*",
 ];
 
-export const getTaskStatusColor = (status: ProjectStatus) => {
+export const getTaskStatusColor = (status: ProjectStatus | string) => {
     switch (status) {
         case "In Progress":
-            return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
+            return "bg-[#1a1c20] text-[#a0c3ec] border border-[#a0c3ec]/30 font-mono text-[11px] uppercase tracking-[1.2px]";
         case "Completed":
-            return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
+        case "Done":
+            return "bg-[#1a1c20] text-white border border-white/30 font-mono text-[11px] uppercase tracking-[1.2px]";
         case "Cancelled":
-            return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
+            return "bg-[#1a1c20] text-[#ff7a17] border border-[#ff7a17]/30 font-mono text-[11px] uppercase tracking-[1.2px]";
         case "On Hold":
-            return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300";
+            return "bg-[#1a1c20] text-[#ffc285] border border-[#ffc285]/30 font-mono text-[11px] uppercase tracking-[1.2px]";
         case "Planning":
-            return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300";
+        case "In Review":
+            return "bg-[#1a1c20] text-[#c4b5fd] border border-[#c4b5fd]/30 font-mono text-[11px] uppercase tracking-[1.2px]";
         default:
-            return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
+            return "bg-[#1a1c20] text-[#dadbdf] border border-[#212327] font-mono text-[11px] uppercase tracking-[1.2px]";
     }
 };
 

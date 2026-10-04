@@ -117,7 +117,7 @@ const MyTasks = () => {
   if (isError) {
     return (
       <div className="space-y-6 pb-12">
-        <h1 className="text-2xl font-bold">My Tasks</h1>
+        <h1 className="text-2xl font-normal tracking-tight text-ink">My Tasks</h1>
         <ErrorState
           title="Failed to load tasks"
           message={getErrorMessage(error, "Could not fetch your assigned tasks.")}
@@ -129,16 +129,19 @@ const MyTasks = () => {
 
   return (
     <div className="space-y-6 pb-12">
-      <div className="flex items-start md:items-center justify-between">
-        <h1 className="text-2xl font-bold">My Tasks</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-normal tracking-tight text-ink">My Tasks</h1>
+          <p className="caption-mono text-mute mt-1">
+            {sortedTasks?.length} assigned {sortedTasks?.length === 1 ? "task" : "tasks"}
+          </p>
+        </div>
 
-        <div
-          className="flex flex-col items-start md:flex-row md"
-          itemScope
-          gap-2
-        >
+        <div className="flex flex-wrap items-center gap-2">
           <Button
-            variant={"outline"}
+            variant="outline"
+            size="sm"
+            className="rounded-full text-xs font-mono"
             onClick={() =>
               setSortDirection(sortDirection === "asc" ? "desc" : "asc")
             }
@@ -148,13 +151,13 @@ const MyTasks = () => {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant={"outline"}>
-                <FilterIcon className="w-4 h-4" /> Filter
+              <Button variant="outline" size="sm" className="rounded-full text-xs font-mono">
+                <FilterIcon className="w-3.5 h-3.5 mr-1 text-mute" /> Filter
               </Button>
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent>
-              <DropdownMenuLabel>Filter Tasks</DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuLabel className="caption-mono text-mute">Filter Tasks</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setFilter("all")}>
                 All Tasks
@@ -169,10 +172,10 @@ const MyTasks = () => {
                 Done
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setFilter("achieved")}>
-                Achieved
+                Archived
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setFilter("high")}>
-                High
+                High Priority
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -180,10 +183,10 @@ const MyTasks = () => {
       </div>
 
       <Input
-        placeholder="Search tasks ...."
+        placeholder="Search tasks..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="max-w-md"
+        className="max-w-md rounded-full bg-canvas-card border-hairline focus-visible:border-canvas-mid text-sm"
       />
 
       <Tabs defaultValue="list">
@@ -194,55 +197,55 @@ const MyTasks = () => {
 
         {/* LIST VIEW */}
         <TabsContent value="list">
-          <Card className="border-none shadow-sm overflow-hidden">
-            <CardHeader className="pb-0">
+          <Card className="bg-canvas-card border border-hairline rounded-[8px] overflow-hidden">
+            <CardHeader className="p-4 md:p-5 border-b border-hairline">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>All Tasks</CardTitle>
-                  <CardDescription className="mt-2">
+                  <CardTitle className="text-base font-normal tracking-tight text-ink">All Tasks</CardTitle>
+                  <CardDescription className="caption-mono text-mute mt-0.5">
                     {sortedTasks?.length} tasks assigned to you
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
 
-            <CardContent className="p-0 mt-4">
-              <div className="divide-y divide-muted/50 border-t">
+            <CardContent className="p-0">
+              <div className="divide-y divide-hairline">
                 {sortedTasks?.map((task) => (
-                  <div key={task._id} className="group p-4 hover:bg-muted/30 transition-colors">
+                  <div key={task._id} className="group p-4 hover:bg-canvas-soft/60 transition-colors">
                     <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <div className="mt-1 flex-shrink-0">
+                        <div className="mt-0.5 flex-shrink-0">
                           {task.status === "Done" ? (
-                            <div className="bg-green-100 dark:bg-green-900/30 p-1 rounded-full">
-                              <CheckCircle className="size-4 text-green-600 dark:text-green-400" />
+                            <div className="bg-canvas-soft border border-hairline p-1 rounded-full text-ink">
+                              <CheckCircle className="size-3.5" />
                             </div>
                           ) : (
-                            <div className="bg-yellow-100 dark:bg-yellow-900/30 p-1 rounded-full">
-                              <Clock className="size-4 text-yellow-600 dark:text-yellow-400" />
+                            <div className="bg-canvas-soft border border-hairline p-1 rounded-full text-accent-breeze">
+                              <Clock className="size-3.5" />
                             </div>
                           )}
                         </div>
 
-                        <div className="space-y-1 min-w-0 flex-1">
+                        <div className="space-y-1.5 min-w-0 flex-1">
                           <Link
                             to={`/workspaces/${task.project.workspace}/projects/${task.project._id}/tasks/${task._id}`}
-                            className="font-bold text-base hover:text-primary hover:underline transition-colors flex items-center gap-1 group-hover:translate-x-0.5 transform duration-200"
+                            className="font-normal text-sm md:text-base text-ink hover:text-accent-breeze transition-colors flex items-center gap-1.5"
                           >
                             <span className="truncate">{task.title}</span>
-                            <ArrowUpRight className="size-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <ArrowUpRight className="size-3.5 opacity-0 group-hover:opacity-100 text-mute transition-opacity" />
                           </Link>
 
-                          <p className="text-sm text-muted-foreground line-clamp-1 max-w-2xl">
+                          <p className="text-xs md:text-sm text-body line-clamp-1 max-w-2xl font-light">
                             {task.description || "No description provided"}
                           </p>
 
-                          <div className="flex flex-wrap items-center gap-2 mt-2">
+                          <div className="flex flex-wrap items-center gap-2 pt-1">
                             <Badge
                               variant={
                                 task.status === "Done" ? "default" : "outline"
                               }
-                              className="text-[10px] font-bold uppercase tracking-tight h-5"
+                              className="text-[10px] font-mono uppercase h-5"
                             >
                               {task.status}
                             </Badge>
@@ -256,24 +259,24 @@ const MyTasks = () => {
                                       ? "default"
                                       : "secondary"
                                 }
-                                className="text-[10px] font-bold uppercase tracking-tight h-5"
+                                className="text-[10px] font-mono uppercase h-5"
                               >
                                 {task.priority}
                               </Badge>
                             )}
 
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase bg-muted px-1.5 py-0.5 rounded">
+                            <span className="caption-mono text-mute px-2 py-0.5 rounded-full border border-hairline bg-canvas-soft">
                               {task.project.title}
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex flex-col sm:flex-row lg:flex-col sm:items-center lg:items-end gap-2 lg:gap-1 text-xs text-muted-foreground flex-shrink-0">
+                      <div className="flex flex-col sm:flex-row lg:flex-col sm:items-center lg:items-end gap-1 caption-mono text-mute flex-shrink-0 text-[11px]">
                         {task.dueDate && (
-                          <div className="flex items-center gap-1.5 font-medium">
+                          <div className="flex items-center gap-1.5">
                             <span>Due:</span>
-                            <span className="text-foreground">{format(new Date(task.dueDate), "MMM d, yyyy")}</span>
+                            <span className="text-body">{format(new Date(task.dueDate), "MMM d, yyyy")}</span>
                           </div>
                         )}
                         <div className="flex items-center gap-1.5">
@@ -287,11 +290,11 @@ const MyTasks = () => {
 
                 {sortedTasks?.length === 0 && (
                   <div className="p-12 text-center">
-                    <div className="bg-muted size-12 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Clock className="size-6 text-muted-foreground/50" />
+                    <div className="bg-canvas-soft border border-hairline size-10 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Clock className="size-4 text-mute" />
                     </div>
-                    <h3 className="text-lg font-medium">No tasks found</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <h3 className="text-sm font-normal text-ink">No tasks found</h3>
+                    <p className="caption-mono text-mute mt-1">
                       You're all caught up!
                     </p>
                   </div>
@@ -303,43 +306,41 @@ const MyTasks = () => {
 
         {/* BOARD VIEW */}
         <TabsContent value="board">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
             {[
-              { title: "To Do", tasks: todoTasks, color: "bg-slate-500" },
-              { title: "In Progress", tasks: inProgressTasks, color: "bg-blue-500" },
-              { title: "Done", tasks: doneTasks, color: "bg-green-500" },
+              { title: "To Do", tasks: todoTasks, indicator: "bg-mute" },
+              { title: "In Progress", tasks: inProgressTasks, indicator: "bg-accent-breeze" },
+              { title: "Done", tasks: doneTasks, indicator: "bg-ink" },
             ].map((column) => (
-              <div key={column.title} className="flex flex-col h-full min-h-[500px]">
-                <div className="flex items-center justify-between mb-4 px-1">
+              <div key={column.title} className="flex flex-col h-full min-h-[450px]">
+                <div className="flex items-center justify-between mb-3 px-1">
                   <div className="flex items-center gap-2">
-                    <div className={cn("size-2 rounded-full", column.color)} />
-                    <h3 className="font-bold text-sm uppercase tracking-wider">{column.title}</h3>
+                    <div className={cn("size-2 rounded-full", column.indicator)} />
+                    <h3 className="caption-mono text-ink">{column.title}</h3>
                   </div>
-                  <Badge variant="outline" className="font-mono">{column.tasks.length}</Badge>
+                  <Badge variant="outline" className="font-mono text-[10px] h-5">{column.tasks.length}</Badge>
                 </div>
 
-                <div className="space-y-3 flex-1 bg-muted/20 p-2 rounded-xl border border-dashed border-muted-foreground/20">
+                <div className="space-y-2.5 flex-1 bg-canvas-soft/40 p-2.5 rounded-[8px] border border-hairline">
                   {column.tasks?.map((task) => (
                     <Card
                       key={task._id}
-                      className="group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 border-none shadow-sm"
+                      className="group bg-canvas-card border border-hairline hover:border-canvas-mid rounded-[8px] transition-colors"
                     >
                       <Link
                         to={`/workspaces/${task.project.workspace}/projects/${task.project._id}/tasks/${task._id}`}
-                        className="block p-4 space-y-3"
+                        className="block p-3.5 space-y-2.5"
                       >
-                        <div className="space-y-1.5">
-                          <div className="flex items-start justify-between gap-2">
-                            <h4 className="font-bold text-sm line-clamp-1 group-hover:text-primary transition-colors">
-                              {task.title}
-                            </h4>
-                          </div>
-                          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                        <div className="space-y-1">
+                          <h4 className="font-normal text-sm text-ink line-clamp-1 group-hover:text-accent-breeze transition-colors">
+                            {task.title}
+                          </h4>
+                          <p className="text-xs text-mute line-clamp-2 leading-relaxed">
                             {task.description || "No description provided"}
                           </p>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 pt-1">
                           <Badge
                             variant={
                               task.priority === "High"
@@ -348,18 +349,18 @@ const MyTasks = () => {
                                   ? "default"
                                   : "secondary"
                             }
-                            className="text-[10px] px-1.5 py-0 font-bold uppercase"
+                            className="text-[10px] px-1.5 py-0 font-mono uppercase h-4"
                           >
                             {task.priority}
                           </Badge>
 
-                          <span className="text-[10px] font-bold text-muted-foreground/60 uppercase truncate flex-1">
+                          <span className="caption-mono text-mute truncate flex-1 text-[10px]">
                             {task.project.title}
                           </span>
                         </div>
 
                         {task.dueDate && (
-                          <div className="pt-2 border-t flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground/80">
+                          <div className="pt-2 border-t border-hairline flex items-center gap-1.5 caption-mono text-mute text-[10px]">
                             <Clock className="size-3" />
                             <span>{format(new Date(task.dueDate), "MMM d")}</span>
                           </div>
@@ -369,8 +370,8 @@ const MyTasks = () => {
                   ))}
 
                   {column.tasks?.length === 0 && (
-                    <div className="h-24 flex items-center justify-center rounded-lg border border-dashed border-muted-foreground/10">
-                      <span className="text-xs text-muted-foreground/50 italic">Empty</span>
+                    <div className="h-20 flex items-center justify-center rounded-[6px] border border-dashed border-hairline">
+                      <span className="caption-mono text-mute text-xs italic">Empty</span>
                     </div>
                   )}
                 </div>

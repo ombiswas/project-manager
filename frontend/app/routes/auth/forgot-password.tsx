@@ -39,58 +39,67 @@ const ForgotPassword = () => {
     };
 
     return (
-        <div className='flex flex-col items-center justify-center min-h-screen pt-10 pb-20 px-4'>
-            <div className='w-full max-w-md space-y-6'>
-                <div className='flex flex-col items-center justify-center space-y-2'>
-                    <h1 className='text-2xl font-bold'>Forgot Password</h1>
-                    <p className='text-muted-foreground'>Enter your  email to reset your password</p>
+        <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0a] py-12 px-4">
+            <div className="w-full max-w-sm space-y-6">
+                <div className="text-center space-y-1.5">
+                    <p className="caption-mono text-xs text-[#7d8187]">ACCOUNT RECOVERY</p>
+                    <h1 className="text-2xl font-normal tracking-[-0.6px] text-white">Forgot password</h1>
+                    <p className="text-sm font-normal text-[#7d8187]">
+                        Enter your email to receive a reset link
+                    </p>
                 </div>
 
-                <Card>
-                    <CardHeader>
-                        <Link to="/sign-in" className='flex items-center gap-2'>
-                            <ArrowLeft className='w-4 h-4' />
+                <Card className="border border-[#212327] bg-[#141517] p-6 rounded-[8px] shadow-none">
+                    <CardContent className="p-0">
+                        <Link
+                            to="/sign-in"
+                            className="inline-flex items-center gap-2 text-xs text-[#7d8187] hover:text-white transition-colors mb-5"
+                        >
+                            <ArrowLeft className="w-3.5 h-3.5" />
                             <span>Back to sign in</span>
                         </Link>
-                    </CardHeader>
-                    <CardContent>
-                        {
-                            isSuccess ? (
-                                <div className='flex flex-col items-center justify-center'>
-                                    <CheckCircle className='w-10 h-10 text-green-500' />
-                                    <h1 className='text-2xl font-bold'> Passsword reset email sent</h1>
-                                    <p className='text-muted-foreground'>Check your email for a link to reset your password</p>
-                                </div>
-                            ) : (
-                                <>
-                                    <Form {...form}>
-                                        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-                                            <FormField
-                                                name="email"
-                                                control={form.control}
-                                                render={({ field }) => (
-                                                    <FormItem>
-                                                        <FormLabel>Email Address</FormLabel>
-                                                        <FormControl>
-                                                            <Input {...field} placeholder='Enter your email' />
-                                                        </FormControl>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )}
-                                            />
 
-                                            <Button type='submit' className='w-full' disabled={isPending}>
-                                                {isPending ? (
-                                                    <Loader2 className='w-4 h-4 animate-spin' />
-                                                ) : (
-                                                    "Reset Password"
-                                                )}
-                                            </Button>
-                                        </form>
-                                    </Form>
-                                </>
-                            )
-                        }
+                        {isSuccess ? (
+                            <div className="flex flex-col items-center justify-center py-6 text-center space-y-3">
+                                <div className="w-12 h-12 rounded-full border border-[#212327] bg-[#1a1c20] flex items-center justify-center">
+                                    <CheckCircle className="w-6 h-6 text-white" />
+                                </div>
+                                <h2 className="text-lg font-normal tracking-[-0.4px] text-white">
+                                    Reset email sent
+                                </h2>
+                                <p className="text-xs text-[#7d8187] max-w-xs">
+                                    Check your inbox for instructions to reset your password.
+                                </p>
+                            </div>
+                        ) : (
+                            <Form {...form}>
+                                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                    <FormField
+                                        name="email"
+                                        control={form.control}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+                                                    Email Address
+                                                </FormLabel>
+                                                <FormControl>
+                                                    <Input {...field} placeholder="name@company.com" />
+                                                </FormControl>
+                                                <FormMessage className="text-xs text-[#ff7a17]" />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <Button type="submit" className="w-full mt-2 h-10" disabled={isPending}>
+                                        {isPending ? (
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                            "Send Reset Link"
+                                        )}
+                                    </Button>
+                                </form>
+                            </Form>
+                        )}
                     </CardContent>
                 </Card>
             </div>

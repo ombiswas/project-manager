@@ -39,11 +39,11 @@ export const Header = ({
     };
 
     return (
-        <div className="bg-background sticky top-0 z-40 border-b">
-            <div className="flex h-14 items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
+        <header className="bg-[#0a0a0a] sticky top-0 z-40 border-b border-[#212327]">
+            <div className="flex h-14 items-center justify-between px-4 sm:px-6 lg:px-8 py-3">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant={"outline"}>
+                        <Button variant={"outline"} className="h-9 px-3.5 text-xs font-normal border-white/20 hover:border-white/40">
                             {selectedWorkspace ? (
                                 <>
                                     {selectedWorkspace.color && (
@@ -52,15 +52,15 @@ export const Header = ({
                                             name={selectedWorkspace.name}
                                         />
                                     )}
-                                    <span className="font-medium">{selectedWorkspace?.name}</span>
+                                    <span className="font-normal text-white">{selectedWorkspace?.name}</span>
                                 </>
                             ) : (
-                                <span className="font-medium">Selected Workspace</span>
+                                <span className="font-normal text-[#7d8187]">Select Workspace</span>
                             )}
                         </Button>
                     </DropdownMenuTrigger>
 
-                    <DropdownMenuContent>
+                    <DropdownMenuContent align="start">
                         <DropdownMenuLabel>Workspace</DropdownMenuLabel>
                         <DropdownMenuSeparator />
 
@@ -87,16 +87,16 @@ export const Header = ({
                 </DropdownMenu>
 
                 <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon">
-                        <Bell />
+                    <Button variant="ghost" size="icon" className="size-8 rounded-full text-[#7d8187] hover:text-white hover:bg-[#1a1c20]">
+                        <Bell className="size-4" />
                     </Button>
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <button className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer group">
-                                <Avatar className="w-8 h-8 border shadow-sm">
+                            <button className="rounded-full outline-none focus-visible:ring-1 focus-visible:ring-white/40 cursor-pointer group">
+                                <Avatar className="w-8 h-8 border border-[#212327] bg-[#1a1c20]">
                                     <AvatarImage src={user?.profilePicture} alt={user?.name || "User"} />
-                                    <AvatarFallback className="bg-blue-600 text-white font-bold text-xs">
+                                    <AvatarFallback className="bg-[#1a1c20] text-white font-mono font-normal text-xs">
                                         {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
                                     </AvatarFallback>
                                 </Avatar>
@@ -106,7 +106,7 @@ export const Header = ({
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>My Account</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem>
+                            <DropdownMenuItem asChild>
                                 <Link to="/user/profile">Profile</Link>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
@@ -115,6 +115,6 @@ export const Header = ({
                     </DropdownMenu>
                 </div>
             </div>
-        </div>
+        </header>
     );
 };
