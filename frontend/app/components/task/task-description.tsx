@@ -3,7 +3,6 @@ import { Edit } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
-import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { getErrorMessage } from "@/lib/fetch-util";
 

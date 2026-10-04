@@ -40,13 +40,34 @@ const truncateLabel = (val: string) => {
   return val.length > 8 ? `${val.slice(0, 7)}…` : val;
 };
 
-const CustomChartTooltip = ({ active, payload, label }: any) => {
+interface TooltipPayloadItem {
+  name?: string;
+  value?: number | string;
+  color?: string;
+  fill?: string;
+  payload?: {
+    fill?: string;
+    [key: string]: unknown;
+  };
+}
+
+interface CustomChartTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadItem[];
+  label?: string;
+}
+
+const CustomChartTooltip = ({
+  active,
+  payload,
+  label,
+}: CustomChartTooltipProps) => {
   if (!active || !payload || !payload.length) return null;
   return (
     <div className="bg-[#141517] border border-[#212327] rounded-[6px] px-3 py-2 text-xs font-mono shadow-xl z-50">
       {label && <p className="text-[#dadbdf] mb-1.5 font-normal">{label}</p>}
       <div className="space-y-1">
-        {payload.map((entry: any, index: number) => (
+        {payload.map((entry: TooltipPayloadItem, index: number) => (
           <div key={`tooltip-${index}`} className="flex items-center gap-2">
             <span
               className="size-2 rounded-full shrink-0"
@@ -61,7 +82,7 @@ const CustomChartTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-const CustomPieTooltip = ({ active, payload }: any) => {
+const CustomPieTooltip = ({ active, payload }: CustomChartTooltipProps) => {
   if (!active || !payload || !payload.length) return null;
   const item = payload[0];
   if (!item || item.name === "No data") return null;

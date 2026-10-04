@@ -16,7 +16,7 @@ import { getErrorMessage } from "@/lib/fetch-util";
 
 export const CommentSection = ({
   taskId,
-  members,
+  members: _members,
   canComment = true,
 }: {
   taskId: string;
@@ -26,15 +26,12 @@ export const CommentSection = ({
   const [newComment, setNewComment] = useState("");
 
   const { mutate: addComment, isPending } = useAddCommentMutation();
-  const {
-    data: rawComments,
-    isLoading,
-    isError,
-  } = useGetCommentsByTaskIdQuery(taskId);
+  const { data: rawComments, isLoading } =
+    useGetCommentsByTaskIdQuery(taskId);
 
   const comments: Comment[] = Array.isArray(rawComments)
     ? rawComments
-    : (rawComments as any)?.comments || [];
+    : (rawComments as { comments?: Comment[] } | undefined)?.comments || [];
 
   const handleAddComment = () => {
     const trimmed = newComment.trim();

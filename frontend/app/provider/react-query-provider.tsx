@@ -5,6 +5,16 @@ import { AuthProvider } from "./auth-context";
 
 export let queryClient: QueryClient;
 
+interface ApiErrorLike {
+  response?: { status?: number };
+  status?: number;
+  statusCode?: number;
+}
+
+const isApiErrorLike = (error: unknown): error is ApiErrorLike => {
+  return typeof error === "object" && error !== null;
+};
+
 const createQueryClient = () =>
   new QueryClient({
     defaultOptions: {
@@ -13,9 +23,10 @@ const createQueryClient = () =>
         gcTime: 600_000,
         refetchOnWindowFocus: true,
         refetchOnReconnect: true,
-        retry: (failureCount, error: any) => {
-          const status =
-            error?.response?.status ?? error?.status ?? error?.statusCode;
+        retry: (failureCount, error: unknown) => {
+          const status = isApiErrorLike(error)
+            ? error.response?.status ?? error.status ?? error.statusCode
+            : undefined;
           if (status === 401 || status === 403 || status === 404) {
             return false;
           }

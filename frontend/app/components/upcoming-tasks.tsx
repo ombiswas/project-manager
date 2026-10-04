@@ -3,7 +3,6 @@ import { Link, useSearchParams } from "react-router";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "./ui/card";

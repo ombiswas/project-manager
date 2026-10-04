@@ -6,7 +6,6 @@ import { Plus, Users, X } from "lucide-react";
 import { Checkbox } from "../ui/checkbox";
 import { useUpdateTaskAssigneesMutation } from "@/hooks/use-task";
 import { toast } from "sonner";
-import { Badge } from "../ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Label } from "../ui/label";
 import { getErrorMessage } from "@/lib/fetch-util";
@@ -25,8 +24,7 @@ export const TaskAssigneesSelector = ({
   const [selectedIds, setSelectedIds] = useState<string[]>(
     assignees.map((assignee) => assignee._id)
   );
-  const { mutate: updateAssignees, isPending } =
-    useUpdateTaskAssigneesMutation();
+  const { mutate: updateAssignees } = useUpdateTaskAssigneesMutation();
 
   const handleToggle = (userId: string, isChecked: boolean) => {
     if (!canEdit) return;

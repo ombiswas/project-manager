@@ -67,9 +67,6 @@ const ProjectSettings = () => {
   const { mutate: updateProject, isPending: isUpdating } = UseUpdateProject();
   const { mutate: deleteProject, isPending: isDeleting } = UseDeleteProject();
 
-  const createdBy = data?.project?.createdBy;
-  const projectCreatorId =
-    typeof createdBy === "string" ? createdBy : createdBy?._id || "";
   const workspaceOwnerId =
     typeof workspaceData?.owner === "string"
       ? workspaceData.owner
