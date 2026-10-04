@@ -35,3 +35,5 @@ export const getProjectProgress = (tasks?: { status: TaskStatus }[]) => {
   const completedTasks = tasks.filter((task) => task?.status === "Done").length;
   return totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 };
+
+export * from "./query-keys";

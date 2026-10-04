@@ -1,4 +1,5 @@
 import { fetchData } from "@/lib/fetch-util";
+import { queryKeys } from "@/lib/query-keys";
 import { useQuery } from "@tanstack/react-query";
 import { Loader } from "../loader";
 import type { ActivityLog } from "@/types";
@@ -6,7 +7,7 @@ import { getActivityIcon } from "./task-icon";
 
 export const TaskActivity = ({ resourceId }: { resourceId: string }) => {
   const { data, isPending } = useQuery({
-    queryKey: ["task-activity", resourceId],
+    queryKey: queryKeys.tasks.activity(resourceId),
     queryFn: () => fetchData(`/tasks/${resourceId}/activity`),
   }) as {
     data: ActivityLog[];

@@ -1,5 +1,6 @@
 import type { CreateProjectFormData } from "@/components/project/create-project";
 import { fetchData, postData, patchData, deleteData } from "@/lib/fetch-util";
+import { queryKeys } from "@/lib/query-keys";
 import type { Project, ProjectTasksResponse } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -15,17 +16,29 @@ export const UseCreateProject = () => {
         `/projects/${data.workspaceId}/create-project`,
         data.projectData
       ),
-    onSuccess: (data: Project) => {
+    onSuccess: (data: Project, variables) => {
+      const workspaceId =
+        (typeof data?.workspace === "string"
+          ? data.workspace
+          : data?.workspace?._id) || variables.workspaceId;
+
       queryClient.invalidateQueries({
-        queryKey: [
-          "workspace",
-          typeof data.workspace === "string"
-            ? data.workspace
-            : data.workspace?._id,
-        ],
+        queryKey: queryKeys.projects.all,
       });
+      if (workspaceId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.workspace.byId(workspaceId),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.workspace.stats(workspaceId),
+        });
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.workspace.all,
+        });
+      }
       queryClient.invalidateQueries({
-        queryKey: ["workspaces"],
+        queryKey: queryKeys.workspaces.all,
       });
     },
   });
@@ -33,7 +46,7 @@ export const UseCreateProject = () => {
 
 export const UseProjectQuery = (projectId: string) => {
   return useQuery({
-    queryKey: ["project", projectId],
+    queryKey: queryKeys.projects.byId(projectId),
     queryFn: () =>
       fetchData<ProjectTasksResponse>(`/projects/${projectId}/tasks`),
     enabled: !!projectId && projectId !== "null",
@@ -49,12 +62,30 @@ export const UseUpdateProject = () => {
       projectId: string;
       projectData: Partial<CreateProjectFormData>;
     }) => patchData<Project>(`/projects/${data.projectId}`, data.projectData),
-    onSuccess: (data: Project) => {
+    onSuccess: (data: Project, variables) => {
+      const projectId = data?._id || variables.projectId;
+      const workspaceId =
+        typeof data?.workspace === "string"
+          ? data.workspace
+          : data?.workspace?._id;
+
       queryClient.invalidateQueries({
-        queryKey: ["project", data._id],
+        queryKey: queryKeys.projects.byId(projectId),
       });
+      if (workspaceId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.workspace.byId(workspaceId),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.workspace.stats(workspaceId),
+        });
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.workspace.all,
+        });
+      }
       queryClient.invalidateQueries({
-        queryKey: ["workspaces"],
+        queryKey: queryKeys.workspaces.all,
       });
     },
   });
@@ -68,9 +99,30 @@ export const UseDeleteProject = () => {
       deleteData<{ message: string; workspaceId?: string }>(
         `/projects/${projectId}`
       ),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({
-        queryKey: ["workspaces"],
+        queryKey: queryKeys.projects.all,
+      });
+      if (data?.workspaceId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.workspace.byId(data.workspaceId),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.workspace.stats(data.workspaceId),
+        });
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.workspace.all,
+        });
+      }
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaces.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.tasks.myTasks(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.tasks.archivedTasks(),
       });
     },
   });

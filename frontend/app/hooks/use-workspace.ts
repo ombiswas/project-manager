@@ -1,5 +1,6 @@
 import type { WorkspaceForm } from "@/components/workspace/create-workspace";
 import { fetchData, postData, patchData, deleteData } from "@/lib/fetch-util";
+import { queryKeys } from "@/lib/query-keys";
 import type {
   Workspace,
   WorkspaceProjectsResponse,
@@ -20,9 +21,17 @@ export const useUpdateWorkspaceMutation = () => {
       ),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ["workspace", variables.workspaceId],
+        queryKey: queryKeys.workspace.byId(variables.workspaceId),
       });
-      queryClient.invalidateQueries({ queryKey: ["workspaces"] });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspace.details(variables.workspaceId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspace.stats(variables.workspaceId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaces.all,
+      });
     },
   });
 };
@@ -33,14 +42,16 @@ export const useCreateWorkspace = () => {
     mutationFn: async (data: WorkspaceForm) =>
       postData<Workspace>("/workspaces", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspaces"] });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaces.all,
+      });
     },
   });
 };
 
 export const useGetWorkspacesQuery = () => {
   return useQuery({
-    queryKey: ["workspaces"],
+    queryKey: queryKeys.workspaces.all,
     queryFn: async () => fetchData<Workspace[]>("/workspaces"),
     refetchInterval: 5000, // Poll every 5 seconds for real-time updates
   });
@@ -48,7 +59,7 @@ export const useGetWorkspacesQuery = () => {
 
 export const useGetWorkspaceQuery = (workspaceId: string) => {
   return useQuery({
-    queryKey: ["workspace", workspaceId],
+    queryKey: queryKeys.workspace.byId(workspaceId),
     queryFn: async () =>
       fetchData<WorkspaceProjectsResponse>(
         `/workspaces/${workspaceId}/projects`
@@ -60,7 +71,7 @@ export const useGetWorkspaceQuery = (workspaceId: string) => {
 
 export const useGetWorkspaceStatsQuery = (workspaceId: string) => {
   return useQuery({
-    queryKey: ["workspace", workspaceId, "stats"],
+    queryKey: queryKeys.workspace.stats(workspaceId),
     queryFn: async () =>
       fetchData<WorkspaceStatsResponse>(`/workspaces/${workspaceId}/stats`),
     enabled: !!workspaceId && workspaceId !== "null",
@@ -72,7 +83,7 @@ export const useGetWorkspaceDetailsQuery = (
   token?: string | null
 ) => {
   return useQuery({
-    queryKey: ["workspace", workspaceId, "details", token || ""],
+    queryKey: queryKeys.workspace.details(workspaceId, token),
     queryFn: async () => {
       const url = token
         ? `/workspaces/${workspaceId}?tk=${encodeURIComponent(token)}`
@@ -96,13 +107,20 @@ export const useInviteMemberMutation = () => {
       ),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ["workspace", variables.workspaceId],
+        queryKey: queryKeys.workspace.byId(variables.workspaceId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspace.details(variables.workspaceId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspace.stats(variables.workspaceId),
       });
     },
   });
 };
 
 export const useAcceptInviteByTokenMutation = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (token: string) =>
       postData<{ message: string; workspaceId?: string }>(
@@ -111,16 +129,36 @@ export const useAcceptInviteByTokenMutation = () => {
           token,
         }
       ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaces.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspace.all,
+      });
+    },
   });
 };
 
 export const useAcceptGenerateInviteMutation = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (workspaceId: string) =>
       postData<{ message: string }>(
         `/workspaces/${workspaceId}/accept-generate-invite`,
         {}
       ),
+    onSuccess: (_, workspaceId) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaces.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspace.byId(workspaceId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspace.stats(workspaceId),
+      });
+    },
   });
 };
 
@@ -130,7 +168,18 @@ export const useDeleteWorkspaceMutation = () => {
     mutationFn: (workspaceId: string) =>
       deleteData<{ message: string }>(`/workspaces/${workspaceId}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspaces"] });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaces.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspace.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.tasks.myTasks(),
+      });
     },
   });
 };
@@ -138,14 +187,22 @@ export const useDeleteWorkspaceMutation = () => {
 export const useRemoveMemberMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    // HTTP verb changed from POST to DELETE
     mutationFn: (data: { workspaceId: string; memberId: string }) =>
       deleteData<{ message: string }>(
         `/workspaces/${data.workspaceId}/remove-member/${data.memberId}`
       ),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ["workspace", variables.workspaceId],
+        queryKey: queryKeys.workspace.byId(variables.workspaceId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspace.details(variables.workspaceId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspace.stats(variables.workspaceId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaces.all,
       });
     },
   });
@@ -154,7 +211,6 @@ export const useRemoveMemberMutation = () => {
 export const useChangeMemberRoleMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    // HTTP verb changed from POST to PATCH
     mutationFn: (data: {
       workspaceId: string;
       memberId: string;
@@ -168,7 +224,13 @@ export const useChangeMemberRoleMutation = () => {
       ),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ["workspace", variables.workspaceId],
+        queryKey: queryKeys.workspace.byId(variables.workspaceId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspace.details(variables.workspaceId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspace.stats(variables.workspaceId),
       });
     },
   });
@@ -177,7 +239,6 @@ export const useChangeMemberRoleMutation = () => {
 export const useTransferOwnershipMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    // HTTP verb changed from POST to PATCH
     mutationFn: (data: { workspaceId: string; newOwnerId: string }) =>
       patchData<{ message: string }>(
         `/workspaces/${data.workspaceId}/transfer-ownership`,
@@ -187,7 +248,16 @@ export const useTransferOwnershipMutation = () => {
       ),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ["workspace", variables.workspaceId],
+        queryKey: queryKeys.workspace.byId(variables.workspaceId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspace.details(variables.workspaceId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspace.stats(variables.workspaceId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaces.all,
       });
     },
   });

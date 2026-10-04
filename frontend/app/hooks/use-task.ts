@@ -1,5 +1,6 @@
 import type { CreateTaskFormData } from "@/components/task/create-task-dialog";
 import { fetchData, postData, patchData, deleteData } from "@/lib/fetch-util";
+import { queryKeys } from "@/lib/query-keys";
 import type {
   Task,
   TaskPriority,
@@ -9,21 +10,37 @@ import type {
 } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+const resolveProjectId = (
+  data?: Task,
+  fallback?: string
+): string | undefined => {
+  if (!data?.project) return fallback;
+  if (typeof data.project === "string") return data.project;
+  return data.project._id;
+};
+
 export const useCreateTaskMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (data: { projectId: string; taskData: CreateTaskFormData }) =>
       postData<Task>(`/tasks/${data.projectId}/create-task`, data.taskData),
-    onSuccess: (data: Task) => {
+    onSuccess: (data: Task, variables) => {
+      const projectId = resolveProjectId(data, variables.projectId);
+      if (projectId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.projects.byId(projectId),
+        });
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.projects.all,
+        });
+      }
       queryClient.invalidateQueries({
-        queryKey: [
-          "project",
-          typeof data.project === "string" ? data.project : data.project?._id,
-        ],
+        queryKey: queryKeys.tasks.myTasks(),
       });
       queryClient.invalidateQueries({
-        queryKey: ["my-tasks"],
+        queryKey: queryKeys.workspace.all,
       });
     },
   });
@@ -31,7 +48,7 @@ export const useCreateTaskMutation = () => {
 
 export const useTaskByIdQuery = (taskId: string) => {
   return useQuery({
-    queryKey: ["task", taskId],
+    queryKey: queryKeys.tasks.byId(taskId),
     queryFn: () => fetchData<TaskDetailResponse>(`/tasks/${taskId}`),
     enabled: !!taskId && taskId !== "null",
     refetchInterval: 5000, // Poll every 5 seconds for real-time updates
@@ -44,18 +61,26 @@ export const useUpdateTaskTitleMutation = () => {
   return useMutation({
     mutationFn: (data: { taskId: string; title: string }) =>
       patchData<Task>(`/tasks/${data.taskId}/title`, { title: data.title }),
-    onSuccess: (data: Task) => {
+    onSuccess: (data: Task, variables) => {
+      const targetTaskId = data?._id || variables.taskId;
+      const projectId = resolveProjectId(data);
+
       queryClient.invalidateQueries({
-        queryKey: ["task", data._id],
+        queryKey: queryKeys.tasks.byId(targetTaskId),
       });
       queryClient.invalidateQueries({
-        queryKey: ["task-activity", data._id],
+        queryKey: queryKeys.tasks.activity(targetTaskId),
+      });
+      if (projectId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.projects.byId(projectId),
+        });
+      }
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.tasks.myTasks(),
       });
       queryClient.invalidateQueries({
-        queryKey: [
-          "project",
-          typeof data.project === "string" ? data.project : data.project?._id,
-        ],
+        queryKey: queryKeys.workspace.all,
       });
     },
   });
@@ -67,21 +92,26 @@ export const useUpdateTaskStatusMutation = () => {
   return useMutation({
     mutationFn: (data: { taskId: string; status: TaskStatus }) =>
       patchData<Task>(`/tasks/${data.taskId}/status`, { status: data.status }),
-    onSuccess: (data: Task) => {
+    onSuccess: (data: Task, variables) => {
+      const targetTaskId = data?._id || variables.taskId;
+      const projectId = resolveProjectId(data);
+
       queryClient.invalidateQueries({
-        queryKey: ["task", data._id],
+        queryKey: queryKeys.tasks.byId(targetTaskId),
       });
       queryClient.invalidateQueries({
-        queryKey: ["task-activity", data._id],
+        queryKey: queryKeys.tasks.activity(targetTaskId),
+      });
+      if (projectId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.projects.byId(projectId),
+        });
+      }
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.tasks.myTasks(),
       });
       queryClient.invalidateQueries({
-        queryKey: [
-          "project",
-          typeof data.project === "string" ? data.project : data.project?._id,
-        ],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["my-tasks"],
+        queryKey: queryKeys.workspace.all,
       });
     },
   });
@@ -95,18 +125,26 @@ export const useUpdateTaskDescriptionMutation = () => {
       patchData<Task>(`/tasks/${data.taskId}/description`, {
         description: data.description,
       }),
-    onSuccess: (data: Task) => {
+    onSuccess: (data: Task, variables) => {
+      const targetTaskId = data?._id || variables.taskId;
+      const projectId = resolveProjectId(data);
+
       queryClient.invalidateQueries({
-        queryKey: ["task", data._id],
+        queryKey: queryKeys.tasks.byId(targetTaskId),
       });
       queryClient.invalidateQueries({
-        queryKey: ["task-activity", data._id],
+        queryKey: queryKeys.tasks.activity(targetTaskId),
+      });
+      if (projectId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.projects.byId(projectId),
+        });
+      }
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.tasks.myTasks(),
       });
       queryClient.invalidateQueries({
-        queryKey: [
-          "project",
-          typeof data.project === "string" ? data.project : data.project?._id,
-        ],
+        queryKey: queryKeys.workspace.all,
       });
     },
   });
@@ -120,18 +158,26 @@ export const useUpdateTaskAssigneesMutation = () => {
       patchData<Task>(`/tasks/${data.taskId}/assignees`, {
         assignees: data.assignees,
       }),
-    onSuccess: (data: Task) => {
+    onSuccess: (data: Task, variables) => {
+      const targetTaskId = data?._id || variables.taskId;
+      const projectId = resolveProjectId(data);
+
       queryClient.invalidateQueries({
-        queryKey: ["task", data._id],
+        queryKey: queryKeys.tasks.byId(targetTaskId),
       });
       queryClient.invalidateQueries({
-        queryKey: ["task-activity", data._id],
+        queryKey: queryKeys.tasks.activity(targetTaskId),
+      });
+      if (projectId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.projects.byId(projectId),
+        });
+      }
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.tasks.myTasks(),
       });
       queryClient.invalidateQueries({
-        queryKey: [
-          "project",
-          typeof data.project === "string" ? data.project : data.project?._id,
-        ],
+        queryKey: queryKeys.workspace.all,
       });
     },
   });
@@ -145,18 +191,26 @@ export const useUpdateTaskPriorityMutation = () => {
       patchData<Task>(`/tasks/${data.taskId}/priority`, {
         priority: data.priority,
       }),
-    onSuccess: (data: Task) => {
+    onSuccess: (data: Task, variables) => {
+      const targetTaskId = data?._id || variables.taskId;
+      const projectId = resolveProjectId(data);
+
       queryClient.invalidateQueries({
-        queryKey: ["task", data._id],
+        queryKey: queryKeys.tasks.byId(targetTaskId),
       });
       queryClient.invalidateQueries({
-        queryKey: ["task-activity", data._id],
+        queryKey: queryKeys.tasks.activity(targetTaskId),
+      });
+      if (projectId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.projects.byId(projectId),
+        });
+      }
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.tasks.myTasks(),
       });
       queryClient.invalidateQueries({
-        queryKey: [
-          "project",
-          typeof data.project === "string" ? data.project : data.project?._id,
-        ],
+        queryKey: queryKeys.workspace.all,
       });
     },
   });
@@ -172,20 +226,25 @@ export const useAddSubTaskMutation = () => {
       }),
     onSuccess: (data: Task, variables) => {
       const targetTaskId = variables.taskId || data?._id;
+      const projectId = resolveProjectId(data);
+
       queryClient.invalidateQueries({
-        queryKey: ["task", targetTaskId],
+        queryKey: queryKeys.tasks.byId(targetTaskId),
       });
       queryClient.invalidateQueries({
-        queryKey: ["task-activity", targetTaskId],
+        queryKey: queryKeys.tasks.activity(targetTaskId),
       });
-      if (data?.project) {
+      if (projectId) {
         queryClient.invalidateQueries({
-          queryKey: [
-            "project",
-            typeof data.project === "string" ? data.project : data.project?._id,
-          ],
+          queryKey: queryKeys.projects.byId(projectId),
         });
       }
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.tasks.myTasks(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspace.all,
+      });
     },
   });
 };
@@ -207,20 +266,25 @@ export const useUpdateSubTaskMutation = () => {
       ),
     onSuccess: (data: Task, variables) => {
       const targetTaskId = variables.taskId || data?._id;
+      const projectId = resolveProjectId(data);
+
       queryClient.invalidateQueries({
-        queryKey: ["task", targetTaskId],
+        queryKey: queryKeys.tasks.byId(targetTaskId),
       });
       queryClient.invalidateQueries({
-        queryKey: ["task-activity", targetTaskId],
+        queryKey: queryKeys.tasks.activity(targetTaskId),
       });
-      if (data?.project) {
+      if (projectId) {
         queryClient.invalidateQueries({
-          queryKey: [
-            "project",
-            typeof data.project === "string" ? data.project : data.project?._id,
-          ],
+          queryKey: queryKeys.projects.byId(projectId),
         });
       }
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.tasks.myTasks(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspace.all,
+      });
     },
   });
 };
@@ -235,13 +299,13 @@ export const useAddCommentMutation = () => {
       }),
     onSuccess: (_: Comment, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ["comments", variables.taskId],
+        queryKey: queryKeys.tasks.comments(variables.taskId),
       });
       queryClient.invalidateQueries({
-        queryKey: ["task-activity", variables.taskId],
+        queryKey: queryKeys.tasks.activity(variables.taskId),
       });
       queryClient.invalidateQueries({
-        queryKey: ["task", variables.taskId],
+        queryKey: queryKeys.tasks.byId(variables.taskId),
       });
     },
   });
@@ -249,7 +313,7 @@ export const useAddCommentMutation = () => {
 
 export const useGetCommentsByTaskIdQuery = (taskId: string) => {
   return useQuery({
-    queryKey: ["comments", taskId],
+    queryKey: queryKeys.tasks.comments(taskId),
     queryFn: () => fetchData<Comment[]>(`/tasks/${taskId}/comments`),
     enabled: !!taskId && taskId !== "null",
     refetchInterval: 5000, // Poll every 5 seconds for real-time updates
@@ -262,12 +326,13 @@ export const useWatchTaskMutation = () => {
   return useMutation({
     mutationFn: (data: { taskId: string }) =>
       postData<Task>(`/tasks/${data.taskId}/watch`, {}),
-    onSuccess: (data: Task) => {
+    onSuccess: (data: Task, variables) => {
+      const targetTaskId = data?._id || variables.taskId;
       queryClient.invalidateQueries({
-        queryKey: ["task", data._id],
+        queryKey: queryKeys.tasks.byId(targetTaskId),
       });
       queryClient.invalidateQueries({
-        queryKey: ["task-activity", data._id],
+        queryKey: queryKeys.tasks.activity(targetTaskId),
       });
     },
   });
@@ -280,24 +345,29 @@ export const useAchievedTaskMutation = () => {
     // HTTP verb changed from POST to PATCH for archive/unarchive task
     mutationFn: (data: { taskId: string }) =>
       patchData<Task>(`/tasks/${data.taskId}/achieved`, {}),
-    onSuccess: (data: Task) => {
+    onSuccess: (data: Task, variables) => {
+      const targetTaskId = data?._id || variables.taskId;
+      const projectId = resolveProjectId(data);
+
       queryClient.invalidateQueries({
-        queryKey: ["task", data._id],
+        queryKey: queryKeys.tasks.byId(targetTaskId),
       });
       queryClient.invalidateQueries({
-        queryKey: ["task-activity", data._id],
+        queryKey: queryKeys.tasks.activity(targetTaskId),
+      });
+      if (projectId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.projects.byId(projectId),
+        });
+      }
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.tasks.archivedTasks(),
       });
       queryClient.invalidateQueries({
-        queryKey: [
-          "project",
-          typeof data.project === "string" ? data.project : data.project?._id,
-        ],
+        queryKey: queryKeys.tasks.myTasks(),
       });
       queryClient.invalidateQueries({
-        queryKey: ["archived-tasks"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["my-tasks"],
+        queryKey: queryKeys.workspace.all,
       });
     },
   });
@@ -309,15 +379,38 @@ export const useDeleteTaskMutation = () => {
   return useMutation({
     mutationFn: (taskId: string) =>
       deleteData<{ message: string; projectId: string }>(`/tasks/${taskId}`),
-    onSuccess: (data: { message: string; projectId: string }) => {
+    onSuccess: (
+      data: { message: string; projectId: string },
+      taskId: string
+    ) => {
+      if (taskId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.tasks.byId(taskId),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.tasks.activity(taskId),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.tasks.comments(taskId),
+        });
+      }
+      if (data?.projectId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.projects.byId(data.projectId),
+        });
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.projects.all,
+        });
+      }
       queryClient.invalidateQueries({
-        queryKey: ["project", data.projectId],
+        queryKey: queryKeys.tasks.myTasks(),
       });
       queryClient.invalidateQueries({
-        queryKey: ["my-tasks"],
+        queryKey: queryKeys.tasks.archivedTasks(),
       });
       queryClient.invalidateQueries({
-        queryKey: ["archived-tasks"],
+        queryKey: queryKeys.workspace.all,
       });
     },
   });
@@ -325,14 +418,14 @@ export const useDeleteTaskMutation = () => {
 
 export const useGetMyTasksQuery = () => {
   return useQuery({
-    queryKey: ["my-tasks", "user"],
+    queryKey: queryKeys.tasks.myTasks(),
     queryFn: () => fetchData<Task[]>("/tasks/my-tasks"),
   });
 };
 
 export const useArchivedTasksQuery = () => {
   return useQuery({
-    queryKey: ["archived-tasks"],
+    queryKey: queryKeys.tasks.archivedTasks(),
     queryFn: () => fetchData<Task[]>("/tasks/archived"),
   });
 };

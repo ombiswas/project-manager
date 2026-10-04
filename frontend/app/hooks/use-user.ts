@@ -1,21 +1,15 @@
 import { deleteData, fetchData, patchData } from "@/lib/fetch-util";
+import { queryKeys } from "@/lib/query-keys";
 import type {
   ChangePasswordFormData,
   ProfileFormData,
 } from "@/routes/user/profile";
 import type { User } from "@/types";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-  type QueryKey,
-} from "@tanstack/react-query";
-
-const queryKey: QueryKey = ["user"];
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useUserProfileQuery = () => {
   return useQuery({
-    queryKey,
+    queryKey: queryKeys.user.all,
     queryFn: () => fetchData<User>("/users/profile"),
   });
 };
@@ -33,7 +27,7 @@ export const useUpdateUserProfile = () => {
     mutationFn: (data: Partial<ProfileFormData>) =>
       patchData<User>("/users/profile", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.all });
     },
   });
 };
