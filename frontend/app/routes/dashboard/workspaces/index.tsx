@@ -25,6 +25,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { ErrorState } from "@/components/error-state";
 import { getErrorMessage } from "@/lib/fetch-util";
+import { Card } from "@/components/ui/card";
 
 const Workspaces = () => {
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
