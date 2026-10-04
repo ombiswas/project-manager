@@ -27,3 +27,5 @@ coverage/
 # Internal / Agent documentation to keep out of repository
 GEMINI.md
 DESIGN-x.ai.md
+website_optimization_plan.md
+plan.md
