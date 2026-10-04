@@ -13,6 +13,7 @@ import {
   useLocation,
   useNavigate,
   useSearchParams,
+  type ShouldRevalidateFunctionArgs,
 } from "react-router";
 import { toast } from "sonner";
 
@@ -25,6 +26,43 @@ export const clientLoader = async () => {
   } catch {
     return { workspaces: [] };
   }
+};
+
+export const shouldRevalidate = ({
+  currentUrl,
+  nextUrl,
+  formMethod,
+  defaultShouldRevalidate,
+}: ShouldRevalidateFunctionArgs) => {
+  // Condition 1: A form submission or route action ran (formMethod present, e.g. POST, PUT, PATCH, DELETE).
+  // Revalidate to ensure data mutations reflect in the layout loader.
+  if (formMethod) {
+    return true;
+  }
+
+  // Condition 2: User logged in or out (authentication token missing or cleared from storage).
+  // Revalidate so workspaces match the current session state.
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  if (!token) {
+    return true;
+  }
+
+  // Condition 3: Pathname changed (navigating to/from a different route).
+  // Revalidate when navigating across distinct route boundaries.
+  if (currentUrl.pathname !== nextUrl.pathname) {
+    return true;
+  }
+
+  // Condition 4: Only search parameters changed (e.g. workspaceId, filters, sort, tabs, search)
+  // and the pathname is unchanged.
+  // Return false to skip re-running clientLoader (/workspaces).
+  if (currentUrl.pathname === nextUrl.pathname) {
+    return false;
+  }
+
+  // Default fallback revalidation behavior
+  return defaultShouldRevalidate;
 };
 
 const DashboardLayout = () => {
