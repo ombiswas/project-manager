@@ -5,4 +5,18 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules/recharts")) {
+            return "recharts";
+          }
+          if (id.includes("node_modules/date-fns")) {
+            return "date-fns";
+          }
+        },
+      },
+    },
+  },
 });

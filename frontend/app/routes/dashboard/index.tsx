@@ -1,6 +1,5 @@
 import { RecentProjects } from "@/components/dashboard/recnt-projects";
 import { StatsCard } from "@/components/dashboard/stat-card";
-import { StatisticsCharts } from "@/components/dashboard/statistics-charts";
 import { ErrorState } from "@/components/error-state";
 import { NoDataFound } from "@/components/no-data-found";
 import { UpcomingTasks } from "@/components/upcoming-tasks";
@@ -8,7 +7,35 @@ import { useGetWorkspaceStatsQuery } from "@/hooks/use-workspace";
 import { getErrorMessage } from "@/lib/fetch-util";
 import { cn } from "@/lib/utils";
 import type { WorkspaceStatsResponse } from "@/types";
+import React, { Suspense } from "react";
 import { useNavigate, useSearchParams } from "react-router";
+
+const StatisticsCharts = React.lazy(() =>
+  import("@/components/dashboard/statistics-charts").then((module) => ({
+    default: module.StatisticsCharts,
+  }))
+);
+
+const ChartsSkeleton = () => (
+  <div
+    className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-pulse"
+    aria-busy="true"
+    aria-label="Loading charts"
+  >
+    {[...Array(4)].map((_, i) => (
+      <div
+        key={i}
+        className="bg-[#141517] border border-[#212327] rounded-[8px] p-4 flex flex-col justify-between h-[260px] sm:h-[300px] lg:h-[340px]"
+      >
+        <div className="space-y-2 mb-4">
+          <div className="h-3 w-28 bg-[#1a1c20] rounded-[8px]" />
+          <div className="h-5 w-44 bg-[#1a1c20] rounded-[8px]" />
+        </div>
+        <div className="flex-1 w-full bg-[#1a1c20]/50 rounded-[8px]" />
+      </div>
+    ))}
+  </div>
+);
 
 const TopProgressBar = () => (
   <div
@@ -47,20 +74,7 @@ const DashboardSkeleton = () => (
     </div>
 
     {/* Statistics Charts skeleton: 4 charts matching StatisticsCharts */}
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {[...Array(4)].map((_, i) => (
-        <div
-          key={i}
-          className="bg-[#141517] border border-[#212327] rounded-[8px] p-4 flex flex-col justify-between h-[260px] sm:h-[300px] lg:h-[340px]"
-        >
-          <div className="space-y-2 mb-4">
-            <div className="h-3 w-28 bg-[#1a1c20] rounded-[8px]" />
-            <div className="h-5 w-44 bg-[#1a1c20] rounded-[8px]" />
-          </div>
-          <div className="flex-1 w-full bg-[#1a1c20]/50 rounded-[8px]" />
-        </div>
-      ))}
-    </div>
+    <ChartsSkeleton />
 
     {/* Bottom row: Recent Projects + Upcoming Tasks */}
     <div className="grid gap-6 lg:grid-cols-2">
@@ -174,13 +188,15 @@ const Dashboard = () => {
 
         <StatsCard data={data.stats} />
 
-        <StatisticsCharts
-          stats={data.stats}
-          taskTrendsData={data.taskTrendsData}
-          projectStatusData={data.projectStatusData}
-          taskPriorityData={data.taskPriorityData}
-          workspaceProductivityData={data.workspaceProductivityData}
-        />
+        <Suspense fallback={<ChartsSkeleton />}>
+          <StatisticsCharts
+            stats={data.stats}
+            taskTrendsData={data.taskTrendsData}
+            projectStatusData={data.projectStatusData}
+            taskPriorityData={data.taskPriorityData}
+            workspaceProductivityData={data.workspaceProductivityData}
+          />
+        </Suspense>
 
         <div className="grid gap-6 lg:grid-cols-2">
           <RecentProjects data={data.recentProjects} />
