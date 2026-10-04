@@ -75,6 +75,7 @@ taskSchema.index({ project: 1, isArchived: 1, createdAt: -1 });
 taskSchema.index({ assignees: 1, isArchived: 1, createdAt: -1 });
 taskSchema.index({ project: 1, isArchived: 1, updatedAt: -1 });
 taskSchema.index({ project: 1, status: 1, isArchived: 1 });
+taskSchema.index({ project: 1, status: 1, dueDate: 1 });
 
 const Task = mongoose.model("Task", taskSchema);
 

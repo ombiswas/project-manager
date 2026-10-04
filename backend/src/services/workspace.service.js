@@ -196,9 +196,22 @@ class WorkspaceService {
   async _fetchTasksForProjects(projects) {
     const projectIds = projects.map((p) => p._id);
     if (projectIds.length === 0) return [];
+
+    // Fields actually read by getWorkspaceStats and its computation helpers:
+    // - project: per-project grouping in _computeProductivityData
+    // - status: task counts in _computeOverviewStats, _computeTaskTrends, _computeProductivityData
+    // - priority: breakdown in _computeTaskPriorityData and tag in upcomingTasks
+    // - createdAt: trend timeline in _computeTaskTrends and query sorting
+    // - dueDate: date filter in _filterUpcomingTasks and display in upcomingTasks
+    // - title: display in upcomingTasks
+    // - assignees: member associations on upcomingTasks
+    const projection =
+      "project status priority createdAt dueDate title assignees";
+
     // Single indexed batch query across all projects in the workspace
     return await taskRepository.findTasksByProjects(projectIds, {
       isArchived: false,
+      projection,
     });
   }
 

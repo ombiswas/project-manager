@@ -173,11 +173,33 @@ class TaskRepository {
     return tasks.map((t) => t._id);
   }
 
-  async findTasksByProjects(projectIds, filter = {}) {
+  async findTasksByProjects(
+    projectIds,
+    optionsOrFilter = {},
+    maybeOptions = {}
+  ) {
     if (!projectIds || projectIds.length === 0) return [];
-    return await Task.find({ project: { $in: projectIds }, ...filter })
-      .sort({ createdAt: -1 })
-      .lean();
+
+    let filter = {};
+    let projection;
+
+    if (maybeOptions && maybeOptions.projection) {
+      projection = maybeOptions.projection;
+      filter = optionsOrFilter || {};
+    } else if (optionsOrFilter) {
+      const { projection: p, ...rest } = optionsOrFilter;
+      projection = p;
+      filter = rest;
+    }
+
+    let query = Task.find({ project: { $in: projectIds }, ...filter })
+      .sort({ createdAt: -1 });
+
+    if (projection) {
+      query = query.select(projection);
+    }
+
+    return await query.lean();
   }
 
   async countByProject(projectId, filter = {}) {
