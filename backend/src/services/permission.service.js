@@ -1,4 +1,4 @@
-import { ForbiddenError, NotFoundError } from "../utils/errors.js";
+import { ForbiddenError } from "../utils/errors.js";
 
 export const ROLE_HIERARCHY = {
   viewer: 1,
@@ -82,7 +82,9 @@ class PermissionService {
     const requiredLevel = ROLE_HIERARCHY[minRole] || 0;
 
     if (currentLevel < requiredLevel) {
-      throw new ForbiddenError(`You need at least '${minRole}' role to perform this action`);
+      throw new ForbiddenError(
+        `You need at least '${minRole}' role to perform this action`
+      );
     }
 
     return role;
@@ -105,7 +107,9 @@ class PermissionService {
       : "member";
 
     if (!this.canManageTask(requesterRole, creatorRole)) {
-      throw new ForbiddenError("You do not have permission to modify tasks in this project.");
+      throw new ForbiddenError(
+        "You do not have permission to modify tasks in this project."
+      );
     }
 
     return { requesterRole, creatorRole };

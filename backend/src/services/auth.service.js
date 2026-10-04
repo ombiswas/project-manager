@@ -51,12 +51,15 @@ class AuthService {
     }
 
     return {
-      message: "Verification email sent to your email. Please check and verify your account.",
+      message:
+        "Verification email sent to your email. Please check and verify your account.",
     };
   }
 
   async loginUser({ email, password }) {
-    const user = await userRepository.findByEmail(email, { includePassword: true });
+    const user = await userRepository.findByEmail(email, {
+      includePassword: true,
+    });
     if (!user) {
       throw new BadRequestError("Invalid email or password");
     }
@@ -89,12 +92,17 @@ class AuthService {
   }
 
   async _handleUnverifiedLogin(user, email) {
-    const existing = await verificationRepository.findByUserIdAndToken(user._id, {
-      $exists: true,
-    });
+    const existing = await verificationRepository.findByUserIdAndToken(
+      user._id,
+      {
+        $exists: true,
+      }
+    );
 
     if (existing && existing.expiresAt > new Date()) {
-      throw new BadRequestError("Email not verified. Please check your email for the verification link.");
+      throw new BadRequestError(
+        "Email not verified. Please check your email for the verification link."
+      );
     }
 
     await verificationRepository.deleteByUserId(user._id);
@@ -121,7 +129,8 @@ class AuthService {
 
     return {
       requiresVerification: true,
-      message: "Verification email sent to your email. Please check and verify your account.",
+      message:
+        "Verification email sent to your email. Please check and verify your account.",
     };
   }
 
@@ -131,7 +140,9 @@ class AuthService {
       payload = jwt.verify(token, env.JWT_SECRET);
     } catch (error) {
       if (error.name === "TokenExpiredError") {
-        throw new UnauthorizedError("Verification token has expired. Please request a new one.");
+        throw new UnauthorizedError(
+          "Verification token has expired. Please request a new one."
+        );
       }
       throw new UnauthorizedError("Invalid verification token.");
     }
@@ -141,7 +152,10 @@ class AuthService {
       throw new UnauthorizedError("Invalid token purpose");
     }
 
-    const verification = await verificationRepository.findByUserIdAndToken(userId, token);
+    const verification = await verificationRepository.findByUserIdAndToken(
+      userId,
+      token
+    );
     if (!verification) {
       throw new UnauthorizedError("Invalid or already used verification token");
     }
@@ -174,7 +188,9 @@ class AuthService {
     }
 
     if (!user.isEmailVerified) {
-      throw new BadRequestError("Please verify your email first before resetting password");
+      throw new BadRequestError(
+        "Please verify your email first before resetting password"
+      );
     }
 
     await verificationRepository.deleteByUserId(user._id);
@@ -193,7 +209,11 @@ class AuthService {
 
     const resetLink = `${env.FRONTEND_URL}/reset-password?token=${resetToken}`;
     const emailBody = `<p>Click <a href="${resetLink}">here</a> to reset your password</p>`;
-    const isEmailSent = await sendEmail(email, "Reset your password", emailBody);
+    const isEmailSent = await sendEmail(
+      email,
+      "Reset your password",
+      emailBody
+    );
 
     if (!isEmailSent) {
       throw new AppError("Failed to send reset password email", 500);
@@ -208,7 +228,9 @@ class AuthService {
       payload = jwt.verify(token, env.JWT_SECRET);
     } catch (error) {
       if (error.name === "TokenExpiredError") {
-        throw new UnauthorizedError("Password reset token has expired. Please request a new one.");
+        throw new UnauthorizedError(
+          "Password reset token has expired. Please request a new one."
+        );
       }
       throw new UnauthorizedError("Invalid password reset token.");
     }
@@ -218,7 +240,10 @@ class AuthService {
       throw new UnauthorizedError("Invalid token purpose");
     }
 
-    const verification = await verificationRepository.findByUserIdAndToken(userId, token);
+    const verification = await verificationRepository.findByUserIdAndToken(
+      userId,
+      token
+    );
     if (!verification) {
       throw new UnauthorizedError("Invalid or already used reset token");
     }

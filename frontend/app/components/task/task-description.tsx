@@ -61,9 +61,9 @@ export const TaskDescription = ({
               Save
             </Button>
           ) : (
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="size-8 shrink-0 rounded-full text-mute hover:text-ink hover:bg-canvas-soft"
               onClick={() => setIsEditing(true)}
             >

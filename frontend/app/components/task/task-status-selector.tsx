@@ -35,7 +35,11 @@ export const TaskStatusSelector = ({
     );
   };
   return (
-    <Select value={status || ""} onValueChange={handleStatusChange} disabled={!canEdit}>
+    <Select
+      value={status || ""}
+      onValueChange={handleStatusChange}
+      disabled={!canEdit}
+    >
       <SelectTrigger className="w-[180px]" disabled={isPending || !canEdit}>
         <SelectValue placeholder="Status" />
       </SelectTrigger>

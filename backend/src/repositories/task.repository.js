@@ -18,7 +18,18 @@ class TaskRepository {
     return await Task.findById(id);
   }
 
-  async findByProject(projectId, { page = 1, limit = 50, search, status, priority, sortBy = "createdAt", sortOrder = "desc" } = {}) {
+  async findByProject(
+    projectId,
+    {
+      page = 1,
+      limit = 50,
+      search,
+      status,
+      priority,
+      sortBy = "createdAt",
+      sortOrder = "desc",
+    } = {}
+  ) {
     const query = { project: projectId, isArchived: false };
 
     if (search) {
@@ -47,7 +58,18 @@ class TaskRepository {
     return { tasks, total, page, limit };
   }
 
-  async findMyTasks(userId, { page = 1, limit = 50, search, status, priority, sortBy = "createdAt", sortOrder = "desc" } = {}) {
+  async findMyTasks(
+    userId,
+    {
+      page = 1,
+      limit = 50,
+      search,
+      status,
+      priority,
+      sortBy = "createdAt",
+      sortOrder = "desc",
+    } = {}
+  ) {
     const query = { assignees: userId, isArchived: false };
 
     if (search) {
@@ -77,7 +99,18 @@ class TaskRepository {
     return { tasks, total, page, limit };
   }
 
-  async findArchivedTasks(userId, { page = 1, limit = 50, search, status, priority, sortBy = "createdAt", sortOrder = "desc" } = {}) {
+  async findArchivedTasks(
+    userId,
+    {
+      page = 1,
+      limit = 50,
+      search,
+      status,
+      priority,
+      sortBy = "createdAt",
+      sortOrder = "desc",
+    } = {}
+  ) {
     const query = { assignees: userId, isArchived: true };
 
     if (search) {
@@ -133,7 +166,10 @@ class TaskRepository {
   }
 
   async findTaskIdsByProjects(projectIds) {
-    const tasks = await Task.find({ project: { $in: projectIds } }, "_id").lean();
+    const tasks = await Task.find(
+      { project: { $in: projectIds } },
+      "_id"
+    ).lean();
     return tasks.map((t) => t._id);
   }
 

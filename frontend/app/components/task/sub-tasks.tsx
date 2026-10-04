@@ -64,7 +64,10 @@ export const SubTasksDetails = ({
         {subTasks.length > 0 ? (
           <div className="space-y-1.5">
             {subTasks.map((subTask) => (
-              <div key={subTask._id} className="flex items-center space-x-3 p-2.5 rounded-[6px] bg-[#141517] border border-[#212327] hover:border-[#363a3f] transition-colors">
+              <div
+                key={subTask._id}
+                className="flex items-center space-x-3 p-2.5 rounded-[6px] bg-[#141517] border border-[#212327] hover:border-[#363a3f] transition-colors"
+              >
                 <Checkbox
                   id={subTask._id}
                   checked={subTask.completed}
@@ -79,7 +82,9 @@ export const SubTasksDetails = ({
                   htmlFor={subTask._id}
                   className={cn(
                     "text-xs font-normal leading-none cursor-pointer flex-1",
-                    subTask.completed ? "line-through text-[#7d8187]" : "text-white"
+                    subTask.completed
+                      ? "line-through text-[#7d8187]"
+                      : "text-white"
                   )}
                 >
                   {subTask.title}
@@ -103,7 +108,7 @@ export const SubTasksDetails = ({
             className="flex-1"
             disabled={isPending}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && newSubTask.length > 0 && !isPending) {
+              if (e.key === "Enter" && newSubTask.length > 0 && !isPending) {
                 handleAddSubTask();
               }
             }}

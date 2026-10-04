@@ -35,7 +35,11 @@ export const TaskPrioritySelector = ({
     );
   };
   return (
-    <Select value={priority || ""} onValueChange={handleStatusChange} disabled={!canEdit}>
+    <Select
+      value={priority || ""}
+      onValueChange={handleStatusChange}
+      disabled={!canEdit}
+    >
       <SelectTrigger className="w-[180px]" disabled={isPending || !canEdit}>
         <SelectValue placeholder="Priority" />
       </SelectTrigger>

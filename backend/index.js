@@ -6,7 +6,10 @@ import morgan from "morgan";
 import { env } from "./src/config/env.js";
 import { connectDB, closeDB } from "./src/config/database.js";
 import { logger } from "./src/utils/logger.js";
-import { notFoundHandler, errorHandler } from "./src/middleware/error-middleware.js";
+import {
+  notFoundHandler,
+  errorHandler,
+} from "./src/middleware/error-middleware.js";
 import { globalLimiter } from "./src/middleware/rate-limiter.js";
 import routes from "./src/routes/index.js";
 

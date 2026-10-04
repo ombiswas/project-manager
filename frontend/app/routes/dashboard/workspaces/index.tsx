@@ -1,16 +1,12 @@
 import { Loader } from "@/components/loader";
 import { NoDataFound } from "@/components/no-data-found";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { CreateWorkspace } from "@/components/workspace/create-workspace";
 import { WorkspaceAvatar } from "@/components/workspace/workspace-avatar";
-import { useGetWorkspacesQuery, useDeleteWorkspaceMutation } from "@/hooks/use-workspace";
+import {
+  useGetWorkspacesQuery,
+  useDeleteWorkspaceMutation,
+} from "@/hooks/use-workspace";
 import type { Workspace } from "@/types";
 import { PlusCircle, Users, Trash } from "lucide-react";
 import { useState } from "react";
@@ -32,17 +28,26 @@ import { getErrorMessage } from "@/lib/fetch-util";
 
 const Workspaces = () => {
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
-  const [workspaceToDelete, setWorkspaceToDelete] = useState<Workspace | null>(null);
-  
-  const { data: workspaces = [], isLoading, isError, error, refetch } = useGetWorkspacesQuery() as {
+  const [workspaceToDelete, setWorkspaceToDelete] = useState<Workspace | null>(
+    null
+  );
+
+  const {
+    data: workspaces = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useGetWorkspacesQuery() as {
     data: Workspace[];
     isLoading: boolean;
     isError: boolean;
     error: unknown;
     refetch: () => void;
   };
-  
-  const { mutate: deleteWorkspace, isPending: isDeleting } = useDeleteWorkspaceMutation();
+
+  const { mutate: deleteWorkspace, isPending: isDeleting } =
+    useDeleteWorkspaceMutation();
   const queryClient = useQueryClient();
 
   const handleDelete = () => {
@@ -51,7 +56,7 @@ const Workspaces = () => {
         onSuccess: () => {
           setWorkspaceToDelete(null);
           queryClient.invalidateQueries({ queryKey: ["workspaces"] });
-        }
+        },
       });
     }
   };
@@ -72,7 +77,10 @@ const Workspaces = () => {
         </div>
         <ErrorState
           title="Failed to load workspaces"
-          message={getErrorMessage(error, "Could not retrieve your workspaces.")}
+          message={getErrorMessage(
+            error,
+            "Could not retrieve your workspaces."
+          )}
           onRetry={() => refetch()}
         />
         <CreateWorkspace
@@ -89,10 +97,15 @@ const Workspaces = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <p className="caption-mono text-xs text-[#7d8187]">ORGANIZATION</p>
-            <h1 className="text-2xl font-normal tracking-[-0.6px] text-white">Workspaces</h1>
+            <h1 className="text-2xl font-normal tracking-[-0.6px] text-white">
+              Workspaces
+            </h1>
           </div>
 
-          <Button onClick={() => setIsCreatingWorkspace(true)} className="w-fit">
+          <Button
+            onClick={() => setIsCreatingWorkspace(true)}
+            className="w-fit"
+          >
             <PlusCircle className="size-4 mr-2" />
             New Workspace
           </Button>
@@ -100,10 +113,10 @@ const Workspaces = () => {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
           {workspaces.map((ws) => (
-            <WorkspaceCard 
-              key={ws._id} 
-              workspace={ws} 
-              onDelete={() => setWorkspaceToDelete(ws)} 
+            <WorkspaceCard
+              key={ws._id}
+              workspace={ws}
+              onDelete={() => setWorkspaceToDelete(ws)}
             />
           ))}
 
@@ -125,22 +138,37 @@ const Workspaces = () => {
         setIsCreatingWorkspace={setIsCreatingWorkspace}
       />
 
-      <Dialog open={!!workspaceToDelete} onOpenChange={(open) => !open && setWorkspaceToDelete(null)}>
+      <Dialog
+        open={!!workspaceToDelete}
+        onOpenChange={(open) => !open && setWorkspaceToDelete(null)}
+      >
         <DialogContent className="bg-[#141517] border border-[#212327] rounded-[8px] text-white">
           <DialogHeader>
             <DialogTitle className="text-lg font-normal tracking-tight text-white">
               Delete Workspace
             </DialogTitle>
             <DialogDescription className="text-xs text-[#7d8187]">
-              Are you sure you want to delete <span className="text-white font-medium">{workspaceToDelete?.name}</span>? 
-              This action cannot be undone and will permanently delete all projects and tasks inside it.
+              Are you sure you want to delete{" "}
+              <span className="text-white font-medium">
+                {workspaceToDelete?.name}
+              </span>
+              ? This action cannot be undone and will permanently delete all
+              projects and tasks inside it.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0 pt-2">
-            <Button variant="outline" onClick={() => setWorkspaceToDelete(null)} disabled={isDeleting}>
+            <Button
+              variant="outline"
+              onClick={() => setWorkspaceToDelete(null)}
+              disabled={isDeleting}
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
               {isDeleting ? "Deleting..." : "Delete Workspace"}
             </Button>
           </DialogFooter>
@@ -150,21 +178,24 @@ const Workspaces = () => {
   );
 };
 
-const WorkspaceCard = ({ 
-  workspace, 
-  onDelete 
-}: { 
-  workspace: Workspace, 
-  onDelete: () => void 
+const WorkspaceCard = ({
+  workspace,
+  onDelete,
+}: {
+  workspace: Workspace;
+  onDelete: () => void;
 }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  
-  const ownerId = typeof workspace.owner === "string" ? workspace.owner : workspace.owner?._id;
+
+  const ownerId =
+    typeof workspace.owner === "string"
+      ? workspace.owner
+      : workspace.owner?._id;
   const isOwner = user?._id === ownerId;
 
   return (
-    <Card 
+    <Card
       className="bg-[#191919] border border-[#212327] rounded-[8px] p-5 shadow-none transition-colors hover:border-[#363a3f] h-full flex flex-col cursor-pointer group"
       onClick={() => navigate(`/workspaces/${workspace._id}`)}
     >
@@ -188,9 +219,9 @@ const WorkspaceCard = ({
             <span>{workspace.members.length}</span>
           </div>
           {isOwner && (
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="h-7 w-7 rounded-full text-[#7d8187] hover:text-[#ff7a17] hover:bg-[#1a1c20]"
               onClick={(e) => {
                 e.stopPropagation();

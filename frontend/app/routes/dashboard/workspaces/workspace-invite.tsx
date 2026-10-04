@@ -24,6 +24,26 @@ const WorkspaceInvite = () => {
   const token = searchParams.get("tk");
   const navigate = useNavigate();
 
+  const {
+    data: workspace,
+    isLoading,
+    isError,
+  } = useGetWorkspaceDetailsQuery(workspaceId || "") as {
+    data: Workspace | undefined;
+    isLoading: boolean;
+    isError: boolean;
+  };
+
+  const {
+    mutate: acceptInviteByToken,
+    isPending: isAcceptInviteByTokenPending,
+  } = useAcceptInviteByTokenMutation();
+
+  const {
+    mutate: acceptGenerateInvite,
+    isPending: isAcceptGenerateInvitePending,
+  } = useAcceptGenerateInviteMutation();
+
   if (!workspaceId) {
     return (
       <div className="flex items-center justify-center min-h-screen pt-10 pb-20 px-4">
@@ -43,20 +63,6 @@ const WorkspaceInvite = () => {
       </div>
     );
   }
-
-  const { data: workspace, isLoading, isError } = useGetWorkspaceDetailsQuery(
-    workspaceId!
-  ) as { data: Workspace | undefined; isLoading: boolean; isError: boolean };
-
-  const {
-    mutate: acceptInviteByToken,
-    isPending: isAcceptInviteByTokenPending,
-  } = useAcceptInviteByTokenMutation();
-
-  const {
-    mutate: acceptGenerateInvite,
-    isPending: isAcceptGenerateInvitePending,
-  } = useAcceptGenerateInviteMutation();
 
   const handleAcceptInvite = () => {
     if (!workspaceId) return;
@@ -104,7 +110,8 @@ const WorkspaceInvite = () => {
           <CardHeader>
             <CardTitle>Invalid or Expired Invitation</CardTitle>
             <CardDescription>
-              This workspace invitation is invalid, has expired, or does not exist.
+              This workspace invitation is invalid, has expired, or does not
+              exist.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -121,13 +128,19 @@ const WorkspaceInvite = () => {
     <div className="flex items-center justify-center min-h-screen bg-[#0a0a0a] py-12 px-4">
       <Card className="max-w-md w-full bg-[#141517] border border-[#212327] rounded-[8px] p-6 shadow-none">
         <CardHeader className="p-0 pb-4">
-          <p className="caption-mono text-xs text-[#7d8187] mb-2">WORKSPACE INVITATION</p>
+          <p className="caption-mono text-xs text-[#7d8187] mb-2">
+            WORKSPACE INVITATION
+          </p>
           <div className="flex items-center gap-3 mb-2">
             <WorkspaceAvatar name={workspace.name} color={workspace.color} />
-            <h2 className="text-xl font-normal tracking-tight text-white">{workspace.name}</h2>
+            <h2 className="text-xl font-normal tracking-tight text-white">
+              {workspace.name}
+            </h2>
           </div>
           <p className="text-sm text-[#dadbdf]">
-            You have been invited to join the <span className="text-white font-medium">{workspace.name}</span> workspace.
+            You have been invited to join the{" "}
+            <span className="text-white font-medium">{workspace.name}</span>{" "}
+            workspace.
           </p>
         </CardHeader>
         <CardContent className="p-0 space-y-5">

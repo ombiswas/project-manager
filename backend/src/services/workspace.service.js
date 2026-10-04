@@ -55,13 +55,14 @@ class WorkspaceService {
 
   async getWorkspaces(userId, query = {}) {
     const { page = 1, limit = 50, search, sortBy, sortOrder } = query;
-    const { workspaces, total } = await workspaceRepository.findWorkspacesByUser(userId, {
-      page: Number(page) || 1,
-      limit: Number(limit) || 50,
-      search,
-      sortBy,
-      sortOrder,
-    });
+    const { workspaces, total } =
+      await workspaceRepository.findWorkspacesByUser(userId, {
+        page: Number(page) || 1,
+        limit: Number(limit) || 50,
+        search,
+        sortBy,
+        sortOrder,
+      });
 
     return {
       workspaces,
@@ -94,14 +95,17 @@ class WorkspaceService {
     }
 
     const { page = 1, limit = 50, search, status, sortBy, sortOrder } = query;
-    const { projects, total } = await projectRepository.findByWorkspace(workspaceId, {
-      page: Number(page) || 1,
-      limit: Number(limit) || 50,
-      search,
-      status,
-      sortBy,
-      sortOrder,
-    });
+    const { projects, total } = await projectRepository.findByWorkspace(
+      workspaceId,
+      {
+        page: Number(page) || 1,
+        limit: Number(limit) || 50,
+        search,
+        status,
+        sortBy,
+        sortOrder,
+      }
+    );
 
     // Owners and Admins can see all projects in the workspace
     // Members and Viewers can only see projects they created or are added to
@@ -109,8 +113,11 @@ class WorkspaceService {
     if (requesterRole !== "owner" && requesterRole !== "admin") {
       const userIdStr = userId.toString();
       visibleProjects = projects.filter((p) => {
-        const isCreator = (p.createdBy?._id || p.createdBy)?.toString() === userIdStr;
-        const isMember = p.members?.some((m) => (m._id || m)?.toString() === userIdStr);
+        const isCreator =
+          (p.createdBy?._id || p.createdBy)?.toString() === userIdStr;
+        const isMember = p.members?.some(
+          (m) => (m._id || m)?.toString() === userIdStr
+        );
         return isCreator || isMember;
       });
     }
@@ -138,8 +145,14 @@ class WorkspaceService {
       throw new ForbiddenError("You are not a member of this workspace");
     }
 
-    const { projects } = await projectRepository.findByWorkspace(workspaceId, { limit: 500 });
-    const visibleProjects = this._filterVisibleProjects(projects, requesterRole, userId);
+    const { projects } = await projectRepository.findByWorkspace(workspaceId, {
+      limit: 500,
+    });
+    const visibleProjects = this._filterVisibleProjects(
+      projects,
+      requesterRole,
+      userId
+    );
     // BATCH QUERY: Eliminates N+1 database round-trips
     const tasks = await this._fetchTasksForProjects(visibleProjects);
 
@@ -147,7 +160,10 @@ class WorkspaceService {
     const taskTrendsData = this._computeTaskTrends(tasks);
     const projectStatusData = this._computeProjectStatusData(visibleProjects);
     const taskPriorityData = this._computeTaskPriorityData(tasks);
-    const workspaceProductivityData = this._computeProductivityData(visibleProjects, tasks);
+    const workspaceProductivityData = this._computeProductivityData(
+      visibleProjects,
+      tasks
+    );
     const upcomingTasks = this._filterUpcomingTasks(tasks);
 
     return {
@@ -167,8 +183,11 @@ class WorkspaceService {
     }
     const userIdStr = userId.toString();
     return projects.filter((p) => {
-      const isCreator = (p.createdBy?._id || p.createdBy)?.toString() === userIdStr;
-      const isMember = p.members?.some((m) => (m._id || m)?.toString() === userIdStr);
+      const isCreator =
+        (p.createdBy?._id || p.createdBy)?.toString() === userIdStr;
+      const isMember = p.members?.some(
+        (m) => (m._id || m)?.toString() === userIdStr
+      );
       return isCreator || isMember;
     });
   }
@@ -177,16 +196,22 @@ class WorkspaceService {
     const projectIds = projects.map((p) => p._id);
     if (projectIds.length === 0) return [];
     // Single indexed batch query across all projects in the workspace
-    return await taskRepository.findTasksByProjects(projectIds, { isArchived: false });
+    return await taskRepository.findTasksByProjects(projectIds, {
+      isArchived: false,
+    });
   }
 
   _computeOverviewStats(projects, tasks) {
     const totalProjects = projects.length;
     const totalTasks = tasks.length;
-    const totalProjectInProgress = projects.filter((p) => p.status === "In Progress").length;
+    const totalProjectInProgress = projects.filter(
+      (p) => p.status === "In Progress"
+    ).length;
     const totalTaskCompleted = tasks.filter((t) => t.status === "Done").length;
     const totalTaskToDo = tasks.filter((t) => t.status === "To Do").length;
-    const totalTaskInProgress = tasks.filter((t) => t.status === "In Progress").length;
+    const totalTaskInProgress = tasks.filter(
+      (t) => t.status === "In Progress"
+    ).length;
 
     return {
       totalProjects,
@@ -225,7 +250,9 @@ class WorkspaceService {
       );
 
       if (dayIndex !== -1) {
-        const dayName = last7Days[dayIndex].toLocaleDateString("en-US", { weekday: "short" });
+        const dayName = last7Days[dayIndex].toLocaleDateString("en-US", {
+          weekday: "short",
+        });
         const dayData = taskTrendsData.find((day) => day.name === dayName);
         if (dayData) {
           if (task.status === "Done") dayData.completed++;
@@ -267,8 +294,12 @@ class WorkspaceService {
 
   _computeProductivityData(projects, tasks) {
     return projects.map((project) => {
-      const pTasks = tasks.filter((t) => t.project?.toString() === project._id.toString());
-      const completed = pTasks.filter((t) => t.status === "Done" && !t.isArchived).length;
+      const pTasks = tasks.filter(
+        (t) => t.project?.toString() === project._id.toString()
+      );
+      const completed = pTasks.filter(
+        (t) => t.status === "Done" && !t.isArchived
+      ).length;
       return {
         name: project.title,
         completed,
@@ -300,10 +331,19 @@ class WorkspaceService {
     if (description !== undefined) updateFields.description = description;
     if (color !== undefined) updateFields.color = color;
 
-    const updated = await workspaceRepository.updateById(workspaceId, updateFields);
-    await recordActivity(userId, "updated_workspace", "Workspace", workspaceId, {
-      description: `Updated workspace details`,
-    });
+    const updated = await workspaceRepository.updateById(
+      workspaceId,
+      updateFields
+    );
+    await recordActivity(
+      userId,
+      "updated_workspace",
+      "Workspace",
+      workspaceId,
+      {
+        description: `Updated workspace details`,
+      }
+    );
 
     return updated;
   }
@@ -315,11 +355,14 @@ class WorkspaceService {
     }
 
     if (workspace.owner.toString() !== userId.toString()) {
-      throw new ForbiddenError("Only the workspace owner can delete this workspace");
+      throw new ForbiddenError(
+        "Only the workspace owner can delete this workspace"
+      );
     }
 
     return await withTransaction(async (session) => {
-      const projectIds = await projectRepository.findProjectIdsByWorkspace(workspaceId);
+      const projectIds =
+        await projectRepository.findProjectIdsByWorkspace(workspaceId);
 
       // Cascading deletion ordered from children to parent to prevent orphaned records
       if (projectIds.length > 0) {
@@ -367,7 +410,9 @@ class WorkspaceService {
     });
 
     if (isInvited && isInvited.expiresAt > new Date()) {
-      throw new ConflictError("An active invitation has already been sent to this user");
+      throw new ConflictError(
+        "An active invitation has already been sent to this user"
+      );
     }
 
     if (isInvited && isInvited.expiresAt < new Date()) {
@@ -399,9 +444,16 @@ class WorkspaceService {
       <p>Click here to join: <a href="${invitationLink}">${invitationLink}</a></p>
     `;
 
-    const emailSent = await sendEmail(email, "You have been invited to join a workspace", emailContent);
+    const emailSent = await sendEmail(
+      email,
+      "You have been invited to join a workspace",
+      emailContent
+    );
     if (!emailSent) {
-      throw new AppError("Failed to send invitation email. Please check email configuration.", 500);
+      throw new AppError(
+        "Failed to send invitation email. Please check email configuration.",
+        500
+      );
     }
 
     return { message: "Invitation sent successfully" };
@@ -420,7 +472,10 @@ class WorkspaceService {
       throw new ConflictError("You are already a member of this workspace");
     }
 
-    await workspaceRepository.addMember(workspaceId, { user: userId, role: "member" });
+    await workspaceRepository.addMember(workspaceId, {
+      user: userId,
+      role: "member",
+    });
     await recordActivity(userId, "joined_workspace", "Workspace", workspaceId, {
       description: `Joined ${workspace.name} workspace`,
     });
@@ -443,10 +498,13 @@ class WorkspaceService {
 
     const isTargetUser =
       (user && authUser._id.toString() === user.toString()) ||
-      (inviteEmail && authUser.email.toLowerCase() === inviteEmail.toLowerCase());
+      (inviteEmail &&
+        authUser.email.toLowerCase() === inviteEmail.toLowerCase());
 
     if (!isTargetUser) {
-      throw new ForbiddenError("This invitation was not issued to your account");
+      throw new ForbiddenError(
+        "This invitation was not issued to your account"
+      );
     }
 
     const workspace = await workspaceRepository.findById(workspaceId);
@@ -481,10 +539,20 @@ class WorkspaceService {
         session
       );
 
-      await workspaceRepository.deleteManyInvites({ user: authUser._id, workspaceId }, session);
-      await recordActivity(authUser._id, "joined_workspace", "Workspace", workspaceId, {
-        description: `Joined ${workspace.name} workspace`,
-      }, session);
+      await workspaceRepository.deleteManyInvites(
+        { user: authUser._id, workspaceId },
+        session
+      );
+      await recordActivity(
+        authUser._id,
+        "joined_workspace",
+        "Workspace",
+        workspaceId,
+        {
+          description: `Joined ${workspace.name} workspace`,
+        },
+        session
+      );
 
       return { message: "Invitation accepted successfully" };
     });
@@ -506,12 +574,18 @@ class WorkspaceService {
     }
 
     // Edge case: Sole owner leaving
-    const isOwner = targetMember.role === "owner" || workspace.owner.toString() === memberId.toString();
+    const isOwner =
+      targetMember.role === "owner" ||
+      workspace.owner.toString() === memberId.toString();
     if (isSelfRemoval) {
       if (isOwner) {
-        const ownerCount = workspace.members.filter(m => m.role === "owner").length;
+        const ownerCount = workspace.members.filter(
+          (m) => m.role === "owner"
+        ).length;
         if (ownerCount <= 1) {
-          throw new ForbiddenError("Cannot leave workspace as the sole owner. Please transfer ownership or delete the workspace.");
+          throw new ForbiddenError(
+            "Cannot leave workspace as the sole owner. Please transfer ownership or delete the workspace."
+          );
         }
       }
     } else {
@@ -524,11 +598,23 @@ class WorkspaceService {
     }
 
     await workspaceRepository.removeMember(workspaceId, targetMember._id);
-    await recordActivity(requesterId, "removed_member", "Workspace", workspaceId, {
-      description: isSelfRemoval ? `Left workspace` : `Removed member from workspace`,
-    });
+    await recordActivity(
+      requesterId,
+      "removed_member",
+      "Workspace",
+      workspaceId,
+      {
+        description: isSelfRemoval
+          ? `Left workspace`
+          : `Removed member from workspace`,
+      }
+    );
 
-    return { message: isSelfRemoval ? "Left workspace successfully" : "Member removed successfully" };
+    return {
+      message: isSelfRemoval
+        ? "Left workspace successfully"
+        : "Member removed successfully",
+    };
   }
 
   async changeMemberRole(workspaceId, requesterId, memberId, role) {
@@ -546,11 +632,18 @@ class WorkspaceService {
       throw new NotFoundError("Member not found in workspace");
     }
 
-    if (targetMember.role === "owner" || workspace.owner.toString() === memberId.toString()) {
+    if (
+      targetMember.role === "owner" ||
+      workspace.owner.toString() === memberId.toString()
+    ) {
       throw new ForbiddenError("Cannot change the workspace owner's role");
     }
 
-    await workspaceRepository.updateMemberRole(workspaceId, targetMember._id, role);
+    await workspaceRepository.updateMemberRole(
+      workspaceId,
+      targetMember._id,
+      role
+    );
     return { message: "Member role updated successfully" };
   }
 
@@ -572,16 +665,39 @@ class WorkspaceService {
     }
 
     return await withTransaction(async (session) => {
-      const currentOwnerMember = workspace.members.find(m => (m.user?._id || m.user).toString() === currentOwnerId.toString());
+      const currentOwnerMember = workspace.members.find(
+        (m) => (m.user?._id || m.user).toString() === currentOwnerId.toString()
+      );
       if (currentOwnerMember) {
-        await workspaceRepository.updateMemberRole(workspaceId, currentOwnerMember._id, "admin", session);
+        await workspaceRepository.updateMemberRole(
+          workspaceId,
+          currentOwnerMember._id,
+          "admin",
+          session
+        );
       }
-      await workspaceRepository.updateMemberRole(workspaceId, newOwnerMember._id, "owner", session);
-      await workspaceRepository.transferOwnership(workspaceId, newOwnerId, session);
+      await workspaceRepository.updateMemberRole(
+        workspaceId,
+        newOwnerMember._id,
+        "owner",
+        session
+      );
+      await workspaceRepository.transferOwnership(
+        workspaceId,
+        newOwnerId,
+        session
+      );
 
-      await recordActivity(currentOwnerId, "transferred_workspace_ownership", "Workspace", workspaceId, {
-        description: `Transferred ownership of workspace`,
-      }, session);
+      await recordActivity(
+        currentOwnerId,
+        "transferred_workspace_ownership",
+        "Workspace",
+        workspaceId,
+        {
+          description: `Transferred ownership of workspace`,
+        },
+        session
+      );
 
       return { message: "Ownership transferred successfully" };
     });

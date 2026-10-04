@@ -43,7 +43,9 @@ export const TaskTitle = ({
           disabled={isPending}
         />
       ) : (
-        <h2 className="text-xl flex-1 font-normal tracking-tight text-ink break-words overflow-hidden text-ellipsis">{title}</h2>
+        <h2 className="text-xl flex-1 font-normal tracking-tight text-ink break-words overflow-hidden text-ellipsis">
+          {title}
+        </h2>
       )}
 
       {canEdit && (
@@ -58,9 +60,9 @@ export const TaskTitle = ({
               Save
             </Button>
           ) : (
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="size-8 shrink-0 rounded-full text-mute hover:text-ink hover:bg-canvas-soft"
               onClick={() => setIsEditing(true)}
             >

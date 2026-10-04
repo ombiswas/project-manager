@@ -26,7 +26,11 @@ export const CommentSection = ({
   const [newComment, setNewComment] = useState("");
 
   const { mutate: addComment, isPending } = useAddCommentMutation();
-  const { data: comments = [], isLoading, isError } = useGetCommentsByTaskIdQuery(taskId);
+  const {
+    data: comments = [],
+    isLoading,
+    isError,
+  } = useGetCommentsByTaskIdQuery(taskId);
 
   const handleAddComment = () => {
     if (!newComment.trim()) return;
@@ -54,15 +58,22 @@ export const CommentSection = ({
 
   return (
     <div className="bg-[#191919] rounded-[8px] border border-[#212327] p-6 shadow-none">
-      <h3 className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187] mb-4">Comments</h3>
+      <h3 className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187] mb-4">
+        Comments
+      </h3>
 
       <ScrollArea className="h-[280px] mb-4 pr-3">
         {comments?.length > 0 ? (
           comments.map((comment) => (
-            <div key={comment._id} className="flex gap-3 py-3 border-b border-[#212327]/60 last:border-0">
+            <div
+              key={comment._id}
+              className="flex gap-3 py-3 border-b border-[#212327]/60 last:border-0"
+            >
               <Avatar className="size-7 rounded-full border border-[#212327] bg-[#1a1c20]">
                 <AvatarImage src={comment.author.profilePicture} />
-                <AvatarFallback className="text-[10px] font-mono bg-[#1a1c20] text-white">{comment.author.name.charAt(0)}</AvatarFallback>
+                <AvatarFallback className="text-[10px] font-mono bg-[#1a1c20] text-white">
+                  {comment.author.name.charAt(0)}
+                </AvatarFallback>
               </Avatar>
 
               <div className="flex-1 min-w-0">
@@ -78,7 +89,9 @@ export const CommentSection = ({
                   </span>
                 </div>
 
-                <p className="text-xs text-[#dadbdf] leading-relaxed break-words">{comment.text}</p>
+                <p className="text-xs text-[#dadbdf] leading-relaxed break-words">
+                  {comment.text}
+                </p>
               </div>
             </div>
           ))

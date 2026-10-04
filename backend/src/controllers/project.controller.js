@@ -11,7 +11,10 @@ export const createProject = asyncHandler(async (req, res) => {
 });
 
 export const getProjectDetails = asyncHandler(async (req, res) => {
-  const project = await projectService.getProjectDetails(req.params.projectId, req.user._id);
+  const project = await projectService.getProjectDetails(
+    req.params.projectId,
+    req.user._id
+  );
   res.status(200).json(project);
 });
 
@@ -46,7 +49,10 @@ export const updateProject = asyncHandler(async (req, res) => {
 });
 
 export const deleteProject = asyncHandler(async (req, res) => {
-  const result = await projectService.deleteProject(req.params.projectId, req.user._id);
+  const result = await projectService.deleteProject(
+    req.params.projectId,
+    req.user._id
+  );
   res.status(200).json(result);
 });
 

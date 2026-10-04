@@ -1,6 +1,12 @@
 import type { CreateTaskFormData } from "@/components/task/create-task-dialog";
 import { fetchData, postData, patchData, deleteData } from "@/lib/fetch-util";
-import type { Task, TaskPriority, TaskStatus, TaskDetailResponse, Comment } from "@/types";
+import type {
+  Task,
+  TaskPriority,
+  TaskStatus,
+  TaskDetailResponse,
+  Comment,
+} from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useCreateTaskMutation = () => {
@@ -11,7 +17,10 @@ export const useCreateTaskMutation = () => {
       postData<Task>(`/tasks/${data.projectId}/create-task`, data.taskData),
     onSuccess: (data: Task) => {
       queryClient.invalidateQueries({
-        queryKey: ["project", typeof data.project === "string" ? data.project : data.project?._id],
+        queryKey: [
+          "project",
+          typeof data.project === "string" ? data.project : data.project?._id,
+        ],
       });
       queryClient.invalidateQueries({
         queryKey: ["my-tasks"],
@@ -43,7 +52,10 @@ export const useUpdateTaskTitleMutation = () => {
         queryKey: ["task-activity", data._id],
       });
       queryClient.invalidateQueries({
-        queryKey: ["project", typeof data.project === "string" ? data.project : data.project?._id],
+        queryKey: [
+          "project",
+          typeof data.project === "string" ? data.project : data.project?._id,
+        ],
       });
     },
   });
@@ -63,7 +75,10 @@ export const useUpdateTaskStatusMutation = () => {
         queryKey: ["task-activity", data._id],
       });
       queryClient.invalidateQueries({
-        queryKey: ["project", typeof data.project === "string" ? data.project : data.project?._id],
+        queryKey: [
+          "project",
+          typeof data.project === "string" ? data.project : data.project?._id,
+        ],
       });
       queryClient.invalidateQueries({
         queryKey: ["my-tasks"],
@@ -88,7 +103,10 @@ export const useUpdateTaskDescriptionMutation = () => {
         queryKey: ["task-activity", data._id],
       });
       queryClient.invalidateQueries({
-        queryKey: ["project", typeof data.project === "string" ? data.project : data.project?._id],
+        queryKey: [
+          "project",
+          typeof data.project === "string" ? data.project : data.project?._id,
+        ],
       });
     },
   });
@@ -110,7 +128,10 @@ export const useUpdateTaskAssigneesMutation = () => {
         queryKey: ["task-activity", data._id],
       });
       queryClient.invalidateQueries({
-        queryKey: ["project", typeof data.project === "string" ? data.project : data.project?._id],
+        queryKey: [
+          "project",
+          typeof data.project === "string" ? data.project : data.project?._id,
+        ],
       });
     },
   });
@@ -121,7 +142,9 @@ export const useUpdateTaskPriorityMutation = () => {
 
   return useMutation({
     mutationFn: (data: { taskId: string; priority: TaskPriority }) =>
-      patchData<Task>(`/tasks/${data.taskId}/priority`, { priority: data.priority }),
+      patchData<Task>(`/tasks/${data.taskId}/priority`, {
+        priority: data.priority,
+      }),
     onSuccess: (data: Task) => {
       queryClient.invalidateQueries({
         queryKey: ["task", data._id],
@@ -130,7 +153,10 @@ export const useUpdateTaskPriorityMutation = () => {
         queryKey: ["task-activity", data._id],
       });
       queryClient.invalidateQueries({
-        queryKey: ["project", typeof data.project === "string" ? data.project : data.project?._id],
+        queryKey: [
+          "project",
+          typeof data.project === "string" ? data.project : data.project?._id,
+        ],
       });
     },
   });
@@ -141,7 +167,9 @@ export const useAddSubTaskMutation = () => {
 
   return useMutation({
     mutationFn: (data: { taskId: string; title: string }) =>
-      postData<Task>(`/tasks/${data.taskId}/add-subtask`, { title: data.title }),
+      postData<Task>(`/tasks/${data.taskId}/add-subtask`, {
+        title: data.title,
+      }),
     onSuccess: (data: Task) => {
       queryClient.invalidateQueries({
         queryKey: ["task", data._id],
@@ -150,7 +178,10 @@ export const useAddSubTaskMutation = () => {
         queryKey: ["task-activity", data._id],
       });
       queryClient.invalidateQueries({
-        queryKey: ["project", typeof data.project === "string" ? data.project : data.project?._id],
+        queryKey: [
+          "project",
+          typeof data.project === "string" ? data.project : data.project?._id,
+        ],
       });
     },
   });
@@ -165,9 +196,12 @@ export const useUpdateSubTaskMutation = () => {
       subTaskId: string;
       completed: boolean;
     }) =>
-      patchData<Task>(`/tasks/${data.taskId}/update-subtask/${data.subTaskId}`, {
-        completed: data.completed,
-      }),
+      patchData<Task>(
+        `/tasks/${data.taskId}/update-subtask/${data.subTaskId}`,
+        {
+          completed: data.completed,
+        }
+      ),
     onSuccess: (data: Task) => {
       queryClient.invalidateQueries({
         queryKey: ["task", data._id],
@@ -176,7 +210,10 @@ export const useUpdateSubTaskMutation = () => {
         queryKey: ["task-activity", data._id],
       });
       queryClient.invalidateQueries({
-        queryKey: ["project", typeof data.project === "string" ? data.project : data.project?._id],
+        queryKey: [
+          "project",
+          typeof data.project === "string" ? data.project : data.project?._id,
+        ],
       });
     },
   });
@@ -187,7 +224,9 @@ export const useAddCommentMutation = () => {
 
   return useMutation({
     mutationFn: (data: { taskId: string; text: string }) =>
-      postData<Comment>(`/tasks/${data.taskId}/add-comment`, { text: data.text }),
+      postData<Comment>(`/tasks/${data.taskId}/add-comment`, {
+        text: data.text,
+      }),
     onSuccess: (_: Comment, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["comments", variables.taskId],
@@ -240,7 +279,10 @@ export const useAchievedTaskMutation = () => {
         queryKey: ["task-activity", data._id],
       });
       queryClient.invalidateQueries({
-        queryKey: ["project", typeof data.project === "string" ? data.project : data.project?._id],
+        queryKey: [
+          "project",
+          typeof data.project === "string" ? data.project : data.project?._id,
+        ],
       });
       queryClient.invalidateQueries({
         queryKey: ["archived-tasks"],
@@ -256,7 +298,8 @@ export const useDeleteTaskMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (taskId: string) => deleteData<{ message: string; projectId: string }>(`/tasks/${taskId}`),
+    mutationFn: (taskId: string) =>
+      deleteData<{ message: string; projectId: string }>(`/tasks/${taskId}`),
     onSuccess: (data: { message: string; projectId: string }) => {
       queryClient.invalidateQueries({
         queryKey: ["project", data.projectId],

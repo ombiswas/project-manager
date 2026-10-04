@@ -15,7 +15,8 @@ const createRateLimiter = ({ windowMs, max, message }) => {
       res.status(429).json({
         status: "fail",
         message:
-          message || "Too many requests from this IP address, please try again later.",
+          message ||
+          "Too many requests from this IP address, please try again later.",
       });
     },
   });

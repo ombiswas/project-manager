@@ -15,7 +15,9 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
   // 2. Malformed header (must be 'Bearer <token>')
   const parts = authHeader.split(" ");
   if (parts.length !== 2 || parts[0] !== "Bearer" || !parts[1].trim()) {
-    throw new UnauthorizedError("Invalid authorization format. Expected 'Bearer <token>'");
+    throw new UnauthorizedError(
+      "Invalid authorization format. Expected 'Bearer <token>'"
+    );
   }
 
   const token = parts[1].trim();

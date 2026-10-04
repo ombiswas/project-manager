@@ -87,7 +87,11 @@ export const StatisticsCharts = ({
                   className="font-mono"
                 />
 
-                <CartesianGrid stroke="#212327" strokeDasharray={"3 3"} vertical={false} />
+                <CartesianGrid
+                  stroke="#212327"
+                  strokeDasharray={"3 3"}
+                  vertical={false}
+                />
                 <ChartTooltip />
 
                 <Line
@@ -126,7 +130,9 @@ export const StatisticsCharts = ({
             <CardTitle className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
               Project Status
             </CardTitle>
-            <p className="text-xs text-[#dadbdf]">Active portfolio distribution</p>
+            <p className="text-xs text-[#dadbdf]">
+              Active portfolio distribution
+            </p>
           </div>
 
           <ChartPie className="size-4 text-[#7d8187]" />
@@ -163,9 +169,16 @@ export const StatisticsCharts = ({
                       entry.name === "Completed"
                         ? "#ffffff"
                         : entry.name === "In Progress"
-                        ? "#a0c3ec"
-                        : "#c4b5fd";
-                    return <Cell key={`cell-${index}`} fill={color} stroke="#191919" strokeWidth={2} />;
+                          ? "#a0c3ec"
+                          : "#c4b5fd";
+                    return (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={color}
+                        stroke="#191919"
+                        strokeWidth={2}
+                      />
+                    );
                   })}
                 </Pie>
                 <ChartTooltip />
@@ -218,9 +231,16 @@ export const StatisticsCharts = ({
                       entry.name === "High"
                         ? "#ff7a17"
                         : entry.name === "Medium"
-                        ? "#a0c3ec"
-                        : "#7d8187";
-                    return <Cell key={`cell-${index}`} fill={color} stroke="#191919" strokeWidth={2} />;
+                          ? "#a0c3ec"
+                          : "#7d8187";
+                    return (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={color}
+                        stroke="#191919"
+                        strokeWidth={2}
+                      />
+                    );
                   })}
                 </Pie>
                 <ChartTooltip />
@@ -238,7 +258,9 @@ export const StatisticsCharts = ({
             <CardTitle className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
               Workspace Productivity
             </CardTitle>
-            <p className="text-xs text-[#dadbdf]">Task completion volume by project</p>
+            <p className="text-xs text-[#dadbdf]">
+              Task completion volume by project
+            </p>
           </div>
           <ChartBarBig className="h-4 w-4 text-[#7d8187]" />
         </CardHeader>
@@ -271,7 +293,11 @@ export const StatisticsCharts = ({
                   axisLine={false}
                   className="font-mono"
                 />
-                <CartesianGrid stroke="#212327" strokeDasharray="3 3" vertical={false} />
+                <CartesianGrid
+                  stroke="#212327"
+                  strokeDasharray="3 3"
+                  vertical={false}
+                />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar
                   dataKey="total"

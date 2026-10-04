@@ -26,8 +26,8 @@ export const WorkspaceHeader = ({
   onEditWorkspace,
 }: WorkspaceHeaderProps) => {
   const { user } = useAuth();
-  
-  const currentUserMember = members.find(m => m.user._id === user?._id);
+
+  const currentUserMember = members.find((m) => m.user._id === user?._id);
   const currentUserRole = currentUserMember?.role;
 
   const canCreateProject = ["owner", "admin"].includes(currentUserRole || "");
@@ -44,7 +44,9 @@ export const WorkspaceHeader = ({
             )}
 
             <div>
-              <p className="caption-mono text-[10px] text-[#7d8187]">WORKSPACE</p>
+              <p className="caption-mono text-[10px] text-[#7d8187]">
+                WORKSPACE
+              </p>
               <h1 className="text-2xl font-normal tracking-[-0.6px] text-white">
                 {workspace.name}
               </h1>
@@ -53,11 +55,17 @@ export const WorkspaceHeader = ({
 
           <div className="flex items-center gap-2.5 flex-wrap">
             {canEditWorkspace && (
-              <Button variant="outline" size="icon" onClick={onEditWorkspace} title="Workspace Settings" className="rounded-full">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={onEditWorkspace}
+                title="Workspace Settings"
+                className="rounded-full"
+              >
                 <Settings className="size-4" />
               </Button>
             )}
-            
+
             {canInviteMember && (
               <Button variant="outline" onClick={onInviteMember}>
                 <UserPlus className="size-3.5 mr-2" />
@@ -83,7 +91,9 @@ export const WorkspaceHeader = ({
 
       {members.length > 0 && (
         <div className="flex items-center gap-3 pt-1">
-          <span className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">MEMBERS</span>
+          <span className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+            MEMBERS
+          </span>
 
           <div className="flex items-center -space-x-1.5">
             {members.map((member) => (
@@ -96,7 +106,9 @@ export const WorkspaceHeader = ({
                   src={member.user.profilePicture}
                   alt={member.user.name}
                 />
-                <AvatarFallback className="text-[11px] font-mono text-white bg-[#1a1c20]">{member.user.name.charAt(0)}</AvatarFallback>
+                <AvatarFallback className="text-[11px] font-mono text-white bg-[#1a1c20]">
+                  {member.user.name.charAt(0)}
+                </AvatarFallback>
               </Avatar>
             ))}
           </div>

@@ -19,6 +19,18 @@ const WorkspaceDetails = () => {
   const [isInviteMember, setIsInviteMember] = useState(false);
   const [isEditWorkspace, setIsEditWorkspace] = useState(false);
 
+  const { data, isLoading, isError, error, refetch } = useGetWorkspaceQuery(
+    workspaceId || ""
+  ) as {
+    data: WorkspaceProjectsResponse | undefined;
+    isLoading: boolean;
+    isError: boolean;
+    error: unknown;
+    refetch: () => void;
+  };
+
+  const { user } = useAuth();
+
   if (!workspaceId) {
     return (
       <div className="py-12">
@@ -31,16 +43,6 @@ const WorkspaceDetails = () => {
       </div>
     );
   }
-
-  const { data, isLoading, isError, error, refetch } = useGetWorkspaceQuery(workspaceId) as {
-    data: WorkspaceProjectsResponse | undefined;
-    isLoading: boolean;
-    isError: boolean;
-    error: unknown;
-    refetch: () => void;
-  };
-
-  const { user } = useAuth();
 
   if (isLoading) return <Loader label="Loading workspace details..." />;
 

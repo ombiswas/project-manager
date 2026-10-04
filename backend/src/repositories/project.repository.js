@@ -17,7 +17,17 @@ class ProjectRepository {
     return await Project.findById(id);
   }
 
-  async findByWorkspace(workspaceId, { page = 1, limit = 20, search, status, sortBy = "createdAt", sortOrder = "desc" } = {}) {
+  async findByWorkspace(
+    workspaceId,
+    {
+      page = 1,
+      limit = 20,
+      search,
+      status,
+      sortBy = "createdAt",
+      sortOrder = "desc",
+    } = {}
+  ) {
     const query = { workspace: workspaceId, isArchived: false };
 
     if (search) {
@@ -44,7 +54,10 @@ class ProjectRepository {
   }
 
   async findProjectIdsByWorkspace(workspaceId) {
-    const projects = await Project.find({ workspace: workspaceId }, "_id").lean();
+    const projects = await Project.find(
+      { workspace: workspaceId },
+      "_id"
+    ).lean();
     return projects.map((p) => p._id);
   }
 

@@ -28,10 +28,12 @@ export const resetPasswordRequest = asyncHandler(async (req, res) => {
   res.status(200).json(result);
 });
 
-export const verifyResetPasswordTokenAndResetPassword = asyncHandler(async (req, res) => {
-  const result = await authService.resetPassword(req.body);
-  res.status(200).json(result);
-});
+export const verifyResetPasswordTokenAndResetPassword = asyncHandler(
+  async (req, res) => {
+    const result = await authService.resetPassword(req.body);
+    res.status(200).json(result);
+  }
+);
 
 export default {
   registerUser,

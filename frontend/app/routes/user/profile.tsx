@@ -63,7 +63,13 @@ import { getErrorMessage } from "@/lib/fetch-util";
 export type ProfileFormData = z.infer<typeof profileSchema>;
 
 const Profile = () => {
-  const { data: user, isPending, isError, error: fetchError, refetch } = useUserProfileQuery() as {
+  const {
+    data: user,
+    isPending,
+    isError,
+    error: fetchError,
+    refetch,
+  } = useUserProfileQuery() as {
     data: User | undefined;
     isPending: boolean;
     isError: boolean;
@@ -143,7 +149,10 @@ const Profile = () => {
         <BackButton />
         <ErrorState
           title="Failed to load profile"
-          message={getErrorMessage(fetchError, "Could not fetch your profile data.")}
+          message={getErrorMessage(
+            fetchError,
+            "Could not fetch your profile data."
+          )}
           onRetry={() => refetch()}
         />
       </div>
@@ -154,7 +163,9 @@ const Profile = () => {
     <div className="space-y-8 pb-12">
       <div className="px-4 md:px-0">
         <BackButton />
-        <h3 className="text-xl font-normal tracking-tight text-ink mt-6">Profile Information</h3>
+        <h3 className="text-xl font-normal tracking-tight text-ink mt-6">
+          Profile Information
+        </h3>
         <p className="caption-mono text-mute mt-1">
           Manage your account settings and preferences.
         </p>
@@ -164,8 +175,12 @@ const Profile = () => {
 
       <Card className="bg-canvas-card border border-hairline rounded-[8px]">
         <CardHeader className="p-5 border-b border-hairline">
-          <CardTitle className="text-base font-normal tracking-tight text-ink">Personal Information</CardTitle>
-          <CardDescription className="caption-mono text-mute mt-0.5">Update your personal details.</CardDescription>
+          <CardTitle className="text-base font-normal tracking-tight text-ink">
+            Personal Information
+          </CardTitle>
+          <CardDescription className="caption-mono text-mute mt-0.5">
+            Update your personal details.
+          </CardDescription>
         </CardHeader>
         <CardContent className="p-5">
           <Form {...profileForm}>
@@ -213,7 +228,10 @@ const Profile = () => {
                   <FormItem className="max-w-md">
                     <FormLabel>Full Name</FormLabel>
                     <FormControl>
-                      <Input {...field} className="rounded-full bg-canvas-card border-hairline focus-visible:border-canvas-mid text-sm h-9" />
+                      <Input
+                        {...field}
+                        className="rounded-full bg-canvas-card border-hairline focus-visible:border-canvas-mid text-sm h-9"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -253,8 +271,12 @@ const Profile = () => {
 
       <Card className="bg-canvas-card border border-hairline rounded-[8px]">
         <CardHeader className="p-5 border-b border-hairline">
-          <CardTitle className="text-base font-normal tracking-tight text-ink">Security</CardTitle>
-          <CardDescription className="caption-mono text-mute mt-0.5">Update your password.</CardDescription>
+          <CardTitle className="text-base font-normal tracking-tight text-ink">
+            Security
+          </CardTitle>
+          <CardDescription className="caption-mono text-mute mt-0.5">
+            Update your password.
+          </CardDescription>
         </CardHeader>
         <CardContent className="p-5">
           <Form {...form}>
@@ -265,7 +287,12 @@ const Profile = () => {
               {passwordError && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{getErrorMessage(passwordError, "Failed to update password")}</AlertDescription>
+                  <AlertDescription>
+                    {getErrorMessage(
+                      passwordError,
+                      "Failed to update password"
+                    )}
+                  </AlertDescription>
                 </Alert>
               )}
 

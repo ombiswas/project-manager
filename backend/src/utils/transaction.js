@@ -13,12 +13,15 @@ export const withTransaction = async (workFn) => {
     return await workFn(null);
   }
 
-  let session = null;
+  let session;
   try {
     session = await mongoose.startSession();
   } catch (err) {
     // If sessions/transactions are not supported on this MongoDB deployment
-    logger.warn("Mongoose sessions not supported on this deployment; running without transaction session:", err.message);
+    logger.warn(
+      "Mongoose sessions not supported on this deployment; running without transaction session:",
+      err.message
+    );
     return await workFn(null);
   }
 
@@ -30,7 +33,10 @@ export const withTransaction = async (workFn) => {
       session.startTransaction();
       transactionStarted = true;
     } catch (startErr) {
-      logger.warn("MongoDB transactions not supported on this instance (e.g. standalone mode). Running sequentially:", startErr.message);
+      logger.warn(
+        "MongoDB transactions not supported on this instance (e.g. standalone mode). Running sequentially:",
+        startErr.message
+      );
     }
 
     if (transactionStarted) {

@@ -25,7 +25,10 @@ export const ProjectCard = ({
   workspaceId,
 }: ProjectCardProps) => {
   return (
-    <Link to={`/workspaces/${workspaceId}/projects/${project._id}`} className="group block h-full">
+    <Link
+      to={`/workspaces/${workspaceId}/projects/${project._id}`}
+      className="group block h-full"
+    >
       <Card className="bg-[#191919] border border-[#212327] rounded-[8px] p-5 shadow-none hover:border-[#363a3f] transition-colors h-full flex flex-col justify-between">
         <div>
           <div className="flex items-start justify-between gap-3 mb-2">

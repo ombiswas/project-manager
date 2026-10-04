@@ -50,10 +50,16 @@ export const authorize = (minRole = "member") => {
       }
 
       if (!workspace) {
-        throw new ForbiddenError("No workspace context available for authorization");
+        throw new ForbiddenError(
+          "No workspace context available for authorization"
+        );
       }
 
-      const role = permissionService.assertMinRole(workspace, req.user._id, minRole);
+      const role = permissionService.assertMinRole(
+        workspace,
+        req.user._id,
+        minRole
+      );
       req.userWorkspaceRole = role;
       next();
     } catch (error) {

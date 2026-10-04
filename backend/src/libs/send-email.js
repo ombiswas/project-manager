@@ -62,7 +62,9 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 export const sendEmail = async (to, subject, html, maxRetries = 2) => {
   const transport = getTransporter();
   if (!transport) {
-    logger.error(`❌ Email delivery skipped for ${to}: SMTP is not configured.`);
+    logger.error(
+      `❌ Email delivery skipped for ${to}: SMTP is not configured.`
+    );
     return false;
   }
 
@@ -77,15 +79,23 @@ export const sendEmail = async (to, subject, html, maxRetries = 2) => {
   while (attempt <= maxRetries) {
     try {
       const info = await transport.sendMail(mailOptions);
-      logger.info(`📧 Email sent successfully to ${to} [MessageId: ${info.messageId}]`);
+      logger.info(
+        `📧 Email sent successfully to ${to} [MessageId: ${info.messageId}]`
+      );
       return true;
     } catch (error) {
       attempt++;
       const isTransient =
-        ["ECONNRESET", "ETIMEDOUT", "ESOCKET", "ECONNREFUSED"].includes(error.code) ||
-        (error.responseCode && error.responseCode >= 400 && error.responseCode < 500);
+        ["ECONNRESET", "ETIMEDOUT", "ESOCKET", "ECONNREFUSED"].includes(
+          error.code
+        ) ||
+        (error.responseCode &&
+          error.responseCode >= 400 &&
+          error.responseCode < 500);
 
-      logger.warn(`Email delivery attempt ${attempt} to ${to} failed: ${error.message}`);
+      logger.warn(
+        `Email delivery attempt ${attempt} to ${to} failed: ${error.message}`
+      );
 
       if (attempt <= maxRetries && isTransient) {
         const delay = attempt * 1000;

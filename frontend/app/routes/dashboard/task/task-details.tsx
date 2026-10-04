@@ -21,12 +21,18 @@ import {
 import { useGetWorkspaceDetailsQuery } from "@/hooks/use-workspace";
 import { useAuth } from "@/provider/auth-context";
 import { getErrorMessage } from "@/lib/fetch-util";
-import type { Project, Task, TaskDetailResponse, Workspace } from "@/types";
+import type { TaskDetailResponse, Workspace } from "@/types";
 import { formatDistanceToNow } from "date-fns";
-import { Archive, ArchiveRestore, Eye, EyeOff, Trash2, AlertTriangle } from "lucide-react";
+import {
+  Archive,
+  ArchiveRestore,
+  Eye,
+  EyeOff,
+  Trash2,
+  AlertTriangle,
+} from "lucide-react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -48,24 +54,28 @@ const TaskDetails = () => {
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const { data, isLoading, isError, error, refetch } = useTaskByIdQuery(taskId!) as {
+  const { data, isLoading, isError, error, refetch } = useTaskByIdQuery(
+    taskId!
+  ) as {
     data: TaskDetailResponse | undefined;
     isLoading: boolean;
     isError: boolean;
     error: unknown;
     refetch: () => void;
   };
-  const { data: workspaceData, isLoading: isLoadingWorkspace } = useGetWorkspaceDetailsQuery(workspaceId!) as {
-    data: Workspace | undefined;
-    isLoading: boolean;
-  };
+  const { data: workspaceData, isLoading: isLoadingWorkspace } =
+    useGetWorkspaceDetailsQuery(workspaceId!) as {
+      data: Workspace | undefined;
+      isLoading: boolean;
+    };
 
   const { mutate: watchTask, isPending: isWatching } = useWatchTaskMutation();
   const { mutate: achievedTask, isPending: isAchieved } =
     useAchievedTaskMutation();
   const { mutate: deleteTask, isPending: isDeleting } = useDeleteTaskMutation();
 
-  if (isLoading || isLoadingWorkspace) return <Loader label="Loading task details..." />;
+  if (isLoading || isLoadingWorkspace)
+    return <Loader label="Loading task details..." />;
 
   if (isError || !data?.task) {
     return (
@@ -73,7 +83,10 @@ const TaskDetails = () => {
         <BackButton className="w-fit" />
         <ErrorState
           title="Task not found"
-          message={getErrorMessage(error, "Could not load the requested task details.")}
+          message={getErrorMessage(
+            error,
+            "Could not load the requested task details."
+          )}
           onRetry={() => refetch()}
         />
       </div>
@@ -86,27 +99,28 @@ const TaskDetails = () => {
   );
 
   // Permission logic
-  const workspaceOwnerId = typeof workspaceData?.owner === "string" ? workspaceData.owner : workspaceData?.owner?._id || "";
+  const workspaceOwnerId =
+    typeof workspaceData?.owner === "string"
+      ? workspaceData.owner
+      : workspaceData?.owner?._id || "";
   const currentUserId = String(user?._id || "");
-  const isWorkspaceOwner = workspaceOwnerId && currentUserId && workspaceOwnerId === currentUserId;
+  const isWorkspaceOwner =
+    workspaceOwnerId && currentUserId && workspaceOwnerId === currentUserId;
 
-  const currentUserWorkspaceRole = isWorkspaceOwner ? "owner" : workspaceData?.members?.find(
-    (m) => String(m.user?._id || m.user) === currentUserId
-  )?.role;
+  const currentUserWorkspaceRole = isWorkspaceOwner
+    ? "owner"
+    : workspaceData?.members?.find(
+        (m) => String(m.user?._id || m.user) === currentUserId
+      )?.role;
 
-  const projectCreatorId = typeof project?.createdBy === "string" 
-    ? project.createdBy 
-    : project?.createdBy?._id || "";
-  const isCreatorOwner = workspaceOwnerId && projectCreatorId && workspaceOwnerId === projectCreatorId;
-  
-  const creatorMember = workspaceData?.members?.find(
-    (m) => String(m.user?._id || m.user) === projectCreatorId
-  );
-  const creatorRole = isCreatorOwner ? "owner" : (creatorMember?.role || "member");
-
-  const isOwnerOrAdmin = currentUserWorkspaceRole === "owner" || currentUserWorkspaceRole === "admin";
+  const projectCreatorId =
+    typeof project?.createdBy === "string"
+      ? project.createdBy
+      : project?.createdBy?._id || "";
+  const isOwnerOrAdmin =
+    currentUserWorkspaceRole === "owner" ||
+    currentUserWorkspaceRole === "admin";
   const isMember = currentUserWorkspaceRole === "member";
-  const isViewer = currentUserWorkspaceRole === "viewer";
 
   const canManageTask = isOwnerOrAdmin;
   const canDeleteTask = isOwnerOrAdmin;
@@ -157,9 +171,14 @@ const TaskDetails = () => {
           <BackButton className="w-fit" />
           <div className="flex items-center gap-3 mt-1">
             <p className="caption-mono text-xs text-[#7d8187]">TASK</p>
-            <h1 className="text-2xl font-normal tracking-[-0.6px] text-white">{task.title}</h1>
+            <h1 className="text-2xl font-normal tracking-[-0.6px] text-white">
+              {task.title}
+            </h1>
             {task.isArchived && (
-              <Badge variant="outline" className="font-mono text-[10px] text-[#ffc285] border-[#ffc285]/30 bg-[#ffc285]/10">
+              <Badge
+                variant="outline"
+                className="font-mono text-[10px] text-[#ffc285] border-[#ffc285]/30 bg-[#ffc285]/10"
+              >
                 ARCHIVED
               </Badge>
             )}
@@ -221,24 +240,47 @@ const TaskDetails = () => {
               <div className="space-y-3 flex-1 w-full overflow-hidden">
                 <div className="flex items-center gap-3 flex-wrap">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono uppercase tracking-[1px] text-[#7d8187]">Priority</span>
-                    <TaskPrioritySelector priority={task.priority} taskId={task._id} canEdit={canManageTask} />
+                    <span className="text-[10px] font-mono uppercase tracking-[1px] text-[#7d8187]">
+                      Priority
+                    </span>
+                    <TaskPrioritySelector
+                      priority={task.priority}
+                      taskId={task._id}
+                      canEdit={canManageTask}
+                    />
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono uppercase tracking-[1px] text-[#7d8187]">Status</span>
-                    <TaskStatusSelector status={task.status} taskId={task._id} canEdit={canUpdateStatus} />
+                    <span className="text-[10px] font-mono uppercase tracking-[1px] text-[#7d8187]">
+                      Status
+                    </span>
+                    <TaskStatusSelector
+                      status={task.status}
+                      taskId={task._id}
+                      canEdit={canUpdateStatus}
+                    />
                   </div>
                 </div>
 
                 <div className="pt-1">
-                  <TaskTitle title={task.title} taskId={task._id} canEdit={canManageTask} />
+                  <TaskTitle
+                    title={task.title}
+                    taskId={task._id}
+                    canEdit={canManageTask}
+                  />
                 </div>
 
                 <div className="flex items-center gap-2 text-xs font-mono text-[#7d8187] pt-1">
                   <span>ID:</span>
-                  <span className="text-white bg-[#1a1c20] px-2 py-0.5 rounded-full border border-[#212327]">{task._id.slice(-6)}</span>
+                  <span className="text-white bg-[#1a1c20] px-2 py-0.5 rounded-full border border-[#212327]">
+                    {task._id.slice(-6)}
+                  </span>
                   <span>•</span>
-                  <span>Created {formatDistanceToNow(new Date(task.createdAt), { addSuffix: true })}</span>
+                  <span>
+                    Created{" "}
+                    {formatDistanceToNow(new Date(task.createdAt), {
+                      addSuffix: true,
+                    })}
+                  </span>
                 </div>
               </div>
             </div>
@@ -273,14 +315,18 @@ const TaskDetails = () => {
             </div>
 
             <div className="pt-4 border-t border-[#212327]">
-              <SubTasksDetails subTasks={task.subtasks || []} taskId={task._id} canEdit={canManageSubtasks} />
+              <SubTasksDetails
+                subTasks={task.subtasks || []}
+                taskId={task._id}
+                canEdit={canManageSubtasks}
+              />
             </div>
           </div>
 
-          <CommentSection 
-            taskId={task._id} 
+          <CommentSection
+            taskId={task._id}
             members={data.project.members}
-            canComment={canComment} 
+            canComment={canComment}
           />
         </div>
 
@@ -289,7 +335,7 @@ const TaskDetails = () => {
           <div className="bg-[#191919] rounded-[8px] border border-[#212327] p-5 shadow-none space-y-4">
             <Watchers watchers={task.watchers || []} />
           </div>
-          
+
           <div className="bg-[#191919] rounded-[8px] border border-[#212327] p-5 shadow-none space-y-3">
             <h3 className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187] border-b border-[#212327] pb-2">
               Task Activity
@@ -324,9 +370,13 @@ const TaskDetails = () => {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="bg-[#141517] border border-[#212327] rounded-[8px] text-white">
           <DialogHeader>
-            <DialogTitle className="text-lg font-normal tracking-tight text-white">Delete Task?</DialogTitle>
+            <DialogTitle className="text-lg font-normal tracking-tight text-white">
+              Delete Task?
+            </DialogTitle>
             <DialogDescription className="text-xs text-[#7d8187]">
-              This action cannot be undone. This will permanently delete <strong className="text-white">{task.title}</strong> and all associated activity.
+              This action cannot be undone. This will permanently delete{" "}
+              <strong className="text-white">{task.title}</strong> and all
+              associated activity.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 pt-2">

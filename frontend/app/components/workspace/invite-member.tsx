@@ -80,7 +80,9 @@ export const InviteMemberDialog = ({
       <DialogContent className="bg-[#141517] border border-[#212327] rounded-[8px] text-white">
         <DialogHeader className="pb-2">
           <p className="caption-mono text-[10px] text-[#7d8187]">MEMBERSHIP</p>
-          <DialogTitle className="text-xl font-normal tracking-[-0.5px] text-white">Invite to Workspace</DialogTitle>
+          <DialogTitle className="text-xl font-normal tracking-[-0.5px] text-white">
+            Invite to Workspace
+          </DialogTitle>
         </DialogHeader>
 
         <Tabs
@@ -101,7 +103,10 @@ export const InviteMemberDialog = ({
           <TabsContent value="email">
             <div className="grid gap-4">
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-4"
+                >
                   <FormField
                     control={form.control}
                     name="email"
@@ -111,7 +116,10 @@ export const InviteMemberDialog = ({
                           Email Address
                         </FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="colleague@company.com" />
+                          <Input
+                            {...field}
+                            placeholder="colleague@company.com"
+                          />
                         </FormControl>
                       </FormItem>
                     )}
@@ -148,10 +156,7 @@ export const InviteMemberDialog = ({
                     )}
                   />
 
-                  <Button
-                    className="mt-6 w-full"
-                    disabled={isPending}
-                  >
+                  <Button className="mt-6 w-full" disabled={isPending}>
                     <Mail className="w-4 h-4 mr-2" />
                     {isPending ? "Sending..." : "Send Invitation"}
                   </Button>
@@ -172,7 +177,12 @@ export const InviteMemberDialog = ({
                     value={`${window.location.origin}/workspace-invite/${workspaceId}`}
                     className="font-mono text-xs"
                   />
-                  <Button onClick={handleCopyInviteLink} disabled={isPending} variant="outline" className="shrink-0">
+                  <Button
+                    onClick={handleCopyInviteLink}
+                    disabled={isPending}
+                    variant="outline"
+                    className="shrink-0"
+                  >
                     {linkCopied ? (
                       <>
                         <Check className="mr-1.5 h-3.5 w-3.5" />
@@ -188,7 +198,8 @@ export const InviteMemberDialog = ({
                 </div>
               </div>
               <p className="text-xs text-[#7d8187]">
-                Anyone with this unique link can join this workspace as a member.
+                Anyone with this unique link can join this workspace as a
+                member.
               </p>
             </div>
           </TabsContent>

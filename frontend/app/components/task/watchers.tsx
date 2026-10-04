@@ -15,14 +15,20 @@ export const Watchers = ({ watchers }: { watchers: User[] }) => {
               <div key={watcher._id} className="flex items-center gap-2.5">
                 <Avatar className="size-7 border border-hairline">
                   <AvatarImage src={watcher.profilePicture} />
-                  <AvatarFallback className="text-[10px] bg-canvas-soft text-body font-mono">{watcher.name.charAt(0)}</AvatarFallback>
+                  <AvatarFallback className="text-[10px] bg-canvas-soft text-body font-mono">
+                    {watcher.name.charAt(0)}
+                  </AvatarFallback>
                 </Avatar>
-                <span className="text-sm font-normal text-body">{watcher.name}</span>
+                <span className="text-sm font-normal text-body">
+                  {watcher.name}
+                </span>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-xs text-mute font-mono italic px-1">No watchers yet</p>
+          <p className="text-xs text-mute font-mono italic px-1">
+            No watchers yet
+          </p>
         )}
       </div>
     </div>

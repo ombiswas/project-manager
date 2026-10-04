@@ -67,7 +67,13 @@ const MyTasks = () => {
     if (urlSearch !== search) setSearch(urlSearch);
   }, [searchParams]);
 
-  const { data: myTasks, isLoading, isError, error, refetch } = useGetMyTasksQuery() as {
+  const {
+    data: myTasks,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useGetMyTasksQuery() as {
     data: Task[] | undefined;
     isLoading: boolean;
     isError: boolean;
@@ -79,21 +85,21 @@ const MyTasks = () => {
   const filteredTasks =
     tasksList.length > 0
       ? tasksList
-        .filter((task) => {
-          if (filter === "all") return true;
-          if (filter === "todo") return task.status === "To Do";
-          if (filter === "inprogress") return task.status === "In Progress";
-          if (filter === "done") return task.status === "Done";
-          if (filter === "achieved") return task.isArchived === true;
-          if (filter === "high") return task.priority === "High";
+          .filter((task) => {
+            if (filter === "all") return true;
+            if (filter === "todo") return task.status === "To Do";
+            if (filter === "inprogress") return task.status === "In Progress";
+            if (filter === "done") return task.status === "Done";
+            if (filter === "achieved") return task.isArchived === true;
+            if (filter === "high") return task.priority === "High";
 
-          return true;
-        })
-        .filter(
-          (task) =>
-            task.title.toLowerCase().includes(search.toLowerCase()) ||
-            task.description?.toLowerCase().includes(search.toLowerCase())
-        )
+            return true;
+          })
+          .filter(
+            (task) =>
+              task.title.toLowerCase().includes(search.toLowerCase()) ||
+              task.description?.toLowerCase().includes(search.toLowerCase())
+          )
       : [];
 
   //   sort task
@@ -117,10 +123,15 @@ const MyTasks = () => {
   if (isError) {
     return (
       <div className="space-y-6 pb-12">
-        <h1 className="text-2xl font-normal tracking-tight text-ink">My Tasks</h1>
+        <h1 className="text-2xl font-normal tracking-tight text-ink">
+          My Tasks
+        </h1>
         <ErrorState
           title="Failed to load tasks"
-          message={getErrorMessage(error, "Could not fetch your assigned tasks.")}
+          message={getErrorMessage(
+            error,
+            "Could not fetch your assigned tasks."
+          )}
           onRetry={() => refetch()}
         />
       </div>
@@ -131,9 +142,12 @@ const MyTasks = () => {
     <div className="space-y-6 pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-normal tracking-tight text-ink">My Tasks</h1>
+          <h1 className="text-2xl font-normal tracking-tight text-ink">
+            My Tasks
+          </h1>
           <p className="caption-mono text-mute mt-1">
-            {sortedTasks?.length} assigned {sortedTasks?.length === 1 ? "task" : "tasks"}
+            {sortedTasks?.length} assigned{" "}
+            {sortedTasks?.length === 1 ? "task" : "tasks"}
           </p>
         </div>
 
@@ -151,13 +165,19 @@ const MyTasks = () => {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="rounded-full text-xs font-mono">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full text-xs font-mono"
+              >
                 <FilterIcon className="w-3.5 h-3.5 mr-1 text-mute" /> Filter
               </Button>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuLabel className="caption-mono text-mute">Filter Tasks</DropdownMenuLabel>
+              <DropdownMenuLabel className="caption-mono text-mute">
+                Filter Tasks
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setFilter("all")}>
                 All Tasks
@@ -201,7 +221,9 @@ const MyTasks = () => {
             <CardHeader className="p-4 md:p-5 border-b border-hairline">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-base font-normal tracking-tight text-ink">All Tasks</CardTitle>
+                  <CardTitle className="text-base font-normal tracking-tight text-ink">
+                    All Tasks
+                  </CardTitle>
                   <CardDescription className="caption-mono text-mute mt-0.5">
                     {sortedTasks?.length} tasks assigned to you
                   </CardDescription>
@@ -212,7 +234,10 @@ const MyTasks = () => {
             <CardContent className="p-0">
               <div className="divide-y divide-hairline">
                 {sortedTasks?.map((task) => (
-                  <div key={task._id} className="group p-4 hover:bg-canvas-soft/60 transition-colors">
+                  <div
+                    key={task._id}
+                    className="group p-4 hover:bg-canvas-soft/60 transition-colors"
+                  >
                     <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
                         <div className="mt-0.5 flex-shrink-0">
@@ -276,12 +301,16 @@ const MyTasks = () => {
                         {task.dueDate && (
                           <div className="flex items-center gap-1.5">
                             <span>Due:</span>
-                            <span className="text-body">{format(new Date(task.dueDate), "MMM d, yyyy")}</span>
+                            <span className="text-body">
+                              {format(new Date(task.dueDate), "MMM d, yyyy")}
+                            </span>
                           </div>
                         )}
                         <div className="flex items-center gap-1.5">
                           <span>Updated:</span>
-                          <span>{format(new Date(task.updatedAt), "MMM d")}</span>
+                          <span>
+                            {format(new Date(task.updatedAt), "MMM d")}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -293,7 +322,9 @@ const MyTasks = () => {
                     <div className="bg-canvas-soft border border-hairline size-10 rounded-full flex items-center justify-center mx-auto mb-3">
                       <Clock className="size-4 text-mute" />
                     </div>
-                    <h3 className="text-sm font-normal text-ink">No tasks found</h3>
+                    <h3 className="text-sm font-normal text-ink">
+                      No tasks found
+                    </h3>
                     <p className="caption-mono text-mute mt-1">
                       You're all caught up!
                     </p>
@@ -309,16 +340,30 @@ const MyTasks = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
             {[
               { title: "To Do", tasks: todoTasks, indicator: "bg-mute" },
-              { title: "In Progress", tasks: inProgressTasks, indicator: "bg-accent-breeze" },
+              {
+                title: "In Progress",
+                tasks: inProgressTasks,
+                indicator: "bg-accent-breeze",
+              },
               { title: "Done", tasks: doneTasks, indicator: "bg-ink" },
             ].map((column) => (
-              <div key={column.title} className="flex flex-col h-full min-h-[450px]">
+              <div
+                key={column.title}
+                className="flex flex-col h-full min-h-[450px]"
+              >
                 <div className="flex items-center justify-between mb-3 px-1">
                   <div className="flex items-center gap-2">
-                    <div className={cn("size-2 rounded-full", column.indicator)} />
+                    <div
+                      className={cn("size-2 rounded-full", column.indicator)}
+                    />
                     <h3 className="caption-mono text-ink">{column.title}</h3>
                   </div>
-                  <Badge variant="outline" className="font-mono text-[10px] h-5">{column.tasks.length}</Badge>
+                  <Badge
+                    variant="outline"
+                    className="font-mono text-[10px] h-5"
+                  >
+                    {column.tasks.length}
+                  </Badge>
                 </div>
 
                 <div className="space-y-2.5 flex-1 bg-canvas-soft/40 p-2.5 rounded-[8px] border border-hairline">
@@ -362,7 +407,9 @@ const MyTasks = () => {
                         {task.dueDate && (
                           <div className="pt-2 border-t border-hairline flex items-center gap-1.5 caption-mono text-mute text-[10px]">
                             <Clock className="size-3" />
-                            <span>{format(new Date(task.dueDate), "MMM d")}</span>
+                            <span>
+                              {format(new Date(task.dueDate), "MMM d")}
+                            </span>
                           </div>
                         )}
                       </Link>
@@ -371,7 +418,9 @@ const MyTasks = () => {
 
                   {column.tasks?.length === 0 && (
                     <div className="h-20 flex items-center justify-center rounded-[6px] border border-dashed border-hairline">
-                      <span className="caption-mono text-mute text-xs italic">Empty</span>
+                      <span className="caption-mono text-mute text-xs italic">
+                        Empty
+                      </span>
                     </div>
                   )}
                 </div>

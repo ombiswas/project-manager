@@ -55,7 +55,9 @@ router.post(
   checkTaskMember,
   validateRequest({
     params: z.object({ taskId: objectIdSchema }),
-    body: z.object({ title: z.string().trim().min(1, "Subtask title is required") }),
+    body: z.object({
+      title: z.string().trim().min(1, "Subtask title is required"),
+    }),
   }),
   addSubTask
 );
@@ -67,7 +69,9 @@ router.post(
   checkTaskMember,
   validateRequest({
     params: z.object({ taskId: objectIdSchema }),
-    body: z.object({ text: z.string().trim().min(1, "Comment text is required") }),
+    body: z.object({
+      text: z.string().trim().min(1, "Comment text is required"),
+    }),
   }),
   addComment
 );

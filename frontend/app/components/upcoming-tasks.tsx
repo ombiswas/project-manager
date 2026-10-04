@@ -39,9 +39,12 @@ export const UpcomingTasks = ({ data }: { data: Task[] }) => {
                 <div
                   className={cn(
                     "rounded-full p-1 border flex items-center justify-center shrink-0",
-                    task.priority === "High" && "border-[#ff7a17]/40 text-[#ff7a17] bg-[#ff7a17]/10",
-                    task.priority === "Medium" && "border-[#a0c3ec]/40 text-[#a0c3ec] bg-[#a0c3ec]/10",
-                    task.priority === "Low" && "border-[#212327] text-[#7d8187] bg-[#1a1c20]"
+                    task.priority === "High" &&
+                      "border-[#ff7a17]/40 text-[#ff7a17] bg-[#ff7a17]/10",
+                    task.priority === "Medium" &&
+                      "border-[#a0c3ec]/40 text-[#a0c3ec] bg-[#a0c3ec]/10",
+                    task.priority === "Low" &&
+                      "border-[#212327] text-[#7d8187] bg-[#1a1c20]"
                   )}
                 >
                   {task.status === "Done" ? (
@@ -70,9 +73,12 @@ export const UpcomingTasks = ({ data }: { data: Task[] }) => {
               <span
                 className={cn(
                   "text-[10px] font-mono uppercase tracking-[1px] px-2 py-0.5 rounded-full border shrink-0 ml-2",
-                  task.priority === "High" && "text-[#ff7a17] border-[#ff7a17]/30 bg-[#ff7a17]/5",
-                  task.priority === "Medium" && "text-[#a0c3ec] border-[#a0c3ec]/30 bg-[#a0c3ec]/5",
-                  task.priority === "Low" && "text-[#7d8187] border-[#212327] bg-[#1a1c20]"
+                  task.priority === "High" &&
+                    "text-[#ff7a17] border-[#ff7a17]/30 bg-[#ff7a17]/5",
+                  task.priority === "Medium" &&
+                    "text-[#a0c3ec] border-[#a0c3ec]/30 bg-[#a0c3ec]/5",
+                  task.priority === "Low" &&
+                    "text-[#7d8187] border-[#212327] bg-[#1a1c20]"
                 )}
               >
                 {task.priority}

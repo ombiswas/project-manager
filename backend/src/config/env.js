@@ -4,9 +4,31 @@ import { z } from "zod";
 // Load environment variables from .env file
 dotenv.config();
 
+// Provide fallback values in test environment
+const isTestEnv =
+  process.env.NODE_ENV === "test" ||
+  process.env.NODE_TEST_CONTEXT !== undefined;
+
+if (isTestEnv) {
+  process.env.NODE_ENV = "test";
+  process.env.MONGODB_URI =
+    process.env.MONGODB_URI || "mongodb://localhost:27017/project-manager-test";
+  process.env.JWT_SECRET =
+    process.env.JWT_SECRET || "test-jwt-secret-key-32-chars-long-minimum";
+  process.env.FRONTEND_URL =
+    process.env.FRONTEND_URL || "http://localhost:5173";
+  process.env.SMTP_HOST = process.env.SMTP_HOST || "smtp.test.com";
+  process.env.SMTP_PORT = process.env.SMTP_PORT || "587";
+  process.env.SMTP_USER = process.env.SMTP_USER || "test@test.com";
+  process.env.SMTP_PASS = process.env.SMTP_PASS || "testpassword";
+  process.env.FROM_EMAIL = process.env.FROM_EMAIL || "test@test.com";
+}
+
 const envSchema = z.object({
   PORT: z.coerce.number().default(5000),
-  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+  NODE_ENV: z
+    .enum(["development", "production", "test"])
+    .default("development"),
   MONGODB_URI: z.string().min(1, "MONGODB_URI is required"),
   JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
   FRONTEND_URL: z.string().min(1, "FRONTEND_URL is required"),
@@ -32,7 +54,9 @@ if (!result.success) {
     console.error(`  ✖ ${key}: ${messages}`);
   }
   console.error("=======================================================");
-  console.error("Please configure your .env file using .env.example as a template.\n");
+  console.error(
+    "Please configure your .env file using .env.example as a template.\n"
+  );
   process.exit(1);
 }
 

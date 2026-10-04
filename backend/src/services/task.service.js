@@ -6,11 +6,7 @@ import activityRepository from "../repositories/activity.repository.js";
 import permissionService from "./permission.service.js";
 import { recordActivity } from "../utils/activity.js";
 import { withTransaction } from "../utils/transaction.js";
-import {
-  BadRequestError,
-  ForbiddenError,
-  NotFoundError,
-} from "../utils/errors.js";
+import { BadRequestError, NotFoundError } from "../utils/errors.js";
 
 class TaskService {
   async _resolveTaskContext(taskId, userId) {
@@ -29,7 +25,11 @@ class TaskService {
       throw new NotFoundError("Workspace not found");
     }
 
-    permissionService.assertTaskManagementPermission(workspace, userId, project.createdBy);
+    permissionService.assertTaskManagementPermission(
+      workspace,
+      userId,
+      project.createdBy
+    );
 
     return { task, project, workspace };
   }
@@ -46,7 +46,9 @@ class TaskService {
     for (const assignee of assignees) {
       const assigneeId = (assignee?._id || assignee).toString();
       if (!memberIdSet.has(assigneeId)) {
-        throw new BadRequestError(`Cannot assign task to user ${assigneeId} who is not a member of this workspace`);
+        throw new BadRequestError(
+          `Cannot assign task to user ${assigneeId} who is not a member of this workspace`
+        );
       }
     }
   }
@@ -62,9 +64,14 @@ class TaskService {
       throw new NotFoundError("Workspace not found");
     }
 
-    permissionService.assertTaskManagementPermission(workspace, userId, project.createdBy);
+    permissionService.assertTaskManagementPermission(
+      workspace,
+      userId,
+      project.createdBy
+    );
 
-    const { title, description, status, priority, dueDate, assignees } = taskData;
+    const { title, description, status, priority, dueDate, assignees } =
+      taskData;
 
     // Edge case: Assigning task to a non-member
     this._assertAssigneesAreWorkspaceMembers(workspace, assignees);
@@ -78,7 +85,8 @@ class TaskService {
       const task = await taskRepository.create(
         {
           title,
-          description: typeof description === "string" ? description.trim() : "",
+          description:
+            typeof description === "string" ? description.trim() : "",
           status: status || "To Do",
           priority: priority || "Medium",
           dueDate,
@@ -89,9 +97,16 @@ class TaskService {
         session
       );
 
-      await recordActivity(userId, "created_task", "Task", task._id, {
-        description: `Created task "${title}"`,
-      }, session);
+      await recordActivity(
+        userId,
+        "created_task",
+        "Task",
+        task._id,
+        {
+          description: `Created task "${title}"`,
+        },
+        session
+      );
 
       return task;
     });
@@ -106,8 +121,10 @@ class TaskService {
   }
 
   async updateTaskTitle(taskId, userId, title) {
-    const { task } = await this._resolveTaskContext(taskId, userId);
-    const updated = await taskRepository.updateById(taskId, { title: title.trim() });
+    await this._resolveTaskContext(taskId, userId);
+    const updated = await taskRepository.updateById(taskId, {
+      title: title.trim(),
+    });
 
     await recordActivity(userId, "updated_task", "Task", taskId, {
       description: `updated task title to "${title}"`,
@@ -118,17 +135,23 @@ class TaskService {
 
   async updateTaskDescription(taskId, userId, description) {
     const { task } = await this._resolveTaskContext(taskId, userId);
-    const cleanDescription = typeof description === "string" ? description.trim() : "";
+    const cleanDescription =
+      typeof description === "string" ? description.trim() : "";
     const oldDescText = task.description || "";
 
-    const oldSnippet = oldDescText.length > 0
-      ? oldDescText.substring(0, 50) + (oldDescText.length > 50 ? "..." : "")
-      : "(empty)";
-    const newSnippet = cleanDescription.length > 0
-      ? cleanDescription.substring(0, 50) + (cleanDescription.length > 50 ? "..." : "")
-      : "(empty)";
+    const oldSnippet =
+      oldDescText.length > 0
+        ? oldDescText.substring(0, 50) + (oldDescText.length > 50 ? "..." : "")
+        : "(empty)";
+    const newSnippet =
+      cleanDescription.length > 0
+        ? cleanDescription.substring(0, 50) +
+          (cleanDescription.length > 50 ? "..." : "")
+        : "(empty)";
 
-    const updated = await taskRepository.updateById(taskId, { description: cleanDescription });
+    const updated = await taskRepository.updateById(taskId, {
+      description: cleanDescription,
+    });
 
     await recordActivity(userId, "updated_task", "Task", taskId, {
       description: `updated task description from "${oldSnippet}" to "${newSnippet}"`,
@@ -138,7 +161,7 @@ class TaskService {
   }
 
   async updateTaskStatus(taskId, userId, status) {
-    const { task } = await this._resolveTaskContext(taskId, userId);
+    await this._resolveTaskContext(taskId, userId);
     const updateData = { status };
     if (status === "Done") {
       updateData.completedAt = new Date();
@@ -154,7 +177,7 @@ class TaskService {
   }
 
   async updateTaskPriority(taskId, userId, priority) {
-    const { task } = await this._resolveTaskContext(taskId, userId);
+    await this._resolveTaskContext(taskId, userId);
     const updated = await taskRepository.updateById(taskId, { priority });
 
     await recordActivity(userId, "updated_task", "Task", taskId, {
@@ -165,7 +188,7 @@ class TaskService {
   }
 
   async updateTaskAssignees(taskId, userId, assignees) {
-    const { task, workspace } = await this._resolveTaskContext(taskId, userId);
+    const { workspace } = await this._resolveTaskContext(taskId, userId);
 
     // Edge case: Assigning task to a non-member
     this._assertAssigneesAreWorkspaceMembers(workspace, assignees);
@@ -181,7 +204,11 @@ class TaskService {
 
   async addSubTask(taskId, userId, title) {
     const { task } = await this._resolveTaskContext(taskId, userId);
-    const newSubTask = { title: title.trim(), completed: false, createdAt: new Date() };
+    const newSubTask = {
+      title: title.trim(),
+      completed: false,
+      createdAt: new Date(),
+    };
 
     task.subtasks.push(newSubTask);
     await task.save();
@@ -215,19 +242,29 @@ class TaskService {
   }
 
   async addComment(taskId, userId, text) {
-    const { task } = await this._resolveTaskContext(taskId, userId);
+    await this._resolveTaskContext(taskId, userId);
 
     return await withTransaction(async (session) => {
-      const comment = await commentRepository.create({
-        text: text.trim(),
-        task: taskId,
-        author: userId,
-      }, session);
+      const comment = await commentRepository.create(
+        {
+          text: text.trim(),
+          task: taskId,
+          author: userId,
+        },
+        session
+      );
 
       const snippet = text.substring(0, 50) + (text.length > 50 ? "..." : "");
-      await recordActivity(userId, "added_comment", "Task", taskId, {
-        description: `added comment ${snippet}`,
-      }, session);
+      await recordActivity(
+        userId,
+        "added_comment",
+        "Task",
+        taskId,
+        {
+          description: `added comment ${snippet}`,
+        },
+        session
+      );
 
       return comment;
     });
@@ -236,12 +273,16 @@ class TaskService {
   async watchTask(taskId, userId) {
     const { task } = await this._resolveTaskContext(taskId, userId);
     const userIdStr = userId.toString();
-    const isWatching = task.watchers.some((w) => (w._id || w).toString() === userIdStr);
+    const isWatching = task.watchers.some(
+      (w) => (w._id || w).toString() === userIdStr
+    );
 
     if (!isWatching) {
       task.watchers.push(userId);
     } else {
-      task.watchers = task.watchers.filter((w) => (w._id || w).toString() !== userIdStr);
+      task.watchers = task.watchers.filter(
+        (w) => (w._id || w).toString() !== userIdStr
+      );
     }
     await task.save();
 
@@ -267,7 +308,15 @@ class TaskService {
   }
 
   async getMyTasks(userId, query = {}) {
-    const { page = 1, limit = 50, search, status, priority, sortBy, sortOrder } = query;
+    const {
+      page = 1,
+      limit = 50,
+      search,
+      status,
+      priority,
+      sortBy,
+      sortOrder,
+    } = query;
     const { tasks, total } = await taskRepository.findMyTasks(userId, {
       page: Number(page) || 1,
       limit: Number(limit) || 50,
@@ -290,7 +339,15 @@ class TaskService {
   }
 
   async getArchivedTasks(userId, query = {}) {
-    const { page = 1, limit = 50, search, status, priority, sortBy, sortOrder } = query;
+    const {
+      page = 1,
+      limit = 50,
+      search,
+      status,
+      priority,
+      sortBy,
+      sortOrder,
+    } = query;
     const { tasks, total } = await taskRepository.findArchivedTasks(userId, {
       page: Number(page) || 1,
       limit: Number(limit) || 50,
@@ -314,10 +371,13 @@ class TaskService {
 
   async getActivityByResourceId(resourceId, query = {}) {
     const { page = 1, limit = 20 } = query;
-    const { logs, total } = await activityRepository.findByResourceId(resourceId, {
-      page: Number(page) || 1,
-      limit: Number(limit) || 20,
-    });
+    const { logs, total } = await activityRepository.findByResourceId(
+      resourceId,
+      {
+        page: Number(page) || 1,
+        limit: Number(limit) || 20,
+      }
+    );
 
     return {
       logs,
@@ -349,7 +409,7 @@ class TaskService {
   }
 
   async deleteTask(taskId, userId) {
-    const { task, project } = await this._resolveTaskContext(taskId, userId);
+    const { project } = await this._resolveTaskContext(taskId, userId);
 
     return await withTransaction(async (session) => {
       // Cascade delete comments and activity logs for this task

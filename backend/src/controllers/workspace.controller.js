@@ -2,7 +2,10 @@ import workspaceService from "../services/workspace.service.js";
 import { asyncHandler } from "../utils/async-handler.js";
 
 export const createWorkspace = asyncHandler(async (req, res) => {
-  const workspace = await workspaceService.createWorkspace(req.body, req.user._id);
+  const workspace = await workspaceService.createWorkspace(
+    req.body,
+    req.user._id
+  );
   res.status(201).json(workspace);
 });
 
@@ -21,7 +24,9 @@ export const getWorkspaces = asyncHandler(async (req, res) => {
 });
 
 export const getWorkspaceDetails = asyncHandler(async (req, res) => {
-  const workspace = await workspaceService.getWorkspaceDetails(req.params.workspaceId);
+  const workspace = await workspaceService.getWorkspaceDetails(
+    req.params.workspaceId
+  );
   res.status(200).json(workspace);
 });
 
@@ -47,7 +52,10 @@ export const getWorkspaceProjects = asyncHandler(async (req, res) => {
 });
 
 export const getWorkspaceStats = asyncHandler(async (req, res) => {
-  const stats = await workspaceService.getWorkspaceStats(req.params.workspaceId, req.user._id);
+  const stats = await workspaceService.getWorkspaceStats(
+    req.params.workspaceId,
+    req.user._id
+  );
   res.status(200).json(stats);
 });
 
@@ -61,7 +69,10 @@ export const updateWorkspace = asyncHandler(async (req, res) => {
 });
 
 export const deleteWorkspace = asyncHandler(async (req, res) => {
-  const result = await workspaceService.deleteWorkspace(req.params.workspaceId, req.user._id);
+  const result = await workspaceService.deleteWorkspace(
+    req.params.workspaceId,
+    req.user._id
+  );
   res.status(200).json(result);
 });
 
@@ -75,12 +86,18 @@ export const inviteUserToWorkspace = asyncHandler(async (req, res) => {
 });
 
 export const acceptGenerateInvite = asyncHandler(async (req, res) => {
-  const result = await workspaceService.acceptGenerateInvite(req.params.workspaceId, req.user._id);
+  const result = await workspaceService.acceptGenerateInvite(
+    req.params.workspaceId,
+    req.user._id
+  );
   res.status(200).json(result);
 });
 
 export const acceptInviteByToken = asyncHandler(async (req, res) => {
-  const result = await workspaceService.acceptInviteByToken(req.body.token, req.user);
+  const result = await workspaceService.acceptInviteByToken(
+    req.body.token,
+    req.user
+  );
   res.status(200).json(result);
 });
 

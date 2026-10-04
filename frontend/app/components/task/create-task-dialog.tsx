@@ -281,37 +281,41 @@ export const CreateTaskDialog = ({
                               align="start"
                             >
                               <div className="flex flex-col gap-1.5">
-                                {projectMembers.filter(m => !!m).map((member) => {
-                                  const isSelected = selectedMembers.includes(member._id);
-                                  return (
-                                    <div
-                                      key={member._id}
-                                      className="flex items-center gap-2.5 px-3 py-2 rounded-[6px] border border-hairline hover:border-canvas-mid bg-canvas-card transition-colors"
-                                    >
-                                      <Checkbox
-                                        checked={isSelected}
-                                        onCheckedChange={(checked) => {
-                                          if (checked) {
-                                            field.onChange([
-                                              ...selectedMembers,
-                                              member._id,
-                                            ]);
-                                          } else {
-                                            field.onChange(
-                                              selectedMembers.filter(
-                                                (m) => m !== member._id
-                                              )
-                                            );
-                                          }
-                                        }}
-                                        id={`member-${member._id}`}
-                                      />
-                                      <span className="truncate flex-1 text-sm text-body">
-                                        {member.name || "Unknown"}
-                                      </span>
-                                    </div>
-                                  );
-                                })}
+                                {projectMembers
+                                  .filter((m) => !!m)
+                                  .map((member) => {
+                                    const isSelected = selectedMembers.includes(
+                                      member._id
+                                    );
+                                    return (
+                                      <div
+                                        key={member._id}
+                                        className="flex items-center gap-2.5 px-3 py-2 rounded-[6px] border border-hairline hover:border-canvas-mid bg-canvas-card transition-colors"
+                                      >
+                                        <Checkbox
+                                          checked={isSelected}
+                                          onCheckedChange={(checked) => {
+                                            if (checked) {
+                                              field.onChange([
+                                                ...selectedMembers,
+                                                member._id,
+                                              ]);
+                                            } else {
+                                              field.onChange(
+                                                selectedMembers.filter(
+                                                  (m) => m !== member._id
+                                                )
+                                              );
+                                            }
+                                          }}
+                                          id={`member-${member._id}`}
+                                        />
+                                        <span className="truncate flex-1 text-sm text-body">
+                                          {member.name || "Unknown"}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
                               </div>
                             </PopoverContent>
                           </Popover>
@@ -325,7 +329,11 @@ export const CreateTaskDialog = ({
             </div>
 
             <DialogFooter>
-              <Button type="submit" disabled={isPending} className="rounded-full">
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="rounded-full"
+              >
                 {isPending ? "Creating..." : "Create Task"}
               </Button>
             </DialogFooter>

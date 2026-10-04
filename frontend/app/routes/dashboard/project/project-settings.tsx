@@ -5,9 +5,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ProjectStatus, type ProjectTasksResponse, type Workspace, type WorkspaceMember } from "@/types";
-import { UseProjectQuery, UseUpdateProject, UseDeleteProject } from "@/hooks/use-project";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  ProjectStatus,
+  type ProjectTasksResponse,
+  type Workspace,
+  type WorkspaceMember,
+} from "@/types";
+import {
+  UseProjectQuery,
+  UseUpdateProject,
+  UseDeleteProject,
+} from "@/hooks/use-project";
 import { useGetWorkspaceDetailsQuery } from "@/hooks/use-workspace";
 import { useAuth } from "@/provider/auth-context";
 import { getErrorMessage } from "@/lib/fetch-util";
@@ -15,8 +30,15 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 import { Trash2, Save, AlertTriangle, Users } from "lucide-react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -28,41 +50,47 @@ const ProjectSettings = () => {
   }>();
   const navigate = useNavigate();
 
-  const { data, isLoading, isError, error, refetch } = UseProjectQuery(projectId!) as {
+  const { data, isLoading, isError, error, refetch } = UseProjectQuery(
+    projectId!
+  ) as {
     data: ProjectTasksResponse | undefined;
     isLoading: boolean;
     isError: boolean;
     error: unknown;
     refetch: () => void;
   };
-  const { data: workspaceData, isLoading: isLoadingWorkspace } = useGetWorkspaceDetailsQuery(workspaceId!) as {
-    data: Workspace | undefined;
-    isLoading: boolean;
-  };
+  const { data: workspaceData, isLoading: isLoadingWorkspace } =
+    useGetWorkspaceDetailsQuery(workspaceId!) as {
+      data: Workspace | undefined;
+      isLoading: boolean;
+    };
   const { mutate: updateProject, isPending: isUpdating } = UseUpdateProject();
   const { mutate: deleteProject, isPending: isDeleting } = UseDeleteProject();
 
   const createdBy = data?.project?.createdBy;
-  const projectCreatorId = typeof createdBy === "string" ? createdBy : createdBy?._id || "";
-  const workspaceOwnerId = typeof workspaceData?.owner === "string" ? workspaceData.owner : workspaceData?.owner?._id || "";
+  const projectCreatorId =
+    typeof createdBy === "string" ? createdBy : createdBy?._id || "";
+  const workspaceOwnerId =
+    typeof workspaceData?.owner === "string"
+      ? workspaceData.owner
+      : workspaceData?.owner?._id || "";
   const currentUserId = String(currentUser?._id || "");
-  const isWorkspaceOwner = workspaceOwnerId && currentUserId && workspaceOwnerId === currentUserId;
+  const isWorkspaceOwner =
+    workspaceOwnerId && currentUserId && workspaceOwnerId === currentUserId;
 
-  const currentUserWorkspaceRole = isWorkspaceOwner ? "owner" : workspaceData?.members?.find(
-    (m) => String(m.user?._id || m.user) === currentUserId
-  )?.role;
-
-  const isCreatorOwner = workspaceOwnerId && projectCreatorId && workspaceOwnerId === projectCreatorId;
-  
-  const creatorMember = workspaceData?.members?.find(
-    (m) => String(m.user?._id || m.user) === projectCreatorId
-  );
-  const creatorRole = isCreatorOwner ? "owner" : (creatorMember?.role || "member");
+  const currentUserWorkspaceRole = isWorkspaceOwner
+    ? "owner"
+    : workspaceData?.members?.find(
+        (m) => String(m.user?._id || m.user) === currentUserId
+      )?.role;
 
   let canDelete = false;
   let canUpdate = false;
 
-  if (currentUserWorkspaceRole === "owner" || currentUserWorkspaceRole === "admin") {
+  if (
+    currentUserWorkspaceRole === "owner" ||
+    currentUserWorkspaceRole === "admin"
+  ) {
     canDelete = true;
     canUpdate = true;
   }
@@ -82,9 +110,7 @@ const ProjectSettings = () => {
       setStatus(data.project.status);
       setTags(data.project.tags?.join(",") || "");
       setProjectMembers(
-        data.project.members.map((m) =>
-          typeof m === "string" ? m : m._id
-        )
+        data.project.members.map((m) => (typeof m === "string" ? m : m._id))
       );
     }
   }, [data]);
@@ -103,7 +129,10 @@ const ProjectSettings = () => {
         <BackButton className="w-fit" />
         <ErrorState
           title="Project not found"
-          message={getErrorMessage(error, "Could not load settings for this project.")}
+          message={getErrorMessage(
+            error,
+            "Could not load settings for this project."
+          )}
           onRetry={() => refetch()}
         />
       </div>
@@ -112,13 +141,16 @@ const ProjectSettings = () => {
 
   const handleUpdate = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    
-    const projectData = { 
-      title, 
-      description, 
+
+    const projectData = {
+      title,
+      description,
       status: (status || ProjectStatus.PLANNING) as ProjectStatus,
-      tags: tags.split(",").map((t) => t.trim()).filter((t) => t !== ""),
-      members: projectMembers 
+      tags: tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter((t) => t !== ""),
+      members: projectMembers,
     };
 
     updateProject(
@@ -164,15 +196,21 @@ const ProjectSettings = () => {
       <div className="flex items-center gap-3">
         <BackButton />
         <div>
-          <p className="caption-mono text-[10px] text-[#7d8187]">CONFIGURATION</p>
-          <h1 className="text-2xl font-normal tracking-[-0.6px] text-white">Project Settings</h1>
+          <p className="caption-mono text-[10px] text-[#7d8187]">
+            CONFIGURATION
+          </p>
+          <h1 className="text-2xl font-normal tracking-[-0.6px] text-white">
+            Project Settings
+          </h1>
         </div>
       </div>
 
       <div className="grid gap-6">
         <Card className="bg-[#191919] border border-[#212327] rounded-[8px] p-6 shadow-none">
           <CardHeader className="p-0 pb-5 border-b border-[#212327]">
-            <CardTitle className="text-base font-normal text-white">General Information</CardTitle>
+            <CardTitle className="text-base font-normal text-white">
+              General Information
+            </CardTitle>
             <p className="text-xs text-[#7d8187]">
               Update basic parameters and status for this project.
             </p>
@@ -180,7 +218,12 @@ const ProjectSettings = () => {
           <form onSubmit={handleUpdate}>
             <div className="space-y-4 py-5">
               <div className="space-y-1.5">
-                <Label htmlFor="title" className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">Project Title</Label>
+                <Label
+                  htmlFor="title"
+                  className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]"
+                >
+                  Project Title
+                </Label>
                 <Input
                   id="title"
                   value={title}
@@ -191,7 +234,12 @@ const ProjectSettings = () => {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="description" className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">Description</Label>
+                <Label
+                  htmlFor="description"
+                  className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]"
+                >
+                  Description
+                </Label>
                 <Textarea
                   id="description"
                   value={description}
@@ -202,8 +250,16 @@ const ProjectSettings = () => {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="status" className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">Project Status</Label>
-                <Select value={status} onValueChange={(value) => setStatus(value as ProjectStatus)}>
+                <Label
+                  htmlFor="status"
+                  className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]"
+                >
+                  Project Status
+                </Label>
+                <Select
+                  value={status}
+                  onValueChange={(value) => setStatus(value as ProjectStatus)}
+                >
                   <SelectTrigger id="status" className="w-full">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
@@ -218,7 +274,12 @@ const ProjectSettings = () => {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="tags" className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">Tags</Label>
+                <Label
+                  htmlFor="tags"
+                  className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]"
+                >
+                  Tags
+                </Label>
                 <Input
                   id="tags"
                   value={tags}
@@ -249,25 +310,42 @@ const ProjectSettings = () => {
           <div className="space-y-3 py-5">
             <div className="space-y-2">
               {workspaceMembers.map((member: WorkspaceMember) => {
-                const isProjectMember = projectMembers.includes(String(member.user._id));
+                const isProjectMember = projectMembers.includes(
+                  String(member.user._id)
+                );
 
                 return (
-                  <div key={member.user._id} className="flex items-center justify-between p-3 bg-[#141517] border border-[#212327] rounded-[8px] hover:border-[#363a3f] transition-colors">
+                  <div
+                    key={member.user._id}
+                    className="flex items-center justify-between p-3 bg-[#141517] border border-[#212327] rounded-[8px] hover:border-[#363a3f] transition-colors"
+                  >
                     <div className="flex items-center gap-3">
                       <Checkbox
                         id={`member-${member.user._id}`}
                         checked={isProjectMember}
-                        onCheckedChange={(checked) => handleMemberToggle(String(member.user._id), checked as boolean)}
+                        onCheckedChange={(checked) =>
+                          handleMemberToggle(
+                            String(member.user._id),
+                            checked as boolean
+                          )
+                        }
                       />
                       <Avatar className="size-7 rounded-full border border-[#212327] bg-[#1a1c20]">
                         <AvatarImage src={member.user.profilePicture} />
-                        <AvatarFallback className="text-[10px] font-mono bg-[#1a1c20] text-white">{member.user.name.charAt(0)}</AvatarFallback>
+                        <AvatarFallback className="text-[10px] font-mono bg-[#1a1c20] text-white">
+                          {member.user.name.charAt(0)}
+                        </AvatarFallback>
                       </Avatar>
                       <div>
-                        <Label htmlFor={`member-${member.user._id}`} className="text-sm font-normal text-white cursor-pointer">
+                        <Label
+                          htmlFor={`member-${member.user._id}`}
+                          className="text-sm font-normal text-white cursor-pointer"
+                        >
                           {member.user.name}
                         </Label>
-                        <p className="text-xs font-mono text-[#7d8187]">{member.user.email}</p>
+                        <p className="text-xs font-mono text-[#7d8187]">
+                          {member.user.email}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -296,9 +374,12 @@ const ProjectSettings = () => {
           <div className="pt-5">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h4 className="font-normal text-sm text-white">Delete this project</h4>
+                <h4 className="font-normal text-sm text-white">
+                  Delete this project
+                </h4>
                 <p className="text-xs text-[#7d8187] mt-0.5">
-                  Once deleted, all data including tasks, comments, and activity will be permanently removed.
+                  Once deleted, all data including tasks, comments, and activity
+                  will be permanently removed.
                 </p>
               </div>
               <Button
@@ -318,10 +399,14 @@ const ProjectSettings = () => {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="bg-[#141517] border border-[#212327] rounded-[8px] text-white">
           <DialogHeader>
-            <DialogTitle className="text-lg font-normal tracking-tight text-white">Are you absolutely sure?</DialogTitle>
+            <DialogTitle className="text-lg font-normal tracking-tight text-white">
+              Are you absolutely sure?
+            </DialogTitle>
             <DialogDescription className="text-xs text-[#7d8187]">
-              This action cannot be undone. This will permanently delete the project
-              <strong className="text-white"> {title}</strong> and all associated data.
+              This action cannot be undone. This will permanently delete the
+              project
+              <strong className="text-white"> {title}</strong> and all
+              associated data.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 pt-2">

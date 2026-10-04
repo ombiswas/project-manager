@@ -30,9 +30,14 @@ class UserService {
     });
   }
 
-  async changePassword(userId, { currentPassword, newPassword, confirmPassword }) {
+  async changePassword(
+    userId,
+    { currentPassword, newPassword, confirmPassword }
+  ) {
     if (newPassword !== confirmPassword) {
-      throw new BadRequestError("New password and confirm password do not match");
+      throw new BadRequestError(
+        "New password and confirm password do not match"
+      );
     }
 
     const user = await userRepository.findById(userId, "+password");
@@ -40,7 +45,10 @@ class UserService {
       throw new NotFoundError("User not found");
     }
 
-    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    const isPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.password
+    );
     if (!isPasswordValid) {
       throw new ForbiddenError("Invalid old password");
     }

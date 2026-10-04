@@ -18,7 +18,16 @@ class WorkspaceRepository {
     return await Workspace.findById(id);
   }
 
-  async findWorkspacesByUser(userId, { page = 1, limit = 20, search, sortBy = "createdAt", sortOrder = "desc" } = {}) {
+  async findWorkspacesByUser(
+    userId,
+    {
+      page = 1,
+      limit = 20,
+      search,
+      sortBy = "createdAt",
+      sortOrder = "desc",
+    } = {}
+  ) {
     const query = {
       $or: [{ owner: userId }, { "members.user": userId }],
     };

@@ -1,228 +1,224 @@
 export interface User {
-    _id: string;
-    email: string;
-    name: string;
-    createdAt: Date;
-    isEmailVerified: boolean;
-    updatedAt: Date;
-    profilePicture?: string;
+  _id: string;
+  email: string;
+  name: string;
+  createdAt: Date;
+  isEmailVerified: boolean;
+  updatedAt: Date;
+  profilePicture?: string;
 }
 
 export interface WorkspaceMember {
-    _id: string;
-    user: User;
-    role: "admin" | "member" | "owner" | "viewer";
-    joinedAt: Date;
+  _id: string;
+  user: User;
+  role: "admin" | "member" | "owner" | "viewer";
+  joinedAt: Date;
 }
 
 export interface Workspace {
-    _id: string;
-    name: string;
-    description?: string;
-    owner: User | string;
-    color: string;
-    members: WorkspaceMember[];
-    createdAt: Date;
-    updatedAt: Date;
+  _id: string;
+  name: string;
+  description?: string;
+  owner: User | string;
+  color: string;
+  members: WorkspaceMember[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 export enum ProjectStatus {
-    PLANNING = "Planning",
-    IN_PROGRESS = "In Progress",
-    ON_HOLD = "On Hold",
-    COMPLETED = "Completed",
-    CANCELLED = "Cancelled",
+  PLANNING = "Planning",
+  IN_PROGRESS = "In Progress",
+  ON_HOLD = "On Hold",
+  COMPLETED = "Completed",
+  CANCELLED = "Cancelled",
 }
 
 export interface Project {
-    _id: string;
-    title: string;
-    description?: string;
-    status: ProjectStatus;
-    workspace: Workspace;
-    startDate: Date;
-    dueDate: Date;
-    progress: number;
-    tasks: Task[];
-    members: User[];
-    tags?: string[];
-    createdAt: Date;
-    updatedAt: Date;
-    isArchived: boolean;
-    createdBy: User | string;
+  _id: string;
+  title: string;
+  description?: string;
+  status: ProjectStatus;
+  workspace: Workspace;
+  startDate: Date;
+  dueDate: Date;
+  progress: number;
+  tasks: Task[];
+  members: User[];
+  tags?: string[];
+  createdAt: Date;
+  updatedAt: Date;
+  isArchived: boolean;
+  createdBy: User | string;
 }
 export type TaskStatus = "To Do" | "In Progress" | "Done";
 export type TaskPriority = "High" | "Medium" | "Low";
 export enum ProjectMemberRole {
-    MANAGER = "manager",
-    CONTRIBUTOR = "contributor",
-    VIEWER = "viewer",
+  MANAGER = "manager",
+  CONTRIBUTOR = "contributor",
+  VIEWER = "viewer",
 }
 
 export interface Subtask {
-    _id: string;
-    title: string;
-    completed: boolean;
-    createdAt: Date;
+  _id: string;
+  title: string;
+  completed: boolean;
+  createdAt: Date;
 }
 
 export interface Task {
-    _id: string;
-    title: string;
-    description?: string;
-    status: TaskStatus;
-    project: Project;
-    createdAt: Date;
-    updatedAt: Date;
-    isArchived: boolean;
-    dueDate: Date;
-    priority: TaskPriority;
-    assignee: User | string;
-    createdBy: User | string;
-    assignees: User[];
-    subtasks?: Subtask[];
-    watchers?: User[];
-    attachments?: Attachment[];
+  _id: string;
+  title: string;
+  description?: string;
+  status: TaskStatus;
+  project: Project;
+  createdAt: Date;
+  updatedAt: Date;
+  isArchived: boolean;
+  dueDate: Date;
+  priority: TaskPriority;
+  assignee: User | string;
+  createdBy: User | string;
+  assignees: User[];
+  subtasks?: Subtask[];
+  watchers?: User[];
+  attachments?: Attachment[];
 }
 
 export interface Attachment {
-    fileName: string;
-    fileUrl: string;
-    fileType: string;
-    fileSize: number;
-    uploadedBy: string;
-    uploadedAt: Date;
-    _id: string;
+  fileName: string;
+  fileUrl: string;
+  fileType: string;
+  fileSize: number;
+  uploadedBy: string;
+  uploadedAt: Date;
+  _id: string;
 }
 
 export interface MemberProps {
-    _id: string;
-    user: User;
-    role: "admin" | "member" | "owner" | "viewer";
-    joinedAt: Date;
+  _id: string;
+  user: User;
+  role: "admin" | "member" | "owner" | "viewer";
+  joinedAt: Date;
 }
 
 export type ResourceType =
-    | "Task"
-    | "Project"
-    | "Workspace"
-    | "Comment"
-    | "User";
+  "Task" | "Project" | "Workspace" | "Comment" | "User";
 
 export type ActionType =
-    | "created_task"
-    | "updated_task"
-    | "created_subtask"
-    | "updated_subtask"
-    | "completed_task"
-    | "created_project"
-    | "updated_project"
-    | "completed_project"
-    | "created_workspace"
-    | "updated_workspace"
-    | "added_comment"
-    | "added_member"
-    | "removed_member"
-    | "joined_workspace"
-    | "added_attachment";
+  | "created_task"
+  | "updated_task"
+  | "created_subtask"
+  | "updated_subtask"
+  | "completed_task"
+  | "created_project"
+  | "updated_project"
+  | "completed_project"
+  | "created_workspace"
+  | "updated_workspace"
+  | "added_comment"
+  | "added_member"
+  | "removed_member"
+  | "joined_workspace"
+  | "added_attachment";
 
 export interface ActivityLog {
-    _id: string;
-    user: User;
-    action: ActionType;
-    resourceType: ResourceType;
-    resourceId: string;
-    details?: {
-        description?: string;
-        [key: string]: unknown;
-    };
-    createdAt: Date;
+  _id: string;
+  user: User;
+  action: ActionType;
+  resourceType: ResourceType;
+  resourceId: string;
+  details?: {
+    description?: string;
+    [key: string]: unknown;
+  };
+  createdAt: Date;
 }
 
 export interface CommentReaction {
-    emoji: string;
-    user: User;
+  emoji: string;
+  user: User;
 }
 
 export interface Comment {
-    _id: string;
-    author: User;
-    text: string;
-    createdAt: Date;
-    reactions?: CommentReaction[];
-    attachments?: {
-        fileName: string;
-        fileUrl: string;
-        fileType?: string;
-        fileSize?: number;
-    }[];
+  _id: string;
+  author: User;
+  text: string;
+  createdAt: Date;
+  reactions?: CommentReaction[];
+  attachments?: {
+    fileName: string;
+    fileUrl: string;
+    fileType?: string;
+    fileSize?: number;
+  }[];
 }
 
 export interface StatsCardProps {
-    totalProjects: number;
-    totalTasks: number;
-    totalProjectInProgress: number;
-    totalTaskCompleted: number;
-    totalTaskToDo: number;
-    totalTaskInProgress: number;
+  totalProjects: number;
+  totalTasks: number;
+  totalProjectInProgress: number;
+  totalTaskCompleted: number;
+  totalTaskToDo: number;
+  totalTaskInProgress: number;
 }
 
 export interface TaskTrendsData {
-    name: string;
-    completed: number;
-    inProgress: number;
-    todo: number;
+  name: string;
+  completed: number;
+  inProgress: number;
+  todo: number;
 }
 
 export interface TaskPriorityData {
-    name: string;
-    value: number;
-    color: string;
+  name: string;
+  value: number;
+  color: string;
 }
 
 export interface ProjectStatusData {
-    name: string;
-    value: number;
-    color: string;
+  name: string;
+  value: number;
+  color: string;
 }
 
 export interface WorkspaceProductivityData {
-    name: string;
-    completed: number;
-    total: number;
+  name: string;
+  completed: number;
+  total: number;
 }
 
 export interface AuthResponse {
-    token: string;
-    user: User;
+  token: string;
+  user: User;
 }
 
 export interface WorkspaceProjectsResponse {
-    projects: Project[];
-    workspace: Workspace;
+  projects: Project[];
+  workspace: Workspace;
 }
 
 export interface ProjectTasksResponse {
-    project: Project;
-    tasks: Task[];
+  project: Project;
+  tasks: Task[];
 }
 
 export interface TaskDetailResponse {
-    task: Task;
-    project: Project;
+  task: Task;
+  project: Project;
 }
 
 export interface WorkspaceStatsResponse {
-    stats: StatsCardProps;
-    taskTrendsData: TaskTrendsData[];
-    projectStatusData: ProjectStatusData[];
-    taskPriorityData: TaskPriorityData[];
-    workspaceProductivityData: WorkspaceProductivityData[];
-    upcomingTasks: Task[];
-    recentProjects: Project[];
+  stats: StatsCardProps;
+  taskTrendsData: TaskTrendsData[];
+  projectStatusData: ProjectStatusData[];
+  taskPriorityData: TaskPriorityData[];
+  workspaceProductivityData: WorkspaceProductivityData[];
+  upcomingTasks: Task[];
+  recentProjects: Project[];
 }
 
 export interface ApiErrorResponse {
-    status?: "fail" | "error";
-    message: string;
-    errors?: Array<{ field?: string; message: string }>;
+  status?: "fail" | "error";
+  message: string;
+  errors?: Array<{ field?: string; message: string }>;
 }

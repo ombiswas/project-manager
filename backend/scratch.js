@@ -28,7 +28,7 @@ const partialSchema = projectSchema.partial();
 const payload = {
   title: "Test Project",
   description: "",
-  status: "In Progress"
+  status: "In Progress",
 };
 
 const result = partialSchema.safeParse(payload);

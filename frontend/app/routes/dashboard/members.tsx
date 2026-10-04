@@ -20,14 +20,20 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/provider/auth-context";
-import { 
-  useGetWorkspaceDetailsQuery, 
-  useRemoveMemberMutation, 
+import {
+  useGetWorkspaceDetailsQuery,
+  useRemoveMemberMutation,
   useTransferOwnershipMutation,
-  useChangeMemberRoleMutation
+  useChangeMemberRoleMutation,
 } from "@/hooks/use-workspace";
 import type { Workspace } from "@/types";
-import { ChevronDown, MoreHorizontal, ShieldCheck, UserCog, UserMinus } from "lucide-react";
+import {
+  ChevronDown,
+  MoreHorizontal,
+  ShieldCheck,
+  UserCog,
+  UserMinus,
+} from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import { toast } from "sonner";
@@ -43,13 +49,14 @@ const Members = () => {
   const initialSearch = searchParams.get("search") || "";
   const [search, setSearch] = useState<string>(initialSearch);
 
-  const { data, isLoading, isError, error, refetch } = useGetWorkspaceDetailsQuery(workspaceId!) as {
-    data: Workspace | undefined;
-    isLoading: boolean;
-    isError: boolean;
-    error: unknown;
-    refetch: () => void;
-  };
+  const { data, isLoading, isError, error, refetch } =
+    useGetWorkspaceDetailsQuery(workspaceId!) as {
+      data: Workspace | undefined;
+      isLoading: boolean;
+      isError: boolean;
+      error: unknown;
+      refetch: () => void;
+    };
 
   const { mutate: removeMember } = useRemoveMemberMutation();
   const { mutate: transferOwnership } = useTransferOwnershipMutation();
@@ -74,7 +81,9 @@ const Members = () => {
   if (!workspaceId) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-normal tracking-tight text-ink">Workspace Members</h1>
+        <h1 className="text-2xl font-normal tracking-tight text-ink">
+          Workspace Members
+        </h1>
         <ErrorState
           title="No workspace selected"
           message="Please select a workspace to view its members."
@@ -86,10 +95,15 @@ const Members = () => {
   if (isError || !data) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-normal tracking-tight text-ink">Workspace Members</h1>
+        <h1 className="text-2xl font-normal tracking-tight text-ink">
+          Workspace Members
+        </h1>
         <ErrorState
           title="Failed to load members"
-          message={getErrorMessage(error, "Could not load member details for this workspace.")}
+          message={getErrorMessage(
+            error,
+            "Could not load member details for this workspace."
+          )}
           onRetry={() => refetch()}
         />
       </div>
@@ -102,27 +116,43 @@ const Members = () => {
 
   const handleRemoveMember = (memberId: string) => {
     if (confirm("Are you sure you want to remove this member?")) {
-      removeMember({ workspaceId, memberId }, {
-        onSuccess: () => toast.success("Member removed successfully"),
-        onError: (err: unknown) => toast.error(getErrorMessage(err, "Failed to remove member")),
-      });
+      removeMember(
+        { workspaceId, memberId },
+        {
+          onSuccess: () => toast.success("Member removed successfully"),
+          onError: (err: unknown) =>
+            toast.error(getErrorMessage(err, "Failed to remove member")),
+        }
+      );
     }
   };
 
   const handleTransferOwnership = (newOwnerId: string) => {
-    if (confirm("Are you sure you want to transfer ownership? You will become an admin.")) {
-      transferOwnership({ workspaceId, newOwnerId }, {
-        onSuccess: () => toast.success("Ownership transferred successfully"),
-        onError: (err: unknown) => toast.error(getErrorMessage(err, "Failed to transfer ownership")),
-      });
+    if (
+      confirm(
+        "Are you sure you want to transfer ownership? You will become an admin."
+      )
+    ) {
+      transferOwnership(
+        { workspaceId, newOwnerId },
+        {
+          onSuccess: () => toast.success("Ownership transferred successfully"),
+          onError: (err: unknown) =>
+            toast.error(getErrorMessage(err, "Failed to transfer ownership")),
+        }
+      );
     }
   };
 
   const handleChangeRole = (memberId: string, role: string) => {
-    changeRole({ workspaceId: workspaceId!, memberId, role }, {
-      onSuccess: () => toast.success("Role updated successfully"),
-      onError: (err: unknown) => toast.error(getErrorMessage(err, "Failed to update role")),
-    });
+    changeRole(
+      { workspaceId: workspaceId!, memberId, role },
+      {
+        onSuccess: () => toast.success("Role updated successfully"),
+        onError: (err: unknown) =>
+          toast.error(getErrorMessage(err, "Failed to update role")),
+      }
+    );
   };
 
   const filteredMembers = data?.members?.filter(
@@ -136,9 +166,13 @@ const Members = () => {
     <div className="space-y-6 pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-normal tracking-tight text-ink">Workspace Members</h1>
+          <h1 className="text-2xl font-normal tracking-tight text-ink">
+            Workspace Members
+          </h1>
           <p className="caption-mono text-mute mt-1">
-            {filteredMembers?.length} active {filteredMembers?.length === 1 ? "member" : "members"} in {data.name}
+            {filteredMembers?.length} active{" "}
+            {filteredMembers?.length === 1 ? "member" : "members"} in{" "}
+            {data.name}
           </p>
         </div>
       </div>
@@ -159,7 +193,9 @@ const Members = () => {
         <TabsContent value="list">
           <Card className="bg-canvas-card border border-hairline rounded-[8px] overflow-hidden">
             <CardHeader className="p-4 md:p-5 border-b border-hairline">
-              <CardTitle className="text-base font-normal tracking-tight text-ink">Members</CardTitle>
+              <CardTitle className="text-base font-normal tracking-tight text-ink">
+                Members
+              </CardTitle>
               <CardDescription className="caption-mono text-mute mt-0.5">
                 {filteredMembers?.length} members in your workspace
               </CardDescription>
@@ -183,7 +219,12 @@ const Members = () => {
                         <p className="text-sm font-normal text-ink flex items-center gap-2">
                           <span className="truncate">{member.user.name}</span>
                           {member.user._id === currentUser?._id && (
-                            <Badge variant="outline" className="text-[10px] font-mono h-4">You</Badge>
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] font-mono h-4"
+                            >
+                              You
+                            </Badge>
                           )}
                         </p>
                         <p className="text-xs text-mute truncate font-light">
@@ -204,63 +245,87 @@ const Members = () => {
                         >
                           {member.role}
                         </Badge>
-                        <Badge variant="outline" className="text-[10px] font-mono h-5 hidden sm:inline-flex">
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] font-mono h-5 hidden sm:inline-flex"
+                        >
                           {data.name}
                         </Badge>
                       </div>
 
-                      {member.user._id !== currentUser?._id && 
-                       (currentUserRole === "owner" || currentUserRole === "admin") && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="size-8 rounded-full text-mute hover:text-ink hover:bg-canvas-soft">
-                              <MoreHorizontal className="size-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuLabel className="caption-mono text-mute">Actions</DropdownMenuLabel>
-                            
-                            {currentUserRole === "owner" && (
-                              <DropdownMenuItem 
-                                onClick={() => handleTransferOwnership(member.user._id)}
-                                className="cursor-pointer text-accent-breeze focus:text-accent-breeze"
+                      {member.user._id !== currentUser?._id &&
+                        (currentUserRole === "owner" ||
+                          currentUserRole === "admin") && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-8 rounded-full text-mute hover:text-ink hover:bg-canvas-soft"
                               >
-                                <ShieldCheck className="mr-2 size-3.5" />
-                                Transfer Ownership
-                              </DropdownMenuItem>
-                            )}
+                                <MoreHorizontal className="size-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuLabel className="caption-mono text-mute">
+                                Actions
+                              </DropdownMenuLabel>
 
-                            {((currentUserRole === "owner") || 
-                              (currentUserRole === "admin" && member.role !== "owner")) && (
-                              <>
-                                <DropdownMenuSeparator />
-                                <div className="p-1">
-                                  <p className="caption-mono text-mute px-2 py-1 text-[10px]">Change Role</p>
-                                  {["admin", "member", "viewer"].map((role) => (
-                                    <DropdownMenuItem
-                                      key={role}
-                                      onClick={() => handleChangeRole(member.user._id, role)}
-                                      disabled={member.role === role}
-                                      className="capitalize cursor-pointer text-xs"
-                                    >
-                                      <UserCog className="mr-2 size-3.5 opacity-50" />
-                                      {role}
-                                    </DropdownMenuItem>
-                                  ))}
-                                </div>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem 
-                                  onClick={() => handleRemoveMember(member.user._id)}
-                                  className="text-accent-sunset focus:text-accent-sunset cursor-pointer text-xs"
+                              {currentUserRole === "owner" && (
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleTransferOwnership(member.user._id)
+                                  }
+                                  className="cursor-pointer text-accent-breeze focus:text-accent-breeze"
                                 >
-                                  <UserMinus className="mr-2 size-3.5" />
-                                  Remove Member
+                                  <ShieldCheck className="mr-2 size-3.5" />
+                                  Transfer Ownership
                                 </DropdownMenuItem>
-                              </>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
+                              )}
+
+                              {(currentUserRole === "owner" ||
+                                (currentUserRole === "admin" &&
+                                  member.role !== "owner")) && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <div className="p-1">
+                                    <p className="caption-mono text-mute px-2 py-1 text-[10px]">
+                                      Change Role
+                                    </p>
+                                    {["admin", "member", "viewer"].map(
+                                      (role) => (
+                                        <DropdownMenuItem
+                                          key={role}
+                                          onClick={() =>
+                                            handleChangeRole(
+                                              member.user._id,
+                                              role
+                                            )
+                                          }
+                                          disabled={member.role === role}
+                                          className="capitalize cursor-pointer text-xs"
+                                        >
+                                          <UserCog className="mr-2 size-3.5 opacity-50" />
+                                          {role}
+                                        </DropdownMenuItem>
+                                      )
+                                    )}
+                                  </div>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleRemoveMember(member.user._id)
+                                    }
+                                    className="text-accent-sunset focus:text-accent-sunset cursor-pointer text-xs"
+                                  >
+                                    <UserMinus className="mr-2 size-3.5" />
+                                    Remove Member
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                     </div>
                   </div>
                 ))}
@@ -272,7 +337,10 @@ const Members = () => {
         <TabsContent value="board">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredMembers.map((member) => (
-              <Card key={member.user._id} className="bg-canvas-card border border-hairline hover:border-canvas-mid rounded-[8px] transition-colors">
+              <Card
+                key={member.user._id}
+                className="bg-canvas-card border border-hairline hover:border-canvas-mid rounded-[8px] transition-colors"
+              >
                 <CardContent className="p-5 flex flex-col items-center text-center">
                   <Avatar className="size-16 mb-3 border border-hairline bg-canvas-soft">
                     <AvatarImage src={member.user.profilePicture} />
@@ -302,54 +370,66 @@ const Members = () => {
                       {member.role}
                     </Badge>
 
-                    {member.user._id !== currentUser?._id && 
-                     (currentUserRole === "owner" || currentUserRole === "admin") && (
-                      <div className="pt-2 border-t border-hairline w-full flex flex-wrap justify-center gap-2">
-                        {currentUserRole === "owner" && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="rounded-full text-accent-breeze hover:text-accent-breeze hover:bg-canvas-soft h-7 px-2.5 text-xs font-mono"
-                            onClick={() => handleTransferOwnership(member.user._id)}
-                          >
-                            Transfer
-                          </Button>
-                        )}
-                        
-                        {((currentUserRole === "owner") || 
-                          (currentUserRole === "admin" && member.role !== "owner")) && (
-                          <>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm" className="rounded-full text-mute hover:text-ink hover:bg-canvas-soft h-7 px-2.5 text-xs font-mono">
-                                  Role <ChevronDown className="size-3 ml-1" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent>
-                                {["admin", "member", "viewer"].map((role) => (
-                                  <DropdownMenuItem
-                                    key={role}
-                                    onClick={() => handleChangeRole(member.user._id, role)}
-                                    className="capitalize text-xs font-mono"
-                                  >
-                                    {role}
-                                  </DropdownMenuItem>
-                                ))}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="rounded-full text-accent-sunset hover:text-accent-sunset hover:bg-canvas-soft h-7 px-2.5 text-xs font-mono"
-                              onClick={() => handleRemoveMember(member.user._id)}
+                    {member.user._id !== currentUser?._id &&
+                      (currentUserRole === "owner" ||
+                        currentUserRole === "admin") && (
+                        <div className="pt-2 border-t border-hairline w-full flex flex-wrap justify-center gap-2">
+                          {currentUserRole === "owner" && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="rounded-full text-accent-breeze hover:text-accent-breeze hover:bg-canvas-soft h-7 px-2.5 text-xs font-mono"
+                              onClick={() =>
+                                handleTransferOwnership(member.user._id)
+                              }
                             >
-                              Remove
+                              Transfer
                             </Button>
-                          </>
-                        )}
-                      </div>
-                    )}
+                          )}
+
+                          {(currentUserRole === "owner" ||
+                            (currentUserRole === "admin" &&
+                              member.role !== "owner")) && (
+                            <>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="rounded-full text-mute hover:text-ink hover:bg-canvas-soft h-7 px-2.5 text-xs font-mono"
+                                  >
+                                    Role <ChevronDown className="size-3 ml-1" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                  {["admin", "member", "viewer"].map((role) => (
+                                    <DropdownMenuItem
+                                      key={role}
+                                      onClick={() =>
+                                        handleChangeRole(member.user._id, role)
+                                      }
+                                      className="capitalize text-xs font-mono"
+                                    >
+                                      {role}
+                                    </DropdownMenuItem>
+                                  ))}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="rounded-full text-accent-sunset hover:text-accent-sunset hover:bg-canvas-soft h-7 px-2.5 text-xs font-mono"
+                                onClick={() =>
+                                  handleRemoveMember(member.user._id)
+                                }
+                              >
+                                Remove
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      )}
                   </div>
                 </CardContent>
               </Card>

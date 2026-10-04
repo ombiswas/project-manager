@@ -94,8 +94,12 @@ export const CreateProjectDialog = ({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[540px] bg-[#141517] border border-[#212327] rounded-[8px] text-white max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-2">
-          <p className="caption-mono text-[10px] text-[#7d8187]">PROJECT SETUP</p>
-          <DialogTitle className="text-xl font-normal tracking-[-0.5px] text-white">Create Project</DialogTitle>
+          <p className="caption-mono text-[10px] text-[#7d8187]">
+            PROJECT SETUP
+          </p>
+          <DialogTitle className="text-xl font-normal tracking-[-0.5px] text-white">
+            Create Project
+          </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -109,7 +113,10 @@ export const CreateProjectDialog = ({
                     Project Title
                   </FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Autonomous Navigation, Core Engine..." />
+                    <Input
+                      {...field}
+                      placeholder="Autonomous Navigation, Core Engine..."
+                    />
                   </FormControl>
                   <FormMessage className="text-xs text-[#ff7a17]" />
                 </FormItem>
@@ -168,7 +175,9 @@ export const CreateProjectDialog = ({
                 name="startDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">Start Date</FormLabel>
+                    <FormLabel className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+                      Start Date
+                    </FormLabel>
                     <FormControl>
                       <Popover modal={true}>
                         <PopoverTrigger asChild>
@@ -210,7 +219,9 @@ export const CreateProjectDialog = ({
                 name="dueDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">Due Date</FormLabel>
+                    <FormLabel className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+                      Due Date
+                    </FormLabel>
                     <FormControl>
                       <Popover modal={true}>
                         <PopoverTrigger asChild>
@@ -254,9 +265,14 @@ export const CreateProjectDialog = ({
               name="tags"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">Tags</FormLabel>
+                  <FormLabel className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+                    Tags
+                  </FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="infrastructure, ml, api..." />
+                    <Input
+                      {...field}
+                      placeholder="infrastructure, ml, api..."
+                    />
                   </FormControl>
                   <FormMessage className="text-xs text-[#ff7a17]" />
                 </FormItem>
@@ -271,7 +287,9 @@ export const CreateProjectDialog = ({
 
                 return (
                   <FormItem>
-                    <FormLabel className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">Members</FormLabel>
+                    <FormLabel className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+                      Members
+                    </FormLabel>
                     <FormControl>
                       <Popover>
                         <PopoverTrigger asChild>
@@ -303,7 +321,9 @@ export const CreateProjectDialog = ({
                         >
                           <div className="flex flex-col gap-1">
                             {workspaceMembers.map((member) => {
-                              const isSelected = selectedMembers.includes(member.user._id);
+                              const isSelected = selectedMembers.includes(
+                                member.user._id
+                              );
 
                               return (
                                 <div
@@ -334,7 +354,10 @@ export const CreateProjectDialog = ({
                                   >
                                     {member.user.name}
                                   </label>
-                                  <Badge variant="outline" className="text-[10px] scale-90">
+                                  <Badge
+                                    variant="outline"
+                                    className="text-[10px] scale-90"
+                                  >
                                     {member.role}
                                   </Badge>
                                 </div>

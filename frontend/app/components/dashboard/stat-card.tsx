@@ -20,7 +20,10 @@ export const StatsCard = ({ data }: { data: StatsCardProps }) => {
               {data.totalProjects}
             </div>
             <p className="text-xs text-[#7d8187] mt-1">
-              <span className="text-[#dadbdf] font-mono">{data.totalProjectInProgress}</span> in progress
+              <span className="text-[#dadbdf] font-mono">
+                {data.totalProjectInProgress}
+              </span>{" "}
+              in progress
             </p>
           </div>
         </div>
@@ -36,7 +39,10 @@ export const StatsCard = ({ data }: { data: StatsCardProps }) => {
               {data.totalTasks}
             </div>
             <p className="text-xs text-[#7d8187] mt-1">
-              <span className="text-[#dadbdf] font-mono">{data.totalTaskCompleted}</span> completed
+              <span className="text-[#dadbdf] font-mono">
+                {data.totalTaskCompleted}
+              </span>{" "}
+              completed
             </p>
           </div>
         </div>

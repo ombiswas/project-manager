@@ -5,7 +5,7 @@ import { CreateTaskDialog } from "@/components/task/create-task-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UseProjectQuery } from "@/hooks/use-project";
@@ -15,9 +15,14 @@ import { useAuth } from "@/provider/auth-context";
 import { getProjectProgress, getTaskStatusColor } from "@/lib";
 import { getErrorMessage } from "@/lib/fetch-util";
 import { cn } from "@/lib/utils";
-import type { Project, ProjectTasksResponse, Task, TaskStatus, Workspace } from "@/types";
+import type {
+  ProjectTasksResponse,
+  Task,
+  TaskStatus,
+  Workspace,
+} from "@/types";
 import { format } from "date-fns";
-import { AlertCircle, Calendar, CheckCircle, Clock, Plus, Settings, CircleDashed } from "lucide-react";
+import { CheckCircle, Clock, Plus, Settings, CircleDashed } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
@@ -31,21 +36,24 @@ const ProjectDetails = () => {
   const navigate = useNavigate();
 
   const [isCreateTask, setIsCreateTask] = useState(false);
-  const [taskFilter, setTaskFilter] = useState<TaskStatus | "All">("All");
 
-  const { data, isLoading, isError, error, refetch } = UseProjectQuery(projectId!) as {
+  const { data, isLoading, isError, error, refetch } = UseProjectQuery(
+    projectId!
+  ) as {
     data: ProjectTasksResponse | undefined;
     isLoading: boolean;
     isError: boolean;
     error: unknown;
     refetch: () => void;
   };
-  const { data: workspaceData, isLoading: isLoadingWorkspace } = useGetWorkspaceDetailsQuery(workspaceId!) as {
-    data: Workspace | undefined;
-    isLoading: boolean;
-  };
+  const { data: workspaceData, isLoading: isLoadingWorkspace } =
+    useGetWorkspaceDetailsQuery(workspaceId!) as {
+      data: Workspace | undefined;
+      isLoading: boolean;
+    };
 
-  if (isLoading || isLoadingWorkspace) return <Loader label="Loading project details..." />;
+  if (isLoading || isLoadingWorkspace)
+    return <Loader label="Loading project details..." />;
 
   if (isError || !data?.project) {
     return (
@@ -53,7 +61,10 @@ const ProjectDetails = () => {
         <BackButton className="w-fit" />
         <ErrorState
           title="Failed to load project"
-          message={getErrorMessage(error, "The requested project could not be found or loaded.")}
+          message={getErrorMessage(
+            error,
+            "The requested project could not be found or loaded."
+          )}
           onRetry={() => refetch()}
         />
       </div>
@@ -64,34 +75,39 @@ const ProjectDetails = () => {
   const projectProgress = getProjectProgress(tasks || []);
 
   // Permission logic
-  const workspaceOwnerId = typeof workspaceData?.owner === "string" ? workspaceData.owner : workspaceData?.owner?._id || "";
+  const workspaceOwnerId =
+    typeof workspaceData?.owner === "string"
+      ? workspaceData.owner
+      : workspaceData?.owner?._id || "";
   const currentUserId = String(user?._id || "");
-  const isWorkspaceOwner = workspaceOwnerId && currentUserId && workspaceOwnerId === currentUserId;
+  const isWorkspaceOwner =
+    workspaceOwnerId && currentUserId && workspaceOwnerId === currentUserId;
 
-  const currentUserWorkspaceRole = isWorkspaceOwner ? "owner" : workspaceData?.members?.find(
-    (m) => String(m.user?._id || m.user) === currentUserId
-  )?.role;
+  const currentUserWorkspaceRole = isWorkspaceOwner
+    ? "owner"
+    : workspaceData?.members?.find(
+        (m) => String(m.user?._id || m.user) === currentUserId
+      )?.role;
 
-  const projectCreatorId = typeof project.createdBy === "string" 
-    ? project.createdBy 
-    : project.createdBy?._id || "";
-  const isCreatorOwner = workspaceOwnerId && projectCreatorId && workspaceOwnerId === projectCreatorId;
-  
-  const creatorMember = workspaceData?.members?.find(
-    (m) => String(m.user?._id || m.user) === projectCreatorId
-  );
-  const creatorRole = isCreatorOwner ? "owner" : (creatorMember?.role || "member");
-
+  const projectCreatorId =
+    typeof project.createdBy === "string"
+      ? project.createdBy
+      : project.createdBy?._id || "";
   let canDelete = false;
   let canUpdate = false;
 
-  if (currentUserWorkspaceRole === "owner" || currentUserWorkspaceRole === "admin") {
+  if (
+    currentUserWorkspaceRole === "owner" ||
+    currentUserWorkspaceRole === "admin"
+  ) {
     canDelete = true;
     canUpdate = true;
   }
 
   const canManage = canUpdate || canDelete;
-  const canEditTasks = currentUserWorkspaceRole === "owner" || currentUserWorkspaceRole === "admin";
+  const canEditTasks =
+    currentUserWorkspaceRole === "owner" ||
+    currentUserWorkspaceRole === "admin";
 
   const handleTaskClick = (taskId: string) => {
     navigate(
@@ -106,7 +122,9 @@ const ProjectDetails = () => {
           <BackButton className="w-fit" />
           <div className="mt-2">
             <p className="caption-mono text-xs text-[#7d8187]">PROJECT</p>
-            <h1 className="text-2xl font-normal tracking-[-0.6px] text-white">{project.title}</h1>
+            <h1 className="text-2xl font-normal tracking-[-0.6px] text-white">
+              {project.title}
+            </h1>
             {project.description && (
               <p className="text-sm text-[#dadbdf] mt-2 max-w-2xl">
                 {project.description}
@@ -128,21 +146,25 @@ const ProjectDetails = () => {
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
             {canEditTasks && (
-              <Button 
-                onClick={() => setIsCreateTask(true)} 
+              <Button
+                onClick={() => setIsCreateTask(true)}
                 className="flex-1 sm:flex-none"
               >
                 <Plus className="size-4 mr-2" />
                 Add Task
               </Button>
             )}
-            
+
             {canManage && (
               <Button
                 variant="outline"
                 size="icon"
                 className="rounded-full"
-                onClick={() => navigate(`/workspaces/${workspaceId}/projects/${projectId}/settings`)}
+                onClick={() =>
+                  navigate(
+                    `/workspaces/${workspaceId}/projects/${projectId}/settings`
+                  )
+                }
                 title="Project Settings"
               >
                 <Settings className="size-4" />
@@ -178,13 +200,23 @@ const ProjectDetails = () => {
                 OVERVIEW
               </span>
               <div className="flex gap-1.5">
-                <Badge variant="outline" className="font-mono text-[10px] uppercase">
+                <Badge
+                  variant="outline"
+                  className="font-mono text-[10px] uppercase"
+                >
                   {tasks.filter((task) => task.status === "To Do").length} To Do
                 </Badge>
-                <Badge variant="outline" className="font-mono text-[10px] uppercase">
-                  {tasks.filter((task) => task.status === "In Progress").length} In Progress
+                <Badge
+                  variant="outline"
+                  className="font-mono text-[10px] uppercase"
+                >
+                  {tasks.filter((task) => task.status === "In Progress").length}{" "}
+                  In Progress
                 </Badge>
-                <Badge variant="outline" className="font-mono text-[10px] uppercase">
+                <Badge
+                  variant="outline"
+                  className="font-mono text-[10px] uppercase"
+                >
                   {tasks.filter((task) => task.status === "Done").length} Done
                 </Badge>
               </div>
@@ -314,16 +346,28 @@ const TaskColumn = ({
   );
 };
 
-const TaskCard = ({ task, onClick, canEditTasks }: { task: Task; onClick: () => void; canEditTasks: boolean }) => {
-  const { mutate: updateStatus, isPending: isUpdating } = useUpdateTaskStatusMutation();
+const TaskCard = ({
+  task,
+  onClick,
+  canEditTasks,
+}: {
+  task: Task;
+  onClick: () => void;
+  canEditTasks: boolean;
+}) => {
+  const { mutate: updateStatus, isPending: isUpdating } =
+    useUpdateTaskStatusMutation();
 
   const handleStatusUpdate = (e: React.MouseEvent, status: TaskStatus) => {
     e.stopPropagation();
-    updateStatus({ taskId: task._id, status }, {
-      onSuccess: () => {
-        toast.success(`Task marked as ${status}`);
+    updateStatus(
+      { taskId: task._id, status },
+      {
+        onSuccess: () => {
+          toast.success(`Task marked as ${status}`);
+        },
       }
-    });
+    );
   };
 
   return (
@@ -346,9 +390,12 @@ const TaskCard = ({ task, onClick, canEditTasks }: { task: Task; onClick: () => 
           <span
             className={cn(
               "text-[10px] font-mono uppercase tracking-[1px] px-2 py-0.5 rounded-full border",
-              task.priority === "High" && "text-[#ff7a17] border-[#ff7a17]/30 bg-[#ff7a17]/10",
-              task.priority === "Medium" && "text-[#a0c3ec] border-[#a0c3ec]/30 bg-[#a0c3ec]/10",
-              task.priority === "Low" && "text-[#7d8187] border-[#212327] bg-[#1a1c20]"
+              task.priority === "High" &&
+                "text-[#ff7a17] border-[#ff7a17]/30 bg-[#ff7a17]/10",
+              task.priority === "Medium" &&
+                "text-[#a0c3ec] border-[#a0c3ec]/30 bg-[#a0c3ec]/10",
+              task.priority === "Low" &&
+                "text-[#7d8187] border-[#212327] bg-[#1a1c20]"
             )}
           >
             {task.priority}
@@ -399,11 +446,17 @@ const TaskCard = ({ task, onClick, canEditTasks }: { task: Task; onClick: () => 
 
       {/* Title & Description */}
       <div>
-        <h3 className="font-normal text-sm text-white line-clamp-2 leading-snug group-hover:text-white/80 transition-colors" title={task.title}>
+        <h3
+          className="font-normal text-sm text-white line-clamp-2 leading-snug group-hover:text-white/80 transition-colors"
+          title={task.title}
+        >
           {task.title}
         </h3>
         {task.description && (
-          <p className="text-xs text-[#7d8187] line-clamp-2 mt-1 leading-relaxed" title={task.description}>
+          <p
+            className="text-xs text-[#7d8187] line-clamp-2 mt-1 leading-relaxed"
+            title={task.description}
+          >
             {task.description}
           </p>
         )}
@@ -412,18 +465,24 @@ const TaskCard = ({ task, onClick, canEditTasks }: { task: Task; onClick: () => 
       {/* Dates */}
       <div className="flex items-center justify-between pt-2 border-t border-[#212327] text-xs font-mono">
         <div className="flex flex-col">
-          <span className="text-[10px] text-[#7d8187] uppercase tracking-[0.5px]">Start</span>
+          <span className="text-[10px] text-[#7d8187] uppercase tracking-[0.5px]">
+            Start
+          </span>
           <span className="text-white">
             {task.createdAt ? format(new Date(task.createdAt), "MMM d") : "N/A"}
           </span>
         </div>
         <div className="flex flex-col text-right">
-          <span className="text-[10px] text-[#7d8187] uppercase tracking-[0.5px]">Due</span>
-          <span className={cn(
-            new Date(task.dueDate) < new Date() && task.status !== "Done" 
-              ? "text-[#ff7a17]" 
-              : "text-white"
-          )}>
+          <span className="text-[10px] text-[#7d8187] uppercase tracking-[0.5px]">
+            Due
+          </span>
+          <span
+            className={cn(
+              new Date(task.dueDate) < new Date() && task.status !== "Done"
+                ? "text-[#ff7a17]"
+                : "text-white"
+            )}
+          >
             {task.dueDate ? format(new Date(task.dueDate), "MMM d") : "N/A"}
           </span>
         </div>

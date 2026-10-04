@@ -17,7 +17,12 @@ export const UseCreateProject = () => {
       ),
     onSuccess: (data: Project) => {
       queryClient.invalidateQueries({
-        queryKey: ["workspace", typeof data.workspace === "string" ? data.workspace : data.workspace?._id],
+        queryKey: [
+          "workspace",
+          typeof data.workspace === "string"
+            ? data.workspace
+            : data.workspace?._id,
+        ],
       });
       queryClient.invalidateQueries({
         queryKey: ["workspaces"],
@@ -29,7 +34,8 @@ export const UseCreateProject = () => {
 export const UseProjectQuery = (projectId: string) => {
   return useQuery({
     queryKey: ["project", projectId],
-    queryFn: () => fetchData<ProjectTasksResponse>(`/projects/${projectId}/tasks`),
+    queryFn: () =>
+      fetchData<ProjectTasksResponse>(`/projects/${projectId}/tasks`),
     enabled: !!projectId && projectId !== "null",
     refetchInterval: 5000, // Poll every 5 seconds for real-time updates
   });
@@ -59,7 +65,9 @@ export const UseDeleteProject = () => {
 
   return useMutation({
     mutationFn: async (projectId: string) =>
-      deleteData<{ message: string; workspaceId?: string }>(`/projects/${projectId}`),
+      deleteData<{ message: string; workspaceId?: string }>(
+        `/projects/${projectId}`
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["workspaces"],

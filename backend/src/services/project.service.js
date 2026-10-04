@@ -19,7 +19,11 @@ class ProjectService {
     }
   }
 
-  async createProject(workspaceId, userId, { title, description, status, startDate, dueDate, tags, members }) {
+  async createProject(
+    workspaceId,
+    userId,
+    { title, description, status, startDate, dueDate, tags, members }
+  ) {
     const workspace = await workspaceRepository.findById(workspaceId);
     if (!workspace) {
       throw new NotFoundError("Workspace not found");
@@ -31,17 +35,26 @@ class ProjectService {
     }
 
     if (requesterRole !== "owner" && requesterRole !== "admin") {
-      throw new ForbiddenError("Only Workspace Owners and Admins can create projects");
+      throw new ForbiddenError(
+        "Only Workspace Owners and Admins can create projects"
+      );
     }
 
     this._validateProjectDates(startDate, dueDate);
 
     const tagArray = Array.isArray(tags)
       ? tags
-      : tags ? tags.split(",").map((t) => t.trim()).filter((t) => t !== "") : [];
+      : tags
+        ? tags
+            .split(",")
+            .map((t) => t.trim())
+            .filter((t) => t !== "")
+        : [];
 
     if (members && members.length === 0) {
-      throw new BadRequestError("At least one member is required for the project");
+      throw new BadRequestError(
+        "At least one member is required for the project"
+      );
     }
 
     const finalMembers = members ? [...members] : [];
@@ -97,7 +110,15 @@ class ProjectService {
 
     this._assertProjectAccess(project, userId);
 
-    const { page = 1, limit = 50, search, status, priority, sortBy, sortOrder } = query;
+    const {
+      page = 1,
+      limit = 50,
+      search,
+      status,
+      priority,
+      sortBy,
+      sortOrder,
+    } = query;
     const { tasks, total } = await taskRepository.findByProject(projectId, {
       page: Number(page) || 1,
       limit: Number(limit) || 50,
@@ -133,12 +154,16 @@ class ProjectService {
 
     const requesterRole = permissionService.resolveUserRole(workspace, userId);
     if (requesterRole !== "owner" && requesterRole !== "admin") {
-      throw new ForbiddenError("You do not have permission to update this project.");
+      throw new ForbiddenError(
+        "You do not have permission to update this project."
+      );
     }
 
-    const { title, description, status, startDate, dueDate, tags, members } = updateData;
+    const { title, description, status, startDate, dueDate, tags, members } =
+      updateData;
 
-    const effectiveStart = startDate !== undefined ? startDate : project.startDate;
+    const effectiveStart =
+      startDate !== undefined ? startDate : project.startDate;
     const effectiveDue = dueDate !== undefined ? dueDate : project.dueDate;
     this._validateProjectDates(effectiveStart, effectiveDue);
 
@@ -152,12 +177,17 @@ class ProjectService {
     if (tags !== undefined) {
       updateFields.tags = Array.isArray(tags)
         ? tags
-        : tags.split(",").map((t) => t.trim()).filter((t) => t !== "");
+        : tags
+            .split(",")
+            .map((t) => t.trim())
+            .filter((t) => t !== "");
     }
 
     if (members !== undefined) {
       if (members.length === 0) {
-        throw new BadRequestError("At least one member is required for the project");
+        throw new BadRequestError(
+          "At least one member is required for the project"
+        );
       }
       updateFields.members = members;
     }
@@ -183,7 +213,9 @@ class ProjectService {
 
     const requesterRole = permissionService.resolveUserRole(workspace, userId);
     if (requesterRole !== "owner" && requesterRole !== "admin") {
-      throw new ForbiddenError("You do not have permission to delete this project.");
+      throw new ForbiddenError(
+        "You do not have permission to delete this project."
+      );
     }
 
     return await withTransaction(async (session) => {
@@ -204,7 +236,8 @@ class ProjectService {
 
   _assertProjectAccess(project, userId) {
     const userIdStr = userId.toString();
-    const isCreator = (project.createdBy?._id || project.createdBy)?.toString() === userIdStr;
+    const isCreator =
+      (project.createdBy?._id || project.createdBy)?.toString() === userIdStr;
     const isMember = project.members?.some(
       (m) => (m._id || m)?.toString() === userIdStr
     );

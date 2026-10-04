@@ -6,110 +6,128 @@ import { fetchData } from "@/lib/fetch-util";
 import { useAuth } from "@/provider/auth-context";
 import type { Workspace } from "@/types";
 import { useEffect, useState } from "react";
-import { Navigate, Outlet, useLoaderData, useLocation, useNavigate, useSearchParams } from "react-router";
+import {
+  Navigate,
+  Outlet,
+  useLoaderData,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router";
 import { toast } from "sonner";
 
 export const clientLoader = async () => {
-    try {
-        const [workspaces] = await Promise.all([fetchData<Workspace[]>("/workspaces")]);
-        return { workspaces: workspaces || [] };
-    } catch {
-        return { workspaces: [] };
-    }
+  try {
+    const [workspaces] = await Promise.all([
+      fetchData<Workspace[]>("/workspaces"),
+    ]);
+    return { workspaces: workspaces || [] };
+  } catch {
+    return { workspaces: [] };
+  }
 };
 
-
 const DashboardLayout = () => {
-    const { isAuthenticated, isLoading } = useAuth();
-    const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
-    const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
+  const { isAuthenticated, isLoading } = useAuth();
+  const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
+  const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(
+    null
+  );
 
-    const { workspaces } = useLoaderData() as { workspaces: Workspace[] };
-    const navigate = useNavigate();
-    const location = useLocation();
-    const [searchParams] = useSearchParams();
+  const { workspaces } = useLoaderData() as { workspaces: Workspace[] };
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
 
-    useEffect(() => {
-        const workspaceId = searchParams.get("workspaceId");
-        if (!workspaceId && workspaces.length > 0) {
-            const savedId = localStorage.getItem("lastWorkspaceId");
-            const targetId = workspaces.find(w => w._id === savedId)?._id || workspaces[0]._id;
-            
-            const newSearchParams = new URLSearchParams(searchParams);
-            newSearchParams.set("workspaceId", targetId);
-            navigate(`${location.pathname}?${newSearchParams.toString()}`, { replace: true });
-        } else if (workspaceId && workspaces.length > 0) {
-            const matchingWorkspace = workspaces.find(w => w._id === workspaceId);
-            if (matchingWorkspace && currentWorkspace?._id !== matchingWorkspace._id) {
-                setCurrentWorkspace(matchingWorkspace);
-                localStorage.setItem("lastWorkspaceId", matchingWorkspace._id);
-            }
-        }
-    }, [searchParams, workspaces, location.pathname, navigate, currentWorkspace]);
+  useEffect(() => {
+    const workspaceId = searchParams.get("workspaceId");
+    if (!workspaceId && workspaces.length > 0) {
+      const savedId = localStorage.getItem("lastWorkspaceId");
+      const targetId =
+        workspaces.find((w) => w._id === savedId)?._id || workspaces[0]._id;
 
-    useEffect(() => {
-        let lastAlertTime = 0;
-        const ALERT_DEBOUNCE = 1000; // 1 second debounce
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.set("workspaceId", targetId);
+      navigate(`${location.pathname}?${newSearchParams.toString()}`, {
+        replace: true,
+      });
+    } else if (workspaceId && workspaces.length > 0) {
+      const matchingWorkspace = workspaces.find((w) => w._id === workspaceId);
+      if (
+        matchingWorkspace &&
+        currentWorkspace?._id !== matchingWorkspace._id
+      ) {
+        setCurrentWorkspace(matchingWorkspace);
+        localStorage.setItem("lastWorkspaceId", matchingWorkspace._id);
+      }
+    }
+  }, [searchParams, workspaces, location.pathname, navigate, currentWorkspace]);
 
-        const handleAccessDenied = (event: Event) => {
-            const now = Date.now();
-            if (now - lastAlertTime < ALERT_DEBOUNCE) return;
-            lastAlertTime = now;
+  useEffect(() => {
+    let lastAlertTime = 0;
+    const ALERT_DEBOUNCE = 1000; // 1 second debounce
 
-            const customEvent = event as CustomEvent<{ message?: string }>;
-            const message = customEvent.detail?.message || "Access denied or resource not found";
-            toast.error(message, {
-                id: "access-denied-toast",
-            });
-            
-            const workspaceId = searchParams.get("workspaceId");
-            if (workspaceId) {
-                navigate(`/dashboard?workspaceId=${workspaceId}`);
-            } else {
-                navigate("/dashboard");
-            }
-        };
+    const handleAccessDenied = (event: Event) => {
+      const now = Date.now();
+      if (now - lastAlertTime < ALERT_DEBOUNCE) return;
+      lastAlertTime = now;
 
-        window.addEventListener("access-denied", handleAccessDenied);
-        return () => window.removeEventListener("access-denied", handleAccessDenied);
-    }, [navigate, searchParams]);
+      const customEvent = event as CustomEvent<{ message?: string }>;
+      const message =
+        customEvent.detail?.message || "Access denied or resource not found";
+      toast.error(message, {
+        id: "access-denied-toast",
+      });
 
-    if (isLoading) {
-        return <Loader label="Authenticating..." />;
+      const workspaceId = searchParams.get("workspaceId");
+      if (workspaceId) {
+        navigate(`/dashboard?workspaceId=${workspaceId}`);
+      } else {
+        navigate("/dashboard");
+      }
     };
 
-    if (!isAuthenticated) {
-        return <Navigate to="/sign-in" />;
-    };
+    window.addEventListener("access-denied", handleAccessDenied);
+    return () =>
+      window.removeEventListener("access-denied", handleAccessDenied);
+  }, [navigate, searchParams]);
 
-    const handleWorkspaceSelected = (workspace: Workspace) => {
-        setCurrentWorkspace(workspace);
-    };
+  if (isLoading) {
+    return <Loader label="Authenticating..." />;
+  }
 
-    return (
-        <div className="flex h-screen w-full bg-[#0a0a0a] text-white overflow-hidden">
-            <SidebarComponent currentWorkspace={currentWorkspace} />
+  if (!isAuthenticated) {
+    return <Navigate to="/sign-in" />;
+  }
 
-            <div className="flex flex-1 flex-col h-full bg-[#0a0a0a] overflow-hidden">
-                <Header
-                    onWorkspaceSelected={handleWorkspaceSelected}
-                    selectedWorkspace={currentWorkspace}
-                    onCreateWorkspace={() => setIsCreatingWorkspace(true)}
-                />
+  const handleWorkspaceSelected = (workspace: Workspace) => {
+    setCurrentWorkspace(workspace);
+  };
 
-                <main className="flex-1 overflow-y-auto w-full bg-[#0a0a0a]">
-                    <div className="mx-auto container px-4 sm:px-6 lg:px-8 pt-4 pb-10 md:pt-8 md:pb-20 w-full min-h-full">
-                        <Outlet />
-                    </div>
-                </main>
-            </div>
+  return (
+    <div className="flex h-screen w-full bg-[#0a0a0a] text-white overflow-hidden">
+      <SidebarComponent currentWorkspace={currentWorkspace} />
 
-            <CreateWorkspace
-                isCreatingWorkspace={isCreatingWorkspace}
-                setIsCreatingWorkspace={setIsCreatingWorkspace}
-            />
-        </div>
-    );
+      <div className="flex flex-1 flex-col h-full bg-[#0a0a0a] overflow-hidden">
+        <Header
+          onWorkspaceSelected={handleWorkspaceSelected}
+          selectedWorkspace={currentWorkspace}
+          onCreateWorkspace={() => setIsCreatingWorkspace(true)}
+        />
+
+        <main className="flex-1 overflow-y-auto w-full bg-[#0a0a0a]">
+          <div className="mx-auto container px-4 sm:px-6 lg:px-8 pt-4 pb-10 md:pt-8 md:pb-20 w-full min-h-full">
+            <Outlet />
+          </div>
+        </main>
+      </div>
+
+      <CreateWorkspace
+        isCreatingWorkspace={isCreatingWorkspace}
+        setIsCreatingWorkspace={setIsCreatingWorkspace}
+      />
+    </div>
+  );
 };
 
 export default DashboardLayout;

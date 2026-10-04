@@ -24,7 +24,10 @@ class ActivityRepository {
 
   async deleteManyByResourceIds(resourceIds, session = null) {
     const opts = session ? { session } : {};
-    return await ActivityLog.deleteMany({ resourceId: { $in: resourceIds } }, opts);
+    return await ActivityLog.deleteMany(
+      { resourceId: { $in: resourceIds } },
+      opts
+    );
   }
 }
 

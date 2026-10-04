@@ -1,19 +1,22 @@
 import { env } from "../config/env.js";
-import { AppError, NotFoundError } from "../utils/errors.js";
+import { NotFoundError } from "../utils/errors.js";
 import { logger } from "../utils/logger.js";
 
 /**
  * Express middleware to catch 404 routes and forward to error handler
  */
 export const notFoundHandler = (req, res, next) => {
-  next(new NotFoundError(`Cannot find ${req.method} ${req.originalUrl} on this server`));
+  next(
+    new NotFoundError(
+      `Cannot find ${req.method} ${req.originalUrl} on this server`
+    )
+  );
 };
 
 /**
  * Global Express error-handling middleware
  */
-export const errorHandler = (err, req, res, next) => {
-  let error = err;
+export const errorHandler = (err, req, res, _next) => {
   let statusCode = err.statusCode || 500;
   let message = err.message || "Internal server error";
   let details = err.details || null;
@@ -75,7 +78,9 @@ export const errorHandler = (err, req, res, next) => {
       stack: err.stack,
     });
   } else {
-    logger.warn(`[${statusCode} Client Error] ${req.method} ${req.originalUrl} - ${message}`);
+    logger.warn(
+      `[${statusCode} Client Error] ${req.method} ${req.originalUrl} - ${message}`
+    );
   }
 
   // In production, sanitize 500 messages to prevent leaking internal details
