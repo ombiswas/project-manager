@@ -22,6 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 
 import { ErrorState } from "@/components/error-state";
 import { getErrorMessage } from "@/lib/fetch-util";
@@ -56,7 +57,9 @@ const Workspaces = () => {
       deleteWorkspace(workspaceToDelete._id, {
         onSuccess: () => {
           setWorkspaceToDelete(null);
-          queryClient.invalidateQueries({ queryKey: ["workspaces"] });
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.workspaces.all,
+          });
         },
       });
     }

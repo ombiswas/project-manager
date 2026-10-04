@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Link, useLoaderData, useLocation, useNavigate } from "react-router";
+import { Link, useLoaderData, useNavigate } from "react-router";
 import { WorkspaceAvatar } from "../workspace/workspace-avatar";
 
 interface HeaderProps {
@@ -32,9 +32,9 @@ export const Header = ({
 
   const { user, logout } = useAuth();
   const { workspaces } = useLoaderData() as { workspaces: Workspace[] };
-  const isOnWorkspacePage = useLocation().pathname.includes("/workspace");
 
   const handleOnClick = (workspace: Workspace) => {
+    onWorkspaceSelected(workspace);
     const url = new URL(window.location.href);
     const searchParams = new URLSearchParams(url.search);
     searchParams.set("workspaceId", workspace._id);

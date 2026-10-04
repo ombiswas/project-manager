@@ -146,6 +146,7 @@ const DashboardLayout = () => {
 
   const handleWorkspaceSelected = (workspace: Workspace) => {
     setCurrentWorkspace(workspace);
+    localStorage.setItem("lastWorkspaceId", workspace._id);
   };
 
   return (
