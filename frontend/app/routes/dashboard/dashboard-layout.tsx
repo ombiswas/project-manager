@@ -30,6 +30,7 @@ export const clientLoader = async () => {
 const DashboardLayout = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(
     null
   );
@@ -38,6 +39,11 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
+
+  // Close mobile navigation drawer on route change
+  useEffect(() => {
+    setIsMobileNavOpen(false);
+  }, [location.pathname, searchParams]);
 
   useEffect(() => {
     const workspaceId = searchParams.get("workspaceId");
@@ -106,17 +112,22 @@ const DashboardLayout = () => {
 
   return (
     <div className="flex h-screen w-full bg-[#0a0a0a] text-white overflow-hidden">
-      <SidebarComponent currentWorkspace={currentWorkspace} />
+      <SidebarComponent
+        currentWorkspace={currentWorkspace}
+        isMobileOpen={isMobileNavOpen}
+        onCloseMobile={() => setIsMobileNavOpen(false)}
+      />
 
-      <div className="flex flex-1 flex-col h-full bg-[#0a0a0a] overflow-hidden">
+      <div className="flex flex-1 flex-col h-full bg-[#0a0a0a] overflow-hidden min-w-0">
         <Header
           onWorkspaceSelected={handleWorkspaceSelected}
           selectedWorkspace={currentWorkspace}
           onCreateWorkspace={() => setIsCreatingWorkspace(true)}
+          onOpenMobileNav={() => setIsMobileNavOpen(true)}
         />
 
-        <main className="flex-1 overflow-y-auto w-full bg-[#0a0a0a]">
-          <div className="mx-auto container px-4 sm:px-6 lg:px-8 pt-4 pb-10 md:pt-8 md:pb-20 w-full min-h-full">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden w-full bg-[#0a0a0a]">
+          <div className="mx-auto container px-3 sm:px-6 lg:px-8 pt-4 pb-10 md:pt-8 md:pb-20 w-full min-h-full">
             <Outlet />
           </div>
         </main>

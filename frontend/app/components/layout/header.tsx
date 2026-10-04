@@ -1,7 +1,7 @@
 import { useAuth } from "@/provider/auth-context";
 import type { Workspace } from "@/types";
 import { Button } from "../ui/button";
-import { Bell, PlusCircle } from "lucide-react";
+import { Bell, Menu, PlusCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,12 +19,14 @@ interface HeaderProps {
   onWorkspaceSelected: (workspace: Workspace) => void;
   selectedWorkspace: Workspace | null;
   onCreateWorkspace: () => void;
+  onOpenMobileNav?: () => void;
 }
 
 export const Header = ({
   onWorkspaceSelected,
   selectedWorkspace,
   onCreateWorkspace,
+  onOpenMobileNav,
 }: HeaderProps) => {
   const navigate = useNavigate();
 
@@ -48,32 +50,43 @@ export const Header = ({
 
   return (
     <header className="bg-[#0a0a0a] sticky top-0 z-40 border-b border-[#212327]">
-      <div className="flex h-14 items-center justify-between px-4 sm:px-6 lg:px-8 py-3">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant={"outline"}
-              className="h-9 px-3.5 text-xs font-normal border-white/20 hover:border-white/40"
-            >
-              {selectedWorkspace ? (
-                <>
-                  {selectedWorkspace.color && (
-                    <WorkspaceAvatar
-                      color={selectedWorkspace.color}
-                      name={selectedWorkspace.name}
-                    />
-                  )}
-                  <span className="font-normal text-white">
-                    {selectedWorkspace?.name}
+      <div className="flex h-14 items-center justify-between px-3 sm:px-6 lg:px-8 py-3">
+        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onOpenMobileNav}
+            className="md:hidden size-8 shrink-0 text-[#7d8187] hover:text-white hover:bg-[#1a1c20]"
+            aria-label="Open mobile navigation"
+          >
+            <Menu className="size-5" />
+          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant={"outline"}
+                className="h-9 px-2.5 sm:px-3.5 text-xs font-normal border-white/20 hover:border-white/40 max-w-[150px] sm:max-w-[240px] md:max-w-xs shrink"
+              >
+                {selectedWorkspace ? (
+                  <div className="flex items-center gap-2 min-w-0">
+                    {selectedWorkspace.color && (
+                      <WorkspaceAvatar
+                        color={selectedWorkspace.color}
+                        name={selectedWorkspace.name}
+                      />
+                    )}
+                    <span className="font-normal text-white truncate">
+                      {selectedWorkspace?.name}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="font-normal text-[#7d8187] truncate">
+                    Select Workspace
                   </span>
-                </>
-              ) : (
-                <span className="font-normal text-[#7d8187]">
-                  Select Workspace
-                </span>
-              )}
-            </Button>
-          </DropdownMenuTrigger>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
 
           <DropdownMenuContent align="start">
             <DropdownMenuLabel>Workspace</DropdownMenuLabel>
@@ -101,8 +114,9 @@ export const Header = ({
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
+      </div>
 
-        <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="icon"

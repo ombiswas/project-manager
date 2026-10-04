@@ -62,7 +62,7 @@ export const CommentSection = ({
     );
 
   return (
-    <div className="bg-[#191919] rounded-[8px] border border-[#212327] p-6 shadow-none">
+    <div className="bg-[#191919] rounded-[8px] border border-[#212327] p-4 sm:p-6 shadow-none">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
           Comments ({comments.length})
@@ -84,7 +84,7 @@ export const CommentSection = ({
                 key={comment._id}
                 className="flex gap-3 py-3 border-b border-[#212327]/60 last:border-0"
               >
-                <Avatar className="size-7 rounded-full border border-[#212327] bg-[#1a1c20]">
+                <Avatar className="size-7 rounded-full border border-[#212327] bg-[#1a1c20] shrink-0">
                   <AvatarImage src={comment.author?.profilePicture} />
                   <AvatarFallback className="text-[10px] font-mono bg-[#1a1c20] text-white">
                     {comment.author?.name?.charAt(0) || "U"}
@@ -92,13 +92,13 @@ export const CommentSection = ({
                 </Avatar>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="font-normal text-sm text-white">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-1 gap-0.5">
+                    <span className="font-normal text-sm text-white truncate">
                       {comment.author?.name || "User"}
                     </span>
 
                     {formattedTime && (
-                      <span className="text-xs font-mono text-[#7d8187]">
+                      <span className="text-[11px] font-mono text-[#7d8187] shrink-0">
                         {formattedTime}
                       </span>
                     )}
@@ -145,6 +145,7 @@ export const CommentSection = ({
             <Button
               disabled={!newComment.trim() || isPending}
               onClick={handleAddComment}
+              className="w-full sm:w-auto"
             >
               {isPending ? "Posting..." : "Post Comment"}
             </Button>

@@ -153,7 +153,7 @@ const ProjectDetails = () => {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full md:w-auto">
           <div className="flex items-center gap-3 w-full sm:w-64 bg-[#191919] border border-[#212327] rounded-[8px] p-3">
             <span className="text-xs font-mono uppercase tracking-[1px] text-[#7d8187] whitespace-nowrap">
               PROGRESS
@@ -197,29 +197,32 @@ const ProjectDetails = () => {
       <div className="flex items-center justify-between">
         <Tabs defaultValue="all" className="w-full">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <TabsList className="bg-[#141517] border border-[#212327]">
-              <TabsTrigger value="all" onClick={() => setTaskFilter("All")}>
-                All Tasks
-              </TabsTrigger>
-              <TabsTrigger value="todo" onClick={() => setTaskFilter("To Do")}>
-                To Do
-              </TabsTrigger>
-              <TabsTrigger
-                value="in-progress"
-                onClick={() => setTaskFilter("In Progress")}
-              >
-                In Progress
-              </TabsTrigger>
-              <TabsTrigger value="done" onClick={() => setTaskFilter("Done")}>
-                Done
-              </TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto pb-1 sm:pb-0 -mx-1 px-1">
+              <TabsList className="bg-[#141517] border border-[#212327] h-auto p-1 w-max sm:w-auto">
+                <TabsTrigger value="all" onClick={() => setTaskFilter("All")} className="text-xs px-3 py-1.5">
+                  All Tasks
+                </TabsTrigger>
+                <TabsTrigger value="todo" onClick={() => setTaskFilter("To Do")} className="text-xs px-3 py-1.5">
+                  To Do
+                </TabsTrigger>
+                <TabsTrigger
+                  value="in-progress"
+                  onClick={() => setTaskFilter("In Progress")}
+                  className="text-xs px-3 py-1.5"
+                >
+                  In Progress
+                </TabsTrigger>
+                <TabsTrigger value="done" onClick={() => setTaskFilter("Done")} className="text-xs px-3 py-1.5">
+                  Done
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
                 OVERVIEW
               </span>
-              <div className="flex gap-1.5">
+              <div className="flex flex-wrap gap-1.5">
                 <Badge
                   variant="outline"
                   className="font-mono text-[10px] uppercase"
@@ -425,7 +428,7 @@ const TaskCard = ({
         </div>
 
         {canEditTasks && (
-          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity absolute right-3 top-3 bg-[#141517] border border-[#212327] rounded-full p-0.5">
+          <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity static sm:absolute sm:right-3 sm:top-3 bg-[#141517] border border-[#212327] rounded-full p-0.5 shrink-0">
             {task.status !== "To Do" && (
               <Button
                 variant="ghost"

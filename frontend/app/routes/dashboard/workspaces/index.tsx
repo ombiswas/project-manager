@@ -105,7 +105,7 @@ const Workspaces = () => {
 
           <Button
             onClick={() => setIsCreatingWorkspace(true)}
-            className="w-fit"
+            className="w-full sm:w-fit"
           >
             <PlusCircle className="size-4 mr-2" />
             New Workspace
@@ -143,7 +143,7 @@ const Workspaces = () => {
         open={!!workspaceToDelete}
         onOpenChange={(open) => !open && setWorkspaceToDelete(null)}
       >
-        <DialogContent className="bg-[#141517] border border-[#212327] rounded-[8px] text-white">
+        <DialogContent className="bg-[#141517] border border-[#212327] rounded-[8px] text-white w-[92vw] max-w-lg p-5 sm:p-6">
           <DialogHeader>
             <DialogTitle className="text-lg font-normal tracking-tight text-white">
               Delete Workspace
@@ -157,11 +157,12 @@ const Workspaces = () => {
               projects and tasks inside it.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-0 pt-2">
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 pt-2">
             <Button
               variant="outline"
               onClick={() => setWorkspaceToDelete(null)}
               disabled={isDeleting}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
@@ -169,6 +170,7 @@ const Workspaces = () => {
               variant="destructive"
               onClick={handleDelete}
               disabled={isDeleting}
+              className="w-full sm:w-auto"
             >
               {isDeleting ? "Deleting..." : "Delete Workspace"}
             </Button>

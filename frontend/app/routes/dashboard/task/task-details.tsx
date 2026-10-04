@@ -179,17 +179,17 @@ const TaskDetails = () => {
     <div className="max-w-7xl mx-auto space-y-6 pb-12">
       {/* Header section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#212327] pb-5">
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 min-w-0">
           <BackButton className="w-fit" />
-          <div className="flex items-center gap-3 mt-1">
-            <p className="caption-mono text-xs text-[#7d8187]">TASK</p>
-            <h1 className="text-2xl font-normal tracking-[-0.6px] text-white">
+          <div className="flex items-center gap-2.5 mt-1 flex-wrap min-w-0">
+            <p className="caption-mono text-xs text-[#7d8187] shrink-0">TASK</p>
+            <h1 className="text-xl sm:text-2xl font-normal tracking-[-0.6px] text-white break-words">
               {task.title}
             </h1>
             {task.isArchived && (
               <Badge
                 variant="outline"
-                className="font-mono text-[10px] text-[#ffc285] border-[#ffc285]/30 bg-[#ffc285]/10"
+                className="font-mono text-[10px] text-[#ffc285] border-[#ffc285]/30 bg-[#ffc285]/10 shrink-0"
               >
                 ARCHIVED
               </Badge>
@@ -197,7 +197,7 @@ const TaskDetails = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {canWatch && (
             <Button
               variant="outline"
@@ -247,7 +247,7 @@ const TaskDetails = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left main content */}
         <div className="lg:col-span-8 space-y-6">
-          <div className="bg-[#191919] rounded-[8px] border border-[#212327] p-6 shadow-none space-y-6">
+          <div className="bg-[#191919] rounded-[8px] border border-[#212327] p-4 sm:p-6 shadow-none space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start gap-4 border-b border-[#212327] pb-5">
               <div className="space-y-3 flex-1 w-full overflow-hidden">
                 <div className="flex items-center gap-3 flex-wrap">
@@ -384,7 +384,7 @@ const TaskDetails = () => {
       </div>
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="bg-[#141517] border border-[#212327] rounded-[8px] text-white">
+        <DialogContent className="bg-[#141517] border border-[#212327] rounded-[8px] text-white w-[92vw] max-w-lg p-5 sm:p-6">
           <DialogHeader>
             <DialogTitle className="text-lg font-normal tracking-tight text-white">
               Delete Task?
@@ -395,11 +395,12 @@ const TaskDetails = () => {
               associated activity.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2 pt-2">
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 pt-2">
             <Button
               variant="outline"
               onClick={() => setIsDeleteDialogOpen(false)}
               disabled={isDeleting}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
@@ -407,6 +408,7 @@ const TaskDetails = () => {
               variant="destructive"
               onClick={handleDeleteTask}
               disabled={isDeleting}
+              className="w-full sm:w-auto"
             >
               {isDeleting ? "Deleting..." : "Permanently Delete"}
             </Button>

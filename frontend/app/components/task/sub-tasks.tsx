@@ -90,7 +90,7 @@ export const SubTasksDetails = ({
                 <label
                   htmlFor={subTask._id}
                   className={cn(
-                    "text-xs font-normal leading-none cursor-pointer flex-1",
+                    "text-xs font-normal leading-relaxed cursor-pointer flex-1 break-words",
                     subTask.completed
                       ? "line-through text-[#7d8187]"
                       : "text-white"
@@ -109,7 +109,7 @@ export const SubTasksDetails = ({
       </div>
 
       {canEdit && (
-        <div className="flex items-center gap-2 pt-1">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
           <Input
             placeholder="Add sub task..."
             value={newSubTask}
@@ -127,7 +127,7 @@ export const SubTasksDetails = ({
           <Button
             onClick={handleAddSubTask}
             disabled={isPending || newSubTask.trim().length === 0}
-            className="shrink-0"
+            className="w-full sm:w-auto shrink-0"
           >
             {isPending ? "Adding..." : "Add Task"}
           </Button>

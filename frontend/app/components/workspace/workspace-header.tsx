@@ -37,44 +37,51 @@ export const WorkspaceHeader = ({
   return (
     <div className="space-y-6 pb-2">
       <div className="space-y-3">
-        <div className="flex flex-col-reverse md:flex-row md:justify-between md:items-center gap-4">
-          <div className="flex md:items-center gap-3.5">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+          <div className="flex items-center gap-3.5 min-w-0">
             {workspace.color && (
               <WorkspaceAvatar color={workspace.color} name={workspace.name} />
             )}
 
-            <div>
+            <div className="min-w-0">
               <p className="caption-mono text-[10px] text-[#7d8187]">
                 WORKSPACE
               </p>
-              <h1 className="text-2xl font-normal tracking-[-0.6px] text-white">
+              <h1 className="text-xl sm:text-2xl font-normal tracking-[-0.6px] text-white break-words">
                 {workspace.name}
               </h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-2.5 flex-wrap w-full md:w-auto">
             {canEditWorkspace && (
               <Button
                 variant="outline"
                 size="icon"
                 onClick={onEditWorkspace}
                 title="Workspace Settings"
-                className="rounded-full"
+                className="rounded-full shrink-0"
               >
                 <Settings className="size-4" />
               </Button>
             )}
 
             {canInviteMember && (
-              <Button variant="outline" onClick={onInviteMember}>
+              <Button
+                variant="outline"
+                onClick={onInviteMember}
+                className="flex-1 sm:flex-none"
+              >
                 <UserPlus className="size-3.5 mr-2" />
                 Invite
               </Button>
             )}
 
             {canCreateProject && (
-              <Button onClick={onCreateProject}>
+              <Button
+                onClick={onCreateProject}
+                className="flex-1 sm:flex-none"
+              >
                 <Plus className="size-3.5 mr-2" />
                 Create Project
               </Button>
