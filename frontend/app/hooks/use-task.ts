@@ -433,5 +433,6 @@ export const useArchivedTasksQuery = () => {
   return useQuery({
     queryKey: queryKeys.tasks.archivedTasks(),
     queryFn: () => fetchData<Task[]>("/tasks/archived"),
+    placeholderData: keepPreviousData,
   });
 };

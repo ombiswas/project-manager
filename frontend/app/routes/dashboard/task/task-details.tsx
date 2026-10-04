@@ -1,6 +1,7 @@
 import { BackButton } from "@/components/back-button";
-import { Loader } from "@/components/loader";
 import { ErrorState } from "@/components/error-state";
+import { TopProgressBar } from "@/components/top-progress-bar";
+import { cn } from "@/lib/utils";
 import { CommentSection } from "@/components/task/comment-section";
 import { SubTasksDetails } from "@/components/task/sub-tasks";
 import { TaskActivity } from "@/components/task/task-activity";
@@ -43,6 +44,132 @@ import {
 } from "@/components/ui/dialog";
 import { useState } from "react";
 
+const TaskDetailsSkeleton = () => (
+  <div
+    className="max-w-7xl mx-auto space-y-6 pb-12 animate-pulse"
+    aria-busy="true"
+    aria-label="Loading task details"
+  >
+    {/* Header Skeleton */}
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#212327] pb-5">
+      <div className="flex flex-col gap-2 min-w-0">
+        <div className="h-8 w-24 bg-[#1a1c20] rounded-[8px]" />
+        <div className="flex items-center gap-2.5 mt-1 flex-wrap">
+          <div className="h-4 w-12 bg-[#1a1c20] rounded-full" />
+          <div className="h-7 w-48 sm:w-72 bg-[#1a1c20] rounded-[8px]" />
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="h-8 w-24 bg-[#141517] border border-[#212327] rounded-full" />
+        <div className="h-8 w-24 bg-[#141517] border border-[#212327] rounded-full" />
+      </div>
+    </div>
+
+    {/* Main Content Grid */}
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      {/* Left Column (8 cols on lg, full width on 360/768) */}
+      <div className="lg:col-span-8 space-y-6">
+        {/* Main Task Card */}
+        <div className="bg-[#191919] rounded-[8px] border border-[#212327] p-4 sm:p-6 space-y-6">
+          {/* Badges and Title */}
+          <div className="border-b border-[#212327] pb-5 space-y-3">
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="h-6 w-28 bg-[#141517] border border-[#212327] rounded-full" />
+              <div className="h-6 w-28 bg-[#141517] border border-[#212327] rounded-full" />
+            </div>
+            <div className="h-8 w-3/4 bg-[#1a1c20] rounded-[8px]" />
+            <div className="h-4 w-40 bg-[#1a1c20] rounded-full" />
+          </div>
+
+          {/* Description Box */}
+          <div className="space-y-2">
+            <div className="h-3 w-20 bg-[#1a1c20] rounded" />
+            <div className="bg-[#141517] rounded-[8px] p-4 border border-[#212327] min-h-[90px] space-y-2">
+              <div className="h-3.5 w-full bg-[#1a1c20] rounded" />
+              <div className="h-3.5 w-5/6 bg-[#1a1c20] rounded" />
+              <div className="h-3.5 w-2/3 bg-[#1a1c20] rounded" />
+            </div>
+          </div>
+
+          {/* Assignees Section */}
+          <div className="pt-4 border-t border-[#212327] space-y-3">
+            <div className="h-3 w-20 bg-[#1a1c20] rounded" />
+            <div className="flex items-center gap-2">
+              <div className="size-8 rounded-full bg-[#141517] border border-[#212327]" />
+              <div className="size-8 rounded-full bg-[#141517] border border-[#212327]" />
+              <div className="h-8 w-28 bg-[#141517] border border-[#212327] rounded-full" />
+            </div>
+          </div>
+
+          {/* Subtasks Section */}
+          <div className="pt-4 border-t border-[#212327] space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="h-3 w-20 bg-[#1a1c20] rounded" />
+              <div className="h-4 w-12 bg-[#1a1c20] rounded" />
+            </div>
+            <div className="space-y-2">
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 p-3 rounded-[8px] bg-[#141517] border border-[#212327]"
+                >
+                  <div className="size-4 rounded bg-[#1a1c20] shrink-0" />
+                  <div className="h-3.5 w-1/2 bg-[#1a1c20] rounded" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Comments Box */}
+        <div className="bg-[#191919] rounded-[8px] border border-[#212327] p-4 sm:p-6 space-y-4">
+          <div className="h-4 w-24 bg-[#1a1c20] rounded" />
+          <div className="h-20 bg-[#141517] border border-[#212327] rounded-[8px]" />
+          <div className="space-y-3 pt-3">
+            {[...Array(2)].map((_, i) => (
+              <div
+                key={i}
+                className="flex gap-3 p-3 rounded-[8px] bg-[#141517] border border-[#212327]"
+              >
+                <div className="size-8 rounded-full bg-[#1a1c20] shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 w-24 bg-[#1a1c20] rounded" />
+                  <div className="h-3.5 w-3/4 bg-[#1a1c20] rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Right Sidebar (4 cols on lg, full width on 360/768) */}
+      <div className="lg:col-span-4 space-y-6">
+        {/* Watchers Card */}
+        <div className="bg-[#191919] rounded-[8px] border border-[#212327] p-5 space-y-4">
+          <div className="h-3 w-20 bg-[#1a1c20] rounded" />
+          <div className="flex items-center gap-2">
+            <div className="size-7 rounded-full bg-[#141517] border border-[#212327]" />
+            <div className="size-7 rounded-full bg-[#141517] border border-[#212327]" />
+          </div>
+        </div>
+
+        {/* Activity Card */}
+        <div className="bg-[#191919] rounded-[8px] border border-[#212327] p-5 space-y-3">
+          <div className="h-3 w-28 bg-[#1a1c20] rounded border-b border-[#212327] pb-2" />
+          <div className="space-y-3 pt-2">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="flex items-center gap-2.5">
+                <div className="size-2 rounded-full bg-[#1a1c20]" />
+                <div className="h-3 w-3/4 bg-[#1a1c20] rounded" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 const TaskDetails = () => {
   const { user } = useAuth();
   const { taskId, projectId, workspaceId } = useParams<{
@@ -54,11 +181,12 @@ const TaskDetails = () => {
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const { data, isLoading, isError, error, refetch } = useTaskByIdQuery(
+  const { data, isLoading, isFetching, isError, error, refetch } = useTaskByIdQuery(
     taskId!
   ) as {
     data: TaskDetailResponse | undefined;
     isLoading: boolean;
+    isFetching: boolean;
     isError: boolean;
     error: unknown;
     refetch: () => void;
@@ -74,12 +202,13 @@ const TaskDetails = () => {
     useAchievedTaskMutation();
   const { mutate: deleteTask, isPending: isDeleting } = useDeleteTaskMutation();
 
-  if (isLoading || isLoadingWorkspace)
-    return <Loader label="Loading task details..." />;
-
   const rawTask = (data as TaskDetailResponse)?.task || (data as unknown as import("@/types").Task);
   const task = rawTask && rawTask._id ? rawTask : undefined;
   const project = (data as TaskDetailResponse)?.project;
+
+  if ((isLoading || isLoadingWorkspace) && !task) {
+    return <TaskDetailsSkeleton />;
+  }
 
   if (isError || !task) {
     return (
@@ -176,7 +305,14 @@ const TaskDetails = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-12">
+    <>
+      {isFetching && <TopProgressBar label="Updating task details..." />}
+      <div
+        className={cn(
+          "max-w-7xl mx-auto space-y-6 pb-12 transition-opacity duration-200",
+          isFetching && "opacity-60"
+        )}
+      >
       {/* Header section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#212327] pb-5">
         <div className="flex flex-col gap-2 min-w-0">
@@ -416,6 +552,7 @@ const TaskDetails = () => {
         </DialogContent>
       </Dialog>
     </div>
+    </>
   );
 };
 

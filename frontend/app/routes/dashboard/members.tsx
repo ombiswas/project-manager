@@ -1,4 +1,3 @@
-import { Loader } from "@/components/loader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,7 +38,62 @@ import { useSearchParams } from "react-router";
 import { toast } from "sonner";
 
 import { ErrorState } from "@/components/error-state";
+import { TopProgressBar } from "@/components/top-progress-bar";
+import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/fetch-util";
+
+const MembersSkeleton = () => (
+  <div
+    className="space-y-6 pb-12 animate-pulse"
+    aria-busy="true"
+    aria-label="Loading workspace members"
+  >
+    {/* Header Skeleton */}
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="space-y-2">
+        <div className="h-7 w-48 bg-canvas-card border border-hairline rounded-[8px]" />
+        <div className="h-4 w-32 bg-canvas-card border border-hairline rounded-[8px]" />
+      </div>
+      <div className="h-9 w-32 bg-canvas-card border border-hairline rounded-full" />
+    </div>
+
+    {/* Search bar Skeleton */}
+    <div className="h-10 w-full max-w-md bg-canvas-card border border-hairline rounded-full" />
+
+    {/* Tabs Skeleton */}
+    <div className="h-9 w-44 bg-canvas-card border border-hairline rounded-[8px]" />
+
+    {/* Member table rows Card Skeleton */}
+    <Card className="bg-canvas-card border border-hairline rounded-[8px] overflow-hidden">
+      <CardHeader className="p-4 md:p-5 border-b border-hairline">
+        <div className="h-5 w-24 bg-canvas-soft rounded-[8px] mb-2" />
+        <div className="h-3 w-36 bg-canvas-soft rounded-[8px]" />
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="divide-y divide-hairline">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 gap-3"
+            >
+              <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                <div className="size-9 rounded-full bg-canvas-soft border border-hairline shrink-0" />
+                <div className="space-y-2 flex-1 min-w-0">
+                  <div className="h-4 w-36 bg-canvas-soft rounded-[8px]" />
+                  <div className="h-3 w-48 bg-canvas-soft rounded-[8px]" />
+                </div>
+              </div>
+              <div className="flex items-center gap-3 ml-12 md:ml-0 shrink-0">
+                <div className="h-5 w-16 bg-canvas-soft rounded-full" />
+                <div className="size-8 rounded-full bg-canvas-soft border border-hairline" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+);
 
 const Members = () => {
   const { user: currentUser } = useAuth();
@@ -49,10 +103,11 @@ const Members = () => {
   const initialSearch = searchParams.get("search") || "";
   const [search, setSearch] = useState<string>(initialSearch);
 
-  const { data, isLoading, isError, error, refetch } =
+  const { data, isLoading, isFetching, isError, error, refetch } =
     useGetWorkspaceDetailsQuery(workspaceId!) as {
       data: Workspace | undefined;
       isLoading: boolean;
+      isFetching: boolean;
       isError: boolean;
       error: unknown;
       refetch: () => void;
@@ -76,7 +131,7 @@ const Members = () => {
     if (urlSearch !== search) setSearch(urlSearch);
   }, [searchParams]);
 
-  if (isLoading) return <Loader label="Loading workspace members..." />;
+  if (isLoading && !data) return <MembersSkeleton />;
 
   if (!workspaceId) {
     return (
@@ -163,7 +218,14 @@ const Members = () => {
   );
 
   return (
-    <div className="space-y-6 pb-12">
+    <>
+      {isFetching && <TopProgressBar label="Updating workspace members..." />}
+      <div
+        className={cn(
+          "space-y-6 pb-12 transition-opacity duration-200",
+          isFetching && "opacity-60"
+        )}
+      >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-normal tracking-tight text-ink">
@@ -438,6 +500,7 @@ const Members = () => {
         </TabsContent>
       </Tabs>
     </div>
+    </>
   );
 };
 

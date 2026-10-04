@@ -1,5 +1,7 @@
 import { NoDataFound } from "@/components/no-data-found";
 import { ErrorState } from "@/components/error-state";
+import { TopProgressBar } from "@/components/top-progress-bar";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,24 +11,73 @@ import {
   useArchivedTasksQuery,
   useAchievedTaskMutation,
 } from "@/hooks/use-task";
-import { Loader } from "@/components/loader";
 import { getErrorMessage } from "@/lib/fetch-util";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import type { Task } from "@/types";
 
+const ArchivedTasksSkeleton = () => (
+  <div
+    className="space-y-6 pb-12 animate-pulse"
+    aria-busy="true"
+    aria-label="Loading archived tasks"
+  >
+    {/* Header Skeleton */}
+    <div className="flex flex-col gap-2">
+      <div className="h-7 w-40 bg-canvas-card border border-hairline rounded-[8px]" />
+      <div className="h-4 w-64 bg-canvas-card border border-hairline rounded-[8px]" />
+    </div>
+
+    {/* Search / Filter Bar Skeleton */}
+    <div className="h-9 w-full max-w-md bg-canvas-card border border-hairline rounded-full" />
+
+    {/* Task Cards Grid Skeleton (responsive at 360: 1 col, 768: 2 cols, 1440: 3 cols) */}
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+      {[...Array(6)].map((_, i) => (
+        <Card
+          key={i}
+          className="bg-canvas-card border border-hairline rounded-[8px]"
+        >
+          <CardContent className="p-4 flex flex-col h-full space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-2 flex-1 min-w-0">
+                <div className="h-4 w-3/4 bg-canvas-soft rounded-[8px]" />
+                <div className="flex items-center gap-1.5">
+                  <div className="h-4 w-16 bg-canvas-soft rounded-full" />
+                  <div className="h-4 w-14 bg-canvas-soft rounded-full" />
+                </div>
+              </div>
+              <div className="h-7 w-20 bg-canvas-soft border border-hairline rounded-full shrink-0" />
+            </div>
+            <div className="space-y-1.5 py-1">
+              <div className="h-3 w-full bg-canvas-soft rounded" />
+              <div className="h-3 w-2/3 bg-canvas-soft rounded" />
+            </div>
+            <div className="pt-2 border-t border-hairline flex items-center justify-between mt-auto">
+              <div className="h-3 w-24 bg-canvas-soft rounded" />
+              <div className="h-3 w-16 bg-canvas-soft rounded" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  </div>
+);
+
 const Archived = () => {
   const [search, setSearch] = useState("");
   const {
     data: archivedTasks,
     isLoading,
+    isFetching,
     isError,
     error,
     refetch,
   } = useArchivedTasksQuery() as {
     data: Task[] | undefined;
     isLoading: boolean;
+    isFetching: boolean;
     isError: boolean;
     error: unknown;
     refetch: () => void;
@@ -54,7 +105,7 @@ const Archived = () => {
       task.project?.title?.toLowerCase().includes(search.toLowerCase())
   );
 
-  if (isLoading) return <Loader label="Loading archived tasks..." />;
+  if (isLoading && !archivedTasks) return <ArchivedTasksSkeleton />;
 
   if (isError) {
     return (
@@ -79,7 +130,14 @@ const Archived = () => {
   }
 
   return (
-    <div className="space-y-6 pb-12">
+    <>
+      {isFetching && <TopProgressBar label="Updating archived tasks..." />}
+      <div
+        className={cn(
+          "space-y-6 pb-12 transition-opacity duration-200",
+          isFetching && "opacity-60"
+        )}
+      >
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-normal tracking-tight text-ink">
           Archived Tasks
@@ -186,6 +244,7 @@ const Archived = () => {
         </CardContent>
       </Card>
     </div>
+    </>
   );
 };
 
