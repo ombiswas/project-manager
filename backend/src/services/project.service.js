@@ -235,28 +235,7 @@ class ProjectService {
   }
 
   async _assertProjectAccess(project, userId) {
-    const userIdStr = userId.toString();
-    const isCreator =
-      (project.createdBy?._id || project.createdBy)?.toString() === userIdStr;
-    const isMember = project.members?.some(
-      (m) => (m._id || m)?.toString() === userIdStr
-    );
-
-    if (isCreator || isMember) {
-      return;
-    }
-
-    const workspace = await workspaceRepository.findById(project.workspace);
-    if (!workspace) {
-      throw new NotFoundError("Workspace associated with project not found");
-    }
-
-    const requesterRole = permissionService.resolveUserRole(workspace, userId);
-    if (requesterRole === "owner" || requesterRole === "admin") {
-      return;
-    }
-
-    throw new ForbiddenError("You are not a member of this project");
+    return await permissionService.assertProjectAccess(project, userId);
   }
 }
 

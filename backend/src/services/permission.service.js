@@ -1,4 +1,5 @@
-import { ForbiddenError } from "../utils/errors.js";
+import workspaceRepository from "../repositories/workspace.repository.js";
+import { ForbiddenError, NotFoundError } from "../utils/errors.js";
 
 export const ROLE_HIERARCHY = {
   viewer: 1,
@@ -8,6 +9,47 @@ export const ROLE_HIERARCHY = {
 };
 
 class PermissionService {
+  /**
+   * Asserts project-level access respecting privacy:
+   * - Allowed if user is project creator
+   * - Allowed if user is in project.members
+   * - Allowed if user is Workspace Owner or Admin
+   * - Otherwise ForbiddenError (403)
+   * - If project or workspace missing -> NotFoundError (404)
+   */
+  async assertProjectAccess(project, userId, workspace = null) {
+    if (!project) {
+      throw new NotFoundError("Project not found");
+    }
+
+    if (!userId) {
+      throw new ForbiddenError("User authentication required");
+    }
+
+    const userIdStr = (userId._id || userId).toString();
+    const isCreator =
+      (project.createdBy?._id || project.createdBy)?.toString() === userIdStr;
+    const isMember = project.members?.some(
+      (m) => (m._id || m)?.toString() === userIdStr
+    );
+
+    if (isCreator || isMember) {
+      return true;
+    }
+
+    const ws =
+      workspace || (await workspaceRepository.findById(project.workspace));
+    if (!ws) {
+      throw new NotFoundError("Workspace associated with project not found");
+    }
+
+    const requesterRole = this.resolveUserRole(ws, userId);
+    if (requesterRole === "owner" || requesterRole === "admin") {
+      return true;
+    }
+
+    throw new ForbiddenError("You are not a member of this project");
+  }
   /**
    * Resolves the user's role in a given workspace document.
    *

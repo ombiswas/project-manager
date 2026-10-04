@@ -127,18 +127,9 @@ export const checkProjectMember = async (req, res, next) => {
       throw new NotFoundError("Associated workspace not found");
     }
 
+    await permissionService.assertProjectAccess(project, req.user._id, workspace);
+
     const role = permissionService.resolveUserRole(workspace, req.user._id);
-    const isMember = project.members.some(
-      (m) => (m._id || m).toString() === req.user._id.toString()
-    );
-    const isCreator = project.createdBy?._id
-      ? project.createdBy._id.toString() === req.user._id.toString()
-      : project.createdBy.toString() === req.user._id.toString();
-
-    if (!role && !isMember && !isCreator) {
-      throw new ForbiddenError("You no longer have access to this project");
-    }
-
     req.project = project;
     req.workspace = workspace;
     req.userWorkspaceRole = role;
@@ -171,18 +162,9 @@ export const checkTaskMember = async (req, res, next) => {
       throw new NotFoundError("Associated workspace not found");
     }
 
+    await permissionService.assertProjectAccess(project, req.user._id, workspace);
+
     const role = permissionService.resolveUserRole(workspace, req.user._id);
-    const isMember = project.members.some(
-      (m) => (m._id || m).toString() === req.user._id.toString()
-    );
-    const isCreator = project.createdBy?._id
-      ? project.createdBy._id.toString() === req.user._id.toString()
-      : project.createdBy.toString() === req.user._id.toString();
-
-    if (!role && !isMember && !isCreator) {
-      throw new ForbiddenError("You no longer have access to this task");
-    }
-
     req.task = task;
     req.project = project;
     req.workspace = workspace;

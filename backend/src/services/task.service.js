@@ -6,7 +6,7 @@ import activityRepository from "../repositories/activity.repository.js";
 import permissionService from "./permission.service.js";
 import { recordActivity } from "../utils/activity.js";
 import { withTransaction } from "../utils/transaction.js";
-import { BadRequestError, NotFoundError } from "../utils/errors.js";
+import { BadRequestError, ForbiddenError, NotFoundError } from "../utils/errors.js";
 
 class TaskService {
   async _resolveTaskContext(taskId, userId) {
@@ -24,6 +24,9 @@ class TaskService {
     if (!workspace) {
       throw new NotFoundError("Workspace not found");
     }
+
+    // Enforce project-level privacy
+    await permissionService.assertProjectAccess(project, userId, workspace);
 
     permissionService.assertTaskManagementPermission(
       workspace,
@@ -63,6 +66,9 @@ class TaskService {
     if (!workspace) {
       throw new NotFoundError("Workspace not found");
     }
+
+    // Enforce project-level privacy
+    await permissionService.assertProjectAccess(project, userId, workspace);
 
     permissionService.assertTaskManagementPermission(
       workspace,
@@ -112,7 +118,7 @@ class TaskService {
     });
   }
 
-  async getTaskById(taskId) {
+  async getTaskById(taskId, userId = null) {
     const task = await taskRepository.findById(taskId);
     if (!task) {
       throw new NotFoundError("Task not found");
@@ -120,6 +126,9 @@ class TaskService {
     const project = await projectRepository.findById(task.project);
     if (!project) {
       throw new NotFoundError("Associated project not found");
+    }
+    if (userId) {
+      await permissionService.assertProjectAccess(project, userId);
     }
     return { task, project };
   }
@@ -228,10 +237,7 @@ class TaskService {
   }
 
   async updateSubTask(taskId, subTaskId, userId, completed) {
-    const task = await taskRepository.findById(taskId);
-    if (!task) {
-      throw new NotFoundError("Task not found");
-    }
+    const { task } = await this._resolveTaskContext(taskId, userId);
 
     if (!Array.isArray(task.subtasks)) {
       task.subtasks = [];
@@ -379,8 +385,68 @@ class TaskService {
     };
   }
 
-  async getActivityByResourceId(resourceId, query = {}) {
-    const { page = 1, limit = 20 } = query;
+  async getActivityByResourceId(resourceId, userId = null, query = {}) {
+    let currentUserId = userId;
+    let currentQuery = query;
+    if (
+      typeof userId === "object" &&
+      userId !== null &&
+      !userId._id &&
+      (userId.page || userId.limit)
+    ) {
+      currentQuery = userId;
+      currentUserId = null;
+    }
+
+    // Resolve resource (task, project, or workspace) from ID and apply matching access check
+    let resourceFound = false;
+
+    // 1. Try finding as Task
+    const task = await taskRepository.findById(resourceId);
+    if (task) {
+      resourceFound = true;
+      const project = await projectRepository.findById(task.project);
+      if (!project) {
+        throw new NotFoundError("Associated project not found");
+      }
+      if (currentUserId) {
+        await permissionService.assertProjectAccess(project, currentUserId);
+      }
+    }
+
+    // 2. Try finding as Project
+    if (!resourceFound) {
+      const project = await projectRepository.findById(resourceId);
+      if (project) {
+        resourceFound = true;
+        if (currentUserId) {
+          await permissionService.assertProjectAccess(project, currentUserId);
+        }
+      }
+    }
+
+    // 3. Try finding as Workspace
+    if (!resourceFound) {
+      const workspace = await workspaceRepository.findById(resourceId);
+      if (workspace) {
+        resourceFound = true;
+        if (currentUserId) {
+          const role = permissionService.resolveUserRole(
+            workspace,
+            currentUserId
+          );
+          if (!role) {
+            throw new ForbiddenError("You are not a member of this workspace");
+          }
+        }
+      }
+    }
+
+    if (!resourceFound) {
+      throw new NotFoundError("Resource not found");
+    }
+
+    const { page = 1, limit = 20 } = currentQuery;
     const { logs, total } = await activityRepository.findByResourceId(
       resourceId,
       {
@@ -400,8 +466,32 @@ class TaskService {
     };
   }
 
-  async getCommentsByTaskId(taskId, query = {}) {
-    const { page = 1, limit = 50 } = query;
+  async getCommentsByTaskId(taskId, userId = null, query = {}) {
+    let currentUserId = userId;
+    let currentQuery = query;
+    if (
+      typeof userId === "object" &&
+      userId !== null &&
+      !userId._id &&
+      (userId.page || userId.limit)
+    ) {
+      currentQuery = userId;
+      currentUserId = null;
+    }
+
+    const task = await taskRepository.findById(taskId);
+    if (!task) {
+      throw new NotFoundError("Task not found");
+    }
+    const project = await projectRepository.findById(task.project);
+    if (!project) {
+      throw new NotFoundError("Associated project not found");
+    }
+    if (currentUserId) {
+      await permissionService.assertProjectAccess(project, currentUserId);
+    }
+
+    const { page = 1, limit = 50 } = currentQuery;
     const { comments, total } = await commentRepository.findByTaskId(taskId, {
       page: Number(page) || 1,
       limit: Number(limit) || 50,

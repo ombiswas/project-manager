@@ -11,7 +11,7 @@ export const createTask = asyncHandler(async (req, res) => {
 });
 
 export const getTaskById = asyncHandler(async (req, res) => {
-  const task = await taskService.getTaskById(req.params.taskId);
+  const task = await taskService.getTaskById(req.params.taskId, req.user._id);
   res.status(200).json(task);
 });
 
@@ -129,6 +129,7 @@ export const getArchivedTasks = asyncHandler(async (req, res) => {
 export const getActivityByResourceId = asyncHandler(async (req, res) => {
   const result = await taskService.getActivityByResourceId(
     req.params.resourceId,
+    req.user._id,
     req.query
   );
   res.setHeader("X-Total-Count", result.pagination.total);
@@ -146,6 +147,7 @@ export const getActivityByResourceId = asyncHandler(async (req, res) => {
 export const getCommentsByTaskId = asyncHandler(async (req, res) => {
   const result = await taskService.getCommentsByTaskId(
     req.params.taskId,
+    req.user._id,
     req.query
   );
   res.setHeader("X-Total-Count", result.pagination.total);
