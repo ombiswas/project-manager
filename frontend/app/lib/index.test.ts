@@ -72,4 +72,73 @@ describe("Frontend Library Utilities", () => {
       expect(cn("px-2", isExpanded && "px-4")).toBe("px-4");
     });
   });
+
+  describe("URL Search Params filter & sort derivations", () => {
+    it("should derive default values when search params are empty", () => {
+      const params = new URLSearchParams("");
+      const filter = params.get("filter") || "all";
+      const sortDirection = params.get("sort") === "asc" ? "asc" : "desc";
+      const search = params.get("search") || "";
+
+      expect(filter).toBe("all");
+      expect(sortDirection).toBe("desc");
+      expect(search).toBe("");
+    });
+
+    it("should derive filter, sort and search from URL search params accurately", () => {
+      const params = new URLSearchParams("filter=todo&sort=asc&search=urgent");
+      const filter = params.get("filter") || "all";
+      const sortDirection = params.get("sort") === "asc" ? "asc" : "desc";
+      const search = params.get("search") || "";
+
+      expect(filter).toBe("todo");
+      expect(sortDirection).toBe("asc");
+      expect(search).toBe("urgent");
+    });
+
+    it("should preserve unrelated params like workspaceId when updating search", () => {
+      const prev = new URLSearchParams("workspaceId=ws-123&tab=overview");
+      const next = new URLSearchParams(prev);
+      const searchTerm = "john";
+
+      if (searchTerm.trim()) {
+        next.set("search", searchTerm);
+      } else {
+        next.delete("search");
+      }
+
+      expect(next.get("workspaceId")).toBe("ws-123");
+      expect(next.get("tab")).toBe("overview");
+      expect(next.get("search")).toBe("john");
+    });
+
+    it("should delete search param when searchTerm is empty or whitespace", () => {
+      const prev = new URLSearchParams("workspaceId=ws-123&search=existing");
+      const next = new URLSearchParams(prev);
+      const searchTerm = "   ";
+
+      if (searchTerm.trim()) {
+        next.set("search", searchTerm);
+      } else {
+        next.delete("search");
+      }
+
+      expect(next.get("workspaceId")).toBe("ws-123");
+      expect(next.has("search")).toBe(false);
+    });
+
+    it("should preserve existing search and filter params when toggling sort", () => {
+      const prev = new URLSearchParams("filter=inprogress&search=fix&sort=desc");
+      const currentSort = prev.get("sort") === "asc" ? "asc" : "desc";
+      const nextSort = currentSort === "asc" ? "desc" : "asc";
+
+      const next = new URLSearchParams(prev);
+      next.set("sort", nextSort);
+
+      expect(next.get("filter")).toBe("inprogress");
+      expect(next.get("search")).toBe("fix");
+      expect(next.get("sort")).toBe("asc");
+    });
+  });
 });
+

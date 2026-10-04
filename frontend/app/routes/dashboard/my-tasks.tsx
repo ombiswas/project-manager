@@ -90,40 +90,62 @@ const MyTasksSkeleton = () => (
 const MyTasks = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const initialFilter = searchParams.get("filter") || "all";
-  const initialSort = searchParams.get("sort") || "desc";
-  const initialSearch = searchParams.get("search") || "";
+  const filter = searchParams.get("filter") || "all";
+  const sortDirection = (searchParams.get("sort") === "asc" ? "asc" : "desc") as
+    | "asc"
+    | "desc";
+  const search = searchParams.get("search") || "";
 
-  const [filter, setFilter] = useState<string>(initialFilter);
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">(
-    initialSort === "asc" ? "asc" : "desc"
-  );
-  const [search, setSearch] = useState<string>(initialSearch);
+  const [searchTerm, setSearchTerm] = useState(search);
 
   useEffect(() => {
-    const params: Record<string, string> = {};
+    setSearchTerm(search);
+  }, [search]);
 
-    searchParams.forEach((value, key) => {
-      params[key] = value;
+  useEffect(() => {
+    if (searchTerm === search) return;
+
+    const timer = setTimeout(() => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (searchTerm.trim()) {
+            next.set("search", searchTerm);
+          } else {
+            next.delete("search");
+          }
+          return next;
+        },
+        { replace: true }
+      );
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, search, setSearchParams]);
+
+  const handleSortChange = () => {
+    const nextSort = sortDirection === "asc" ? "desc" : "asc";
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("sort", nextSort);
+        return next;
+      },
+      { replace: true }
+    );
+  };
+
+  const handleFilterChange = (newFilter: string) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (newFilter === "all") {
+        next.delete("filter");
+      } else {
+        next.set("filter", newFilter);
+      }
+      return next;
     });
-
-    params.filter = filter;
-    params.sort = sortDirection;
-    params.search = search;
-
-    setSearchParams(params, { replace: true });
-  }, [filter, sortDirection, search]);
-
-  useEffect(() => {
-    const urlFilter = searchParams.get("filter") || "all";
-    const urlSort = searchParams.get("sort") || "desc";
-    const urlSearch = searchParams.get("search") || "";
-
-    if (urlFilter !== filter) setFilter(urlFilter);
-    if (urlSort !== sortDirection)
-      setSortDirection(urlSort === "asc" ? "asc" : "desc");
-    if (urlSearch !== search) setSearch(urlSearch);
-  }, [searchParams]);
+  };
 
   const {
     data: myTasks,
@@ -236,9 +258,7 @@ const MyTasks = () => {
             variant="outline"
             size="sm"
             className="rounded-full text-xs font-mono"
-            onClick={() =>
-              setSortDirection(sortDirection === "asc" ? "desc" : "asc")
-            }
+            onClick={handleSortChange}
           >
             {sortDirection === "asc" ? "Oldest First" : "Newest First"}
           </Button>
@@ -259,22 +279,22 @@ const MyTasks = () => {
                 Filter Tasks
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setFilter("all")}>
+              <DropdownMenuItem onClick={() => handleFilterChange("all")}>
                 All Tasks
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setFilter("todo")}>
+              <DropdownMenuItem onClick={() => handleFilterChange("todo")}>
                 To Do
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setFilter("inprogress")}>
+              <DropdownMenuItem onClick={() => handleFilterChange("inprogress")}>
                 In Progress
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setFilter("done")}>
+              <DropdownMenuItem onClick={() => handleFilterChange("done")}>
                 Done
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setFilter("achieved")}>
+              <DropdownMenuItem onClick={() => handleFilterChange("achieved")}>
                 Archived
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setFilter("high")}>
+              <DropdownMenuItem onClick={() => handleFilterChange("high")}>
                 High Priority
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -284,8 +304,8 @@ const MyTasks = () => {
 
       <Input
         placeholder="Search tasks..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
         className="max-w-md rounded-full bg-canvas-card border-hairline focus-visible:border-canvas-mid text-sm"
       />
 

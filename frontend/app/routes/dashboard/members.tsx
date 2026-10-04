@@ -100,8 +100,33 @@ const Members = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const workspaceId = searchParams.get("workspaceId");
-  const initialSearch = searchParams.get("search") || "";
-  const [search, setSearch] = useState<string>(initialSearch);
+  const search = searchParams.get("search") || "";
+  const [searchTerm, setSearchTerm] = useState<string>(search);
+
+  useEffect(() => {
+    setSearchTerm(search);
+  }, [search]);
+
+  useEffect(() => {
+    if (searchTerm === search) return;
+
+    const timer = setTimeout(() => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (searchTerm.trim()) {
+            next.set("search", searchTerm);
+          } else {
+            next.delete("search");
+          }
+          return next;
+        },
+        { replace: true }
+      );
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, search, setSearchParams]);
 
   const { data, isLoading, isFetching, isError, error, refetch } =
     useGetWorkspaceDetailsQuery(workspaceId!) as {
@@ -116,20 +141,6 @@ const Members = () => {
   const { mutate: removeMember } = useRemoveMemberMutation();
   const { mutate: transferOwnership } = useTransferOwnershipMutation();
   const { mutate: changeRole } = useChangeMemberRoleMutation();
-
-  useEffect(() => {
-    const params: Record<string, string> = {};
-    searchParams.forEach((value, key) => {
-      params[key] = value;
-    });
-    params.search = search;
-    setSearchParams(params, { replace: true });
-  }, [search]);
-
-  useEffect(() => {
-    const urlSearch = searchParams.get("search") || "";
-    if (urlSearch !== search) setSearch(urlSearch);
-  }, [searchParams]);
 
   if (isLoading && !data) return <MembersSkeleton />;
 
@@ -241,8 +252,8 @@ const Members = () => {
 
       <Input
         placeholder="Search members..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
         className="max-w-md rounded-full bg-canvas-card border-hairline focus-visible:border-canvas-mid text-sm"
       />
 
