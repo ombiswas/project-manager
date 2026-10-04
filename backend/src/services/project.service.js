@@ -98,7 +98,7 @@ class ProjectService {
       throw new NotFoundError("Project not found");
     }
 
-    this._assertProjectAccess(project, userId);
+    await this._assertProjectAccess(project, userId);
     return project;
   }
 
@@ -108,7 +108,7 @@ class ProjectService {
       throw new NotFoundError("Project not found");
     }
 
-    this._assertProjectAccess(project, userId);
+    await this._assertProjectAccess(project, userId);
 
     const {
       page = 1,
@@ -234,7 +234,7 @@ class ProjectService {
     });
   }
 
-  _assertProjectAccess(project, userId) {
+  async _assertProjectAccess(project, userId) {
     const userIdStr = userId.toString();
     const isCreator =
       (project.createdBy?._id || project.createdBy)?.toString() === userIdStr;
@@ -242,9 +242,21 @@ class ProjectService {
       (m) => (m._id || m)?.toString() === userIdStr
     );
 
-    if (!isCreator && !isMember) {
-      throw new ForbiddenError("You are not a member of this project");
+    if (isCreator || isMember) {
+      return;
     }
+
+    const workspace = await workspaceRepository.findById(project.workspace);
+    if (!workspace) {
+      throw new NotFoundError("Workspace associated with project not found");
+    }
+
+    const requesterRole = permissionService.resolveUserRole(workspace, userId);
+    if (requesterRole === "owner" || requesterRole === "admin") {
+      return;
+    }
+
+    throw new ForbiddenError("You are not a member of this project");
   }
 }
 
