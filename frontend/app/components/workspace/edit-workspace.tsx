@@ -279,7 +279,7 @@ export const EditWorkspace = ({
                         </Button>
                       );
                     })}
-                  {workspace.members.length <= 1 && (
+                  {(workspace.members?.length ?? 0) <= 1 && (
                     <p className="text-xs font-mono text-[#7d8187] py-1">
                       NO OTHER MEMBERS AVAILABLE
                     </p>

@@ -1,12 +1,6 @@
 import type { Project } from "@/types";
 import { Link } from "react-router";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../ui/card";
+import { Card } from "../ui/card";
 import { cn } from "@/lib/utils";
 import { getTaskStatusColor } from "@/lib";
 import { Progress } from "../ui/progress";
@@ -62,7 +56,7 @@ export const ProjectCard = ({
 
           <div className="flex items-center justify-between pt-3 border-t border-[#212327]">
             <div className="flex items-center text-xs font-mono text-[#7d8187] gap-1.5">
-              <span className="text-white">{project.tasks.length}</span>
+              <span className="text-white">{project.tasks?.length ?? 0}</span>
               <span>TASKS</span>
             </div>
 

@@ -362,7 +362,7 @@ const MyTasks = () => {
                     variant="outline"
                     className="font-mono text-[10px] h-5"
                   >
-                    {column.tasks.length}
+                    {column.tasks?.length ?? 0}
                   </Badge>
                 </div>
 

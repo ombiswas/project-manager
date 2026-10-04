@@ -217,7 +217,7 @@ const WorkspaceCard = ({
         <div className="flex items-center gap-2 shrink-0">
           <div className="flex items-center text-[#7d8187] font-mono text-xs">
             <Users className="size-3.5 mr-1" />
-            <span>{workspace.members.length}</span>
+            <span>{workspace.members?.length ?? 0}</span>
           </div>
           {isOwner && (
             <Button
