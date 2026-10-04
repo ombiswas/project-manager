@@ -61,49 +61,18 @@ describe("Permission Service & Middleware", () => {
   });
 
   describe("canManageTask", () => {
-    it("should return false for viewer regardless of creator", () => {
-      assert.strictEqual(
-        permissionService.canManageTask("viewer", "member"),
-        false
-      );
-      assert.strictEqual(
-        permissionService.canManageTask("viewer", "admin"),
-        false
-      );
-      assert.strictEqual(
-        permissionService.canManageTask(null, "member"),
-        false
-      );
+    it("should return false for viewer or null role", () => {
+      assert.strictEqual(permissionService.canManageTask("viewer"), false);
+      assert.strictEqual(permissionService.canManageTask(null), false);
     });
 
-    it("should return true for owner and admin regardless of creator", () => {
-      assert.strictEqual(
-        permissionService.canManageTask("owner", "admin"),
-        true
-      );
-      assert.strictEqual(
-        permissionService.canManageTask("admin", "owner"),
-        true
-      );
-      assert.strictEqual(
-        permissionService.canManageTask("admin", "member"),
-        true
-      );
+    it("should return true for owner and admin", () => {
+      assert.strictEqual(permissionService.canManageTask("owner"), true);
+      assert.strictEqual(permissionService.canManageTask("admin"), true);
     });
 
-    it("should allow member to manage task regardless of project creator role", () => {
-      assert.strictEqual(
-        permissionService.canManageTask("member", "member"),
-        true
-      );
-      assert.strictEqual(
-        permissionService.canManageTask("member", "admin"),
-        true
-      );
-      assert.strictEqual(
-        permissionService.canManageTask("member", "owner"),
-        true
-      );
+    it("should allow member to manage task", () => {
+      assert.strictEqual(permissionService.canManageTask("member"), true);
     });
   });
 
@@ -164,8 +133,7 @@ describe("Permission Service & Middleware", () => {
         () =>
           permissionService.assertTaskManagementPermission(
             mockWorkspace,
-            nonMemberId,
-            memberId
+            nonMemberId
           ),
         /You are not a member of this workspace/
       );
@@ -176,34 +144,29 @@ describe("Permission Service & Middleware", () => {
         () =>
           permissionService.assertTaskManagementPermission(
             mockWorkspace,
-            viewerId,
-            memberId
+            viewerId
           ),
         /Viewers cannot modify tasks/
       );
     });
 
-    it("should succeed when member manages task in admin-created project", () => {
+    it("should succeed when member manages task", () => {
       const result = permissionService.assertTaskManagementPermission(
         mockWorkspace,
-        memberId,
-        adminId
-      );
-      assert.deepStrictEqual(result, {
-        requesterRole: "member",
-        creatorRole: "admin",
-      });
-    });
-
-    it("should succeed when admin manages task created by admin or member", () => {
-      const result = permissionService.assertTaskManagementPermission(
-        mockWorkspace,
-        adminId,
         memberId
       );
       assert.deepStrictEqual(result, {
+        requesterRole: "member",
+      });
+    });
+
+    it("should succeed when admin manages task", () => {
+      const result = permissionService.assertTaskManagementPermission(
+        mockWorkspace,
+        adminId
+      );
+      assert.deepStrictEqual(result, {
         requesterRole: "admin",
-        creatorRole: "member",
       });
     });
   });

@@ -87,10 +87,9 @@ class PermissionService {
    * Viewers have read-only access and cannot modify tasks.
    *
    * @param {string} requesterRole
-   * @param {string} [creatorRole="member"]
    * @returns {boolean}
    */
-  canManageTask(requesterRole, creatorRole = "member") {
+  canManageTask(requesterRole) {
     if (!requesterRole || requesterRole === "viewer") {
       return false;
     }
@@ -131,9 +130,9 @@ class PermissionService {
   }
 
   /**
-   * Validates task modification permission given workspace, requesterId, and project/creatorId.
+   * Validates task modification permission given workspace and requesterId.
    */
-  assertTaskManagementPermission(workspace, requesterId, projectCreatorId) {
+  assertTaskManagementPermission(workspace, requesterId) {
     const requesterRole = this.resolveUserRole(workspace, requesterId);
     if (!requesterRole) {
       throw new ForbiddenError("You are not a member of this workspace");
@@ -142,17 +141,13 @@ class PermissionService {
       throw new ForbiddenError("Viewers cannot modify tasks");
     }
 
-    const creatorRole = projectCreatorId
-      ? this.resolveUserRole(workspace, projectCreatorId) || "member"
-      : "member";
-
-    if (!this.canManageTask(requesterRole, creatorRole)) {
+    if (!this.canManageTask(requesterRole)) {
       throw new ForbiddenError(
         "You do not have permission to modify tasks in this project."
       );
     }
 
-    return { requesterRole, creatorRole };
+    return { requesterRole };
   }
 }
 

@@ -30,8 +30,7 @@ class TaskService {
 
     permissionService.assertTaskManagementPermission(
       workspace,
-      userId,
-      project.createdBy
+      userId
     );
 
     return { task, project, workspace };
@@ -72,8 +71,7 @@ class TaskService {
 
     permissionService.assertTaskManagementPermission(
       workspace,
-      userId,
-      project.createdBy
+      userId
     );
 
     const { title, description, status, priority, dueDate, assignees } =
