@@ -27,6 +27,59 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 
+const TopProgressBar = () => (
+  <div
+    role="progressbar"
+    aria-label="Updating project..."
+    className="fixed top-0 left-0 right-0 z-50 h-[2px] bg-gradient-to-r from-transparent via-[#ff7a17] to-transparent animate-pulse"
+  />
+);
+
+const ProjectDetailsSkeleton = () => (
+  <div
+    className="space-y-6 animate-pulse"
+    aria-busy="true"
+    aria-label="Loading project details"
+  >
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col gap-2">
+        <div className="h-8 w-20 bg-[#1a1c20] rounded-[8px]" />
+        <div className="mt-2 space-y-2">
+          <div className="h-3 w-16 bg-[#1a1c20] rounded-[8px]" />
+          <div className="h-8 w-48 bg-[#1a1c20] rounded-[8px]" />
+          <div className="h-4 w-72 bg-[#1a1c20] rounded-[8px]" />
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-48 bg-[#141517] border border-[#212327] rounded-[8px]" />
+        <div className="h-9 w-24 bg-[#1a1c20] rounded-full" />
+      </div>
+    </div>
+
+    {/* Tabs skeleton */}
+    <div className="h-10 w-72 bg-[#141517] border border-[#212327] rounded-[8px]" />
+
+    {/* Task cards skeleton */}
+    <div className="space-y-3">
+      {[...Array(4)].map((_, i) => (
+        <div
+          key={i}
+          className="bg-[#141517] border border-[#212327] rounded-[8px] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 h-[72px]"
+        >
+          <div className="flex items-center gap-3">
+            <div className="size-5 rounded-full bg-[#1a1c20]" />
+            <div className="h-4 w-56 bg-[#1a1c20] rounded-[8px]" />
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-5 w-16 bg-[#1a1c20] rounded-full" />
+            <div className="h-5 w-14 bg-[#1a1c20] rounded-full" />
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
 const ProjectDetails = () => {
   const { user } = useAuth();
   const { projectId, workspaceId } = useParams<{
@@ -38,11 +91,12 @@ const ProjectDetails = () => {
   const [isCreateTask, setIsCreateTask] = useState(false);
   const [, setTaskFilter] = useState("All");
 
-  const { data, isLoading, isError, error, refetch } = UseProjectQuery(
+  const { data, isLoading, isFetching, isError, error, refetch } = UseProjectQuery(
     projectId!
   ) as {
     data: ProjectTasksResponse | undefined;
     isLoading: boolean;
+    isFetching: boolean;
     isError: boolean;
     error: unknown;
     refetch: () => void;
@@ -53,8 +107,10 @@ const ProjectDetails = () => {
       isLoading: boolean;
     };
 
-  if (isLoading || isLoadingWorkspace)
-    return <Loader label="Loading project details..." />;
+  // Render skeleton loader only when there is no data yet
+  if ((isLoading && !data) || (isLoadingWorkspace && !workspaceData)) {
+    return <ProjectDetailsSkeleton />;
+  }
 
   if (isError || !data?.project) {
     return (
@@ -136,10 +192,30 @@ const ProjectDetails = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex flex-col gap-2">
-          <BackButton className="w-fit" />
+    <>
+      {isFetching && <TopProgressBar />}
+      <div
+        className={cn(
+          "space-y-6 transition-opacity duration-200",
+          isFetching ? "opacity-75" : "opacity-100"
+        )}
+      >
+        {isError && (
+          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-[8px] flex items-center justify-between text-xs text-red-400">
+            <span>{getErrorMessage(error, "Failed to refresh project details.")}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => refetch()}
+            >
+              Retry
+            </Button>
+          </div>
+        )}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col gap-2">
+            <BackButton className="w-fit" />
           <div className="mt-2">
             <p className="caption-mono text-xs text-[#7d8187]">PROJECT</p>
             <h1 className="text-2xl font-normal tracking-[-0.6px] text-white">
@@ -312,7 +388,8 @@ const ProjectDetails = () => {
           projectMembers={workspaceMembers}
         />
       )}
-    </div>
+      </div>
+    </>
   );
 };
 

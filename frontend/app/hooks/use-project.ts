@@ -2,7 +2,12 @@ import type { CreateProjectFormData } from "@/components/project/create-project"
 import { fetchData, postData, patchData, deleteData } from "@/lib/fetch-util";
 import { queryKeys, DETAIL_POLL_MS } from "@/lib/query-keys";
 import type { Project, ProjectTasksResponse } from "@/types";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 export const UseCreateProject = () => {
   const queryClient = useQueryClient();
@@ -52,6 +57,7 @@ export const UseProjectQuery = (projectId: string) => {
     enabled: !!projectId && projectId !== "null",
     refetchInterval: DETAIL_POLL_MS,
     refetchIntervalInBackground: false,
+    placeholderData: keepPreviousData,
   });
 };
 

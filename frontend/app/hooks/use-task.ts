@@ -8,7 +8,12 @@ import type {
   TaskDetailResponse,
   Comment,
 } from "@/types";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 const resolveProjectId = (
   data?: Task,
@@ -420,6 +425,7 @@ export const useGetMyTasksQuery = () => {
   return useQuery({
     queryKey: queryKeys.tasks.myTasks(),
     queryFn: () => fetchData<Task[]>("/tasks/my-tasks"),
+    placeholderData: keepPreviousData,
   });
 };
 

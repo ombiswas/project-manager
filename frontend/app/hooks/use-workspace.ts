@@ -6,7 +6,12 @@ import type {
   WorkspaceProjectsResponse,
   WorkspaceStatsResponse,
 } from "@/types";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 export const useUpdateWorkspaceMutation = () => {
   const queryClient = useQueryClient();
@@ -73,6 +78,7 @@ export const useGetWorkspaceStatsQuery = (workspaceId: string) => {
     queryFn: async () =>
       fetchData<WorkspaceStatsResponse>(`/workspaces/${workspaceId}/stats`),
     enabled: !!workspaceId && workspaceId !== "null",
+    placeholderData: keepPreviousData,
   });
 };
 
@@ -89,6 +95,7 @@ export const useGetWorkspaceDetailsQuery = (
       return fetchData<Workspace>(url);
     },
     enabled: !!workspaceId && workspaceId !== "null",
+    placeholderData: keepPreviousData,
   });
 };
 
