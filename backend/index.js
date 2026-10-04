@@ -13,6 +13,7 @@ import {
 import { globalLimiter } from "./src/middleware/rate-limiter.js";
 import routes from "./src/routes/index.js";
 
+// Express server entry point
 const app = express();
 
 // Security HTTP headers

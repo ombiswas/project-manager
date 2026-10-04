@@ -27,16 +27,21 @@ export const CommentSection = ({
 
   const { mutate: addComment, isPending } = useAddCommentMutation();
   const {
-    data: comments = [],
+    data: rawComments,
     isLoading,
     isError,
   } = useGetCommentsByTaskIdQuery(taskId);
 
+  const comments: Comment[] = Array.isArray(rawComments)
+    ? rawComments
+    : (rawComments as any)?.comments || [];
+
   const handleAddComment = () => {
-    if (!newComment.trim()) return;
+    const trimmed = newComment.trim();
+    if (!trimmed || isPending) return;
 
     addComment(
-      { taskId, text: newComment },
+      { taskId, text: trimmed },
       {
         onSuccess: () => {
           setNewComment("");
@@ -51,50 +56,61 @@ export const CommentSection = ({
 
   if (isLoading)
     return (
-      <div>
+      <div className="bg-[#191919] rounded-[8px] border border-[#212327] p-6">
         <Loader />
       </div>
     );
 
   return (
     <div className="bg-[#191919] rounded-[8px] border border-[#212327] p-6 shadow-none">
-      <h3 className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187] mb-4">
-        Comments
-      </h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+          Comments ({comments.length})
+        </h3>
+      </div>
 
       <ScrollArea className="h-[280px] mb-4 pr-3">
-        {comments?.length > 0 ? (
-          comments.map((comment) => (
-            <div
-              key={comment._id}
-              className="flex gap-3 py-3 border-b border-[#212327]/60 last:border-0"
-            >
-              <Avatar className="size-7 rounded-full border border-[#212327] bg-[#1a1c20]">
-                <AvatarImage src={comment.author.profilePicture} />
-                <AvatarFallback className="text-[10px] font-mono bg-[#1a1c20] text-white">
-                  {comment.author.name.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
+        {comments.length > 0 ? (
+          comments.map((comment) => {
+            const commentDate = comment.createdAt
+              ? new Date(comment.createdAt)
+              : new Date();
+            const formattedTime = !isNaN(commentDate.getTime())
+              ? formatDistanceToNow(commentDate, { addSuffix: true })
+              : "";
 
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="font-normal text-sm text-white">
-                    {comment.author.name}
-                  </span>
+            return (
+              <div
+                key={comment._id}
+                className="flex gap-3 py-3 border-b border-[#212327]/60 last:border-0"
+              >
+                <Avatar className="size-7 rounded-full border border-[#212327] bg-[#1a1c20]">
+                  <AvatarImage src={comment.author?.profilePicture} />
+                  <AvatarFallback className="text-[10px] font-mono bg-[#1a1c20] text-white">
+                    {comment.author?.name?.charAt(0) || "U"}
+                  </AvatarFallback>
+                </Avatar>
 
-                  <span className="text-xs font-mono text-[#7d8187]">
-                    {formatDistanceToNow(new Date(comment.createdAt), {
-                      addSuffix: true,
-                    })}
-                  </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-normal text-sm text-white">
+                      {comment.author?.name || "User"}
+                    </span>
+
+                    {formattedTime && (
+                      <span className="text-xs font-mono text-[#7d8187]">
+                        {formattedTime}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-[#dadbdf] leading-relaxed break-words whitespace-pre-wrap">
+                    {comment.text}
+                  </p>
                 </div>
-
-                <p className="text-xs text-[#dadbdf] leading-relaxed break-words">
-                  {comment.text}
-                </p>
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
           <div className="flex items-center justify-center py-8">
             <p className="text-xs font-mono text-[#7d8187]">NO COMMENTS YET</p>
@@ -107,10 +123,22 @@ export const CommentSection = ({
       {canComment && (
         <div className="mt-4 space-y-3">
           <Textarea
-            placeholder="Write a comment..."
+            placeholder="Write a comment... (Ctrl+Enter to post)"
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
+            onKeyDown={(e) => {
+              if (
+                e.key === "Enter" &&
+                (e.ctrlKey || e.metaKey) &&
+                newComment.trim() &&
+                !isPending
+              ) {
+                e.preventDefault();
+                handleAddComment();
+              }
+            }}
             rows={3}
+            disabled={isPending}
           />
 
           <div className="flex justify-end">

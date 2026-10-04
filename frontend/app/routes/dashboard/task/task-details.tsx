@@ -77,7 +77,11 @@ const TaskDetails = () => {
   if (isLoading || isLoadingWorkspace)
     return <Loader label="Loading task details..." />;
 
-  if (isError || !data?.task) {
+  const rawTask = (data as TaskDetailResponse)?.task || (data as unknown as import("@/types").Task);
+  const task = rawTask && rawTask._id ? rawTask : undefined;
+  const project = (data as TaskDetailResponse)?.project;
+
+  if (isError || !task) {
     return (
       <div className="max-w-7xl mx-auto space-y-4 py-8 px-4">
         <BackButton className="w-fit" />
@@ -93,41 +97,49 @@ const TaskDetails = () => {
     );
   }
 
-  const { task, project } = data;
+  const currentUserId = String(
+    user?._id || (user as { id?: string })?.id || ""
+  );
+
   const isUserWatching = task?.watchers?.some(
-    (watcher) => (watcher._id || watcher).toString() === user?._id.toString()
+    (watcher) => (watcher._id || watcher).toString() === currentUserId
   );
 
   // Permission logic
   const workspaceOwnerId =
     typeof workspaceData?.owner === "string"
       ? workspaceData.owner
-      : workspaceData?.owner?._id || "";
-  const currentUserId = String(user?._id || "");
-  const isWorkspaceOwner =
-    workspaceOwnerId && currentUserId && workspaceOwnerId === currentUserId;
+      : workspaceData?.owner?._id || (workspaceData?.owner as { id?: string })?.id || "";
+
+  const isWorkspaceOwner = Boolean(
+    workspaceOwnerId && currentUserId && String(workspaceOwnerId) === currentUserId
+  );
+
+  const memberRecord = workspaceData?.members?.find((m) => {
+    const mUserId = String(m.user?._id || (m.user as { id?: string })?.id || m.user || "");
+    return mUserId && mUserId === currentUserId;
+  });
 
   const currentUserWorkspaceRole = isWorkspaceOwner
     ? "owner"
-    : workspaceData?.members?.find(
-        (m) => String(m.user?._id || m.user) === currentUserId
-      )?.role;
+    : memberRecord?.role;
 
-  const projectCreatorId =
-    typeof project?.createdBy === "string"
-      ? project.createdBy
-      : project?.createdBy?._id || "";
   const isOwnerOrAdmin =
     currentUserWorkspaceRole === "owner" ||
-    currentUserWorkspaceRole === "admin";
-  const isMember = currentUserWorkspaceRole === "member";
+    currentUserWorkspaceRole === "admin" ||
+    isWorkspaceOwner;
 
-  const canManageTask = isOwnerOrAdmin;
+  // Viewers have read-only access.
+  // Workspace owners, admins, and members can collaborate on tasks (create, edit, subtasks, comments).
+  // Default to allowing actions for authorized users viewing the task (backend enforces access).
+  const isViewer = currentUserWorkspaceRole === "viewer";
+
+  const canManageTask = !isViewer;
   const canDeleteTask = isOwnerOrAdmin;
-  const canUpdateStatus = isOwnerOrAdmin || isMember;
-  const canManageSubtasks = isOwnerOrAdmin || isMember;
-  const canComment = isOwnerOrAdmin || isMember;
-  const canWatch = isOwnerOrAdmin || isMember;
+  const canUpdateStatus = !isViewer;
+  const canManageSubtasks = !isViewer;
+  const canComment = !isViewer;
+  const canWatch = !isViewer;
 
   const handleWatchTask = () => {
     watchTask(
@@ -307,7 +319,11 @@ const TaskDetails = () => {
                   <TaskAssigneesSelector
                     task={task}
                     assignees={task.assignees || []}
-                    projectMembers={data.project.members || []}
+                    projectMembers={(workspaceData?.members || []).flatMap((m) => {
+                      const u = m.user as { _id?: string; name?: string; email?: string; profilePicture?: string } | string | undefined;
+                      if (!u || typeof u === "string") return [];
+                      return [{ _id: u._id || "", name: u.name || "", email: u.email || "", profilePicture: u.profilePicture || "" }];
+                    }) as import("@/types").User[]}
                     canEdit={canManageTask}
                   />
                 </div>
@@ -325,7 +341,7 @@ const TaskDetails = () => {
 
           <CommentSection
             taskId={task._id}
-            members={data.project.members}
+            members={(project?.members || []) as unknown as import("@/types").User[]}
             canComment={canComment}
           />
         </div>

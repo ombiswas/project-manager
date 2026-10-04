@@ -25,6 +25,8 @@ export const SubTasksDetails = ({
   const { mutate: updateSubTask, isPending: isUpdating } =
     useUpdateSubTaskMutation();
 
+  const taskList = Array.isArray(subTasks) ? subTasks : [];
+
   const handleToggleTask = (subTaskId: string, checked: boolean) => {
     updateSubTask(
       { taskId, subTaskId, completed: checked },
@@ -40,8 +42,11 @@ export const SubTasksDetails = ({
   };
 
   const handleAddSubTask = () => {
+    const trimmed = newSubTask.trim();
+    if (!trimmed || isPending) return;
+
     addSubTask(
-      { taskId, title: newSubTask },
+      { taskId, title: trimmed },
       {
         onSuccess: () => {
           setNewSubTask("");
@@ -54,16 +59,20 @@ export const SubTasksDetails = ({
     );
   };
 
+  const completedCount = taskList.filter((s) => s.completed).length;
+
   return (
     <div className="space-y-3">
-      <h3 className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
-        Sub Tasks
-      </h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-xs font-mono uppercase tracking-[1.2px] text-[#7d8187]">
+          Sub Tasks {taskList.length > 0 && `(${completedCount}/${taskList.length})`}
+        </h3>
+      </div>
 
       <div className="space-y-1.5">
-        {subTasks.length > 0 ? (
+        {taskList.length > 0 ? (
           <div className="space-y-1.5">
-            {subTasks.map((subTask) => (
+            {taskList.map((subTask) => (
               <div
                 key={subTask._id}
                 className="flex items-center space-x-3 p-2.5 rounded-[6px] bg-[#141517] border border-[#212327] hover:border-[#363a3f] transition-colors"
@@ -108,7 +117,8 @@ export const SubTasksDetails = ({
             className="flex-1"
             disabled={isPending}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && newSubTask.length > 0 && !isPending) {
+              if (e.key === "Enter" && newSubTask.trim().length > 0 && !isPending) {
+                e.preventDefault();
                 handleAddSubTask();
               }
             }}
@@ -116,10 +126,10 @@ export const SubTasksDetails = ({
 
           <Button
             onClick={handleAddSubTask}
-            disabled={isPending || newSubTask.length === 0}
+            disabled={isPending || newSubTask.trim().length === 0}
             className="shrink-0"
           >
-            Add Task
+            {isPending ? "Adding..." : "Add Task"}
           </Button>
         </div>
       )}

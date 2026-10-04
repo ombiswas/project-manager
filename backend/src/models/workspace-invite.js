@@ -8,6 +8,11 @@ const workspaceInviteSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    email: {
+      type: String,
+      trim: true,
+      lowercase: true,
+    },
     workspaceId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Workspace",
@@ -31,6 +36,7 @@ const workspaceInviteSchema = new mongoose.Schema(
 );
 
 workspaceInviteSchema.index({ user: 1, workspaceId: 1 });
+workspaceInviteSchema.index({ email: 1, workspaceId: 1 });
 workspaceInviteSchema.index({ token: 1 });
 // TTL index for automatic expiration cleanup
 workspaceInviteSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });

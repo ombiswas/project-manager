@@ -2,6 +2,15 @@ import mongoose from "mongoose";
 import { env } from "./env.js";
 import { logger } from "../utils/logger.js";
 
+// Ensure all Mongoose schemas are registered
+import "../models/user.js";
+import "../models/workspace.js";
+import "../models/workspace-invite.js";
+import "../models/project.js";
+import "../models/task.js";
+import "../models/comment.js";
+import "../models/activity.js";
+
 export const connectDB = async () => {
   try {
     const conn = await mongoose.connect(env.MONGODB_URI);

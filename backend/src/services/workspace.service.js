@@ -122,20 +122,9 @@ class WorkspaceService {
       }
     );
 
-    // Owners and Admins can see all projects in the workspace
-    // Members and Viewers can only see projects they created or are added to
-    let visibleProjects = projects;
-    if (requesterRole !== "owner" && requesterRole !== "admin") {
-      const userIdStr = userId.toString();
-      visibleProjects = projects.filter((p) => {
-        const isCreator =
-          (p.createdBy?._id || p.createdBy)?.toString() === userIdStr;
-        const isMember = p.members?.some(
-          (m) => (m._id || m)?.toString() === userIdStr
-        );
-        return isCreator || isMember;
-      });
-    }
+    // All workspace members can see all projects in the workspace.
+    // Task-level and mutation-level permission checks remain in place.
+    const visibleProjects = projects;
 
     return {
       projects: visibleProjects,
@@ -163,11 +152,8 @@ class WorkspaceService {
     const { projects } = await projectRepository.findByWorkspace(workspaceId, {
       limit: 500,
     });
-    const visibleProjects = this._filterVisibleProjects(
-      projects,
-      requesterRole,
-      userId
-    );
+    const visibleProjects = projects; // All workspace members see all projects
+
     // BATCH QUERY: Eliminates N+1 database round-trips
     const tasks = await this._fetchTasksForProjects(visibleProjects);
 
@@ -390,7 +376,8 @@ class WorkspaceService {
       throw new NotFoundError("Workspace not found");
     }
 
-    if (workspace.owner.toString() !== userId.toString()) {
+    const ownerId = (workspace.owner?._id || workspace.owner).toString();
+    if (ownerId !== userId.toString()) {
       throw new ForbiddenError(
         "Only the workspace owner can delete this workspace"
       );
@@ -446,6 +433,7 @@ class WorkspaceService {
 
     await workspaceRepository.createInvite({
       user: existingUser._id,
+      email: existingUser.email.toLowerCase().trim(),
       workspaceId,
       token: inviteToken,
       role: role || "member",
@@ -559,8 +547,11 @@ class WorkspaceService {
 
       await workspaceRepository.deleteManyInvites(
         {
-          user: authUser._id,
           workspaceId,
+          $or: [
+            { user: authUser._id },
+            { email: authUser.email.toLowerCase().trim() },
+          ],
         },
         session
       );
@@ -595,9 +586,10 @@ class WorkspaceService {
     }
 
     // Edge case: Sole owner leaving
+    const ownerId = (workspace.owner?._id || workspace.owner).toString();
     const isOwner =
       targetMember.role === "owner" ||
-      workspace.owner.toString() === memberId.toString();
+      ownerId === memberId.toString();
     if (isSelfRemoval) {
       if (isOwner) {
         const ownerCount = workspace.members.filter(
@@ -653,9 +645,10 @@ class WorkspaceService {
       throw new NotFoundError("Member not found in workspace");
     }
 
+    const ownerId = (workspace.owner?._id || workspace.owner).toString();
     if (
       targetMember.role === "owner" ||
-      workspace.owner.toString() === memberId.toString()
+      ownerId === memberId.toString()
     ) {
       throw new ForbiddenError("Cannot change the workspace owner's role");
     }
@@ -674,7 +667,8 @@ class WorkspaceService {
       throw new NotFoundError("Workspace not found");
     }
 
-    if (workspace.owner.toString() !== currentOwnerId.toString()) {
+    const ownerId = (workspace.owner?._id || workspace.owner).toString();
+    if (ownerId !== currentOwnerId.toString()) {
       throw new ForbiddenError("Only the owner can transfer ownership");
     }
 

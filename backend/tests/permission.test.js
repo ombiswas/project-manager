@@ -91,21 +91,18 @@ describe("Permission Service & Middleware", () => {
       );
     });
 
-    it("should allow member to manage task if creator is member", () => {
+    it("should allow member to manage task regardless of project creator role", () => {
       assert.strictEqual(
         permissionService.canManageTask("member", "member"),
         true
       );
-    });
-
-    it("should NOT allow member to manage task if creator is admin or owner", () => {
       assert.strictEqual(
         permissionService.canManageTask("member", "admin"),
-        false
+        true
       );
       assert.strictEqual(
         permissionService.canManageTask("member", "owner"),
-        false
+        true
       );
     });
   });
@@ -186,16 +183,16 @@ describe("Permission Service & Middleware", () => {
       );
     });
 
-    it("should throw ForbiddenError when member tries to manage task in admin-created project", () => {
-      assert.throws(
-        () =>
-          permissionService.assertTaskManagementPermission(
-            mockWorkspace,
-            memberId,
-            adminId
-          ),
-        /You do not have permission to modify tasks in this project/
+    it("should succeed when member manages task in admin-created project", () => {
+      const result = permissionService.assertTaskManagementPermission(
+        mockWorkspace,
+        memberId,
+        adminId
       );
+      assert.deepStrictEqual(result, {
+        requesterRole: "member",
+        creatorRole: "admin",
+      });
     });
 
     it("should succeed when admin manages task created by admin or member", () => {

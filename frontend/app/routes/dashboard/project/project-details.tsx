@@ -36,6 +36,7 @@ const ProjectDetails = () => {
   const navigate = useNavigate();
 
   const [isCreateTask, setIsCreateTask] = useState(false);
+  const [, setTaskFilter] = useState("All");
 
   const { data, isLoading, isError, error, refetch } = UseProjectQuery(
     projectId!
@@ -75,39 +76,58 @@ const ProjectDetails = () => {
   const projectProgress = getProjectProgress(tasks || []);
 
   // Permission logic
+  const currentUserId = String(
+    user?._id || (user as { id?: string })?.id || ""
+  );
+
   const workspaceOwnerId =
     typeof workspaceData?.owner === "string"
       ? workspaceData.owner
-      : workspaceData?.owner?._id || "";
-  const currentUserId = String(user?._id || "");
-  const isWorkspaceOwner =
-    workspaceOwnerId && currentUserId && workspaceOwnerId === currentUserId;
+      : workspaceData?.owner?._id || (workspaceData?.owner as { id?: string })?.id || "";
+
+  const isWorkspaceOwner = Boolean(
+    workspaceOwnerId && currentUserId && String(workspaceOwnerId) === currentUserId
+  );
+
+  const memberRecord = workspaceData?.members?.find((m) => {
+    const mUserId = String(m.user?._id || (m.user as { id?: string })?.id || m.user || "");
+    return mUserId && mUserId === currentUserId;
+  });
 
   const currentUserWorkspaceRole = isWorkspaceOwner
     ? "owner"
-    : workspaceData?.members?.find(
-        (m) => String(m.user?._id || m.user) === currentUserId
-      )?.role;
+    : memberRecord?.role;
 
   const projectCreatorId =
     typeof project.createdBy === "string"
       ? project.createdBy
       : project.createdBy?._id || "";
-  let canDelete = false;
-  let canUpdate = false;
+  const isProjectCreator = projectCreatorId === currentUserId;
+  const isProjectMember = (project.members || []).some(
+    (m) => String((m as { _id?: string })?._id || m) === currentUserId
+  );
 
-  if (
+  const isOwnerOrAdmin =
     currentUserWorkspaceRole === "owner" ||
-    currentUserWorkspaceRole === "admin"
-  ) {
-    canDelete = true;
-    canUpdate = true;
-  }
+    currentUserWorkspaceRole === "admin" ||
+    isWorkspaceOwner;
+
+  // Viewers have strictly read-only access and cannot add or edit tasks
+  const isViewer = currentUserWorkspaceRole === "viewer";
+
+  let canDelete = isOwnerOrAdmin;
+  let canUpdate = isOwnerOrAdmin;
 
   const canManage = canUpdate || canDelete;
-  const canEditTasks =
-    currentUserWorkspaceRole === "owner" ||
-    currentUserWorkspaceRole === "admin";
+  // Non-viewers who are admins, owners, project creator, or project members can add/edit tasks
+  const canEditTasks = !isViewer && (isOwnerOrAdmin || isProjectCreator || isProjectMember);
+
+  // Derive a flat User[] list of all workspace members for the assignee selector
+  const workspaceMembers = (workspaceData?.members || []).flatMap((m) => {
+    const u = m.user as { _id?: string; name?: string; email?: string; profilePicture?: string } | string | undefined;
+    if (!u || typeof u === "string") return [];
+    return [{ _id: u._id || "", name: u.name || "", email: u.email || "", profilePicture: u.profilePicture || "" }];
+  }) as import("@/types").User[];
 
   const handleTaskClick = (taskId: string) => {
     navigate(
@@ -281,12 +301,14 @@ const ProjectDetails = () => {
       </div>
 
       {/* create task dialog */}
-      <CreateTaskDialog
-        open={isCreateTask}
-        onOpenChange={setIsCreateTask}
-        projectId={projectId!}
-        projectMembers={project.members || []}
-      />
+      {canEditTasks && (
+        <CreateTaskDialog
+          open={isCreateTask}
+          onOpenChange={setIsCreateTask}
+          projectId={projectId!}
+          projectMembers={workspaceMembers}
+        />
+      )}
     </div>
   );
 };

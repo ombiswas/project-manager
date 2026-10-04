@@ -46,18 +46,33 @@ api.interceptors.response.use(
         error.response.status === 403 ||
         error.response.status === 404
       ) {
-        // Dispatch a custom event to trigger redirect if access is lost or resource is deleted
-        const message =
-          error.response.data?.message ||
-          error.response.data?.error ||
-          "Access denied or resource not found";
-        const event = new CustomEvent("access-denied", {
-          detail: {
-            message,
-            status: error.response.status,
-          },
-        });
-        window.dispatchEvent(event);
+        // Skip global redirect for self-service user mutation routes.
+        // These routes use 403 for "wrong password" errors and should
+        // display the message in-place rather than redirecting the user.
+        const selfServiceRoutes = [
+          "/users/profile",
+          "/users/account",
+          "/users/change-password",
+        ];
+        const requestUrl: string = (error.config?.url as string) ?? "";
+        const isSelfService = selfServiceRoutes.some((route) =>
+          requestUrl.includes(route)
+        );
+
+        if (!isSelfService) {
+          // Dispatch a custom event to trigger redirect if access is lost or resource is deleted
+          const message =
+            error.response.data?.message ||
+            error.response.data?.error ||
+            "Access denied or resource not found";
+          const event = new CustomEvent("access-denied", {
+            detail: {
+              message,
+              status: error.response.status,
+            },
+          });
+          window.dispatchEvent(event);
+        }
       }
     }
     return Promise.reject(error);

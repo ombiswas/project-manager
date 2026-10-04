@@ -170,19 +170,22 @@ export const useAddSubTaskMutation = () => {
       postData<Task>(`/tasks/${data.taskId}/add-subtask`, {
         title: data.title,
       }),
-    onSuccess: (data: Task) => {
+    onSuccess: (data: Task, variables) => {
+      const targetTaskId = variables.taskId || data?._id;
       queryClient.invalidateQueries({
-        queryKey: ["task", data._id],
+        queryKey: ["task", targetTaskId],
       });
       queryClient.invalidateQueries({
-        queryKey: ["task-activity", data._id],
+        queryKey: ["task-activity", targetTaskId],
       });
-      queryClient.invalidateQueries({
-        queryKey: [
-          "project",
-          typeof data.project === "string" ? data.project : data.project?._id,
-        ],
-      });
+      if (data?.project) {
+        queryClient.invalidateQueries({
+          queryKey: [
+            "project",
+            typeof data.project === "string" ? data.project : data.project?._id,
+          ],
+        });
+      }
     },
   });
 };
@@ -202,19 +205,22 @@ export const useUpdateSubTaskMutation = () => {
           completed: data.completed,
         }
       ),
-    onSuccess: (data: Task) => {
+    onSuccess: (data: Task, variables) => {
+      const targetTaskId = variables.taskId || data?._id;
       queryClient.invalidateQueries({
-        queryKey: ["task", data._id],
+        queryKey: ["task", targetTaskId],
       });
       queryClient.invalidateQueries({
-        queryKey: ["task-activity", data._id],
+        queryKey: ["task-activity", targetTaskId],
       });
-      queryClient.invalidateQueries({
-        queryKey: [
-          "project",
-          typeof data.project === "string" ? data.project : data.project?._id,
-        ],
-      });
+      if (data?.project) {
+        queryClient.invalidateQueries({
+          queryKey: [
+            "project",
+            typeof data.project === "string" ? data.project : data.project?._id,
+          ],
+        });
+      }
     },
   });
 };
@@ -233,6 +239,9 @@ export const useAddCommentMutation = () => {
       });
       queryClient.invalidateQueries({
         queryKey: ["task-activity", variables.taskId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["task", variables.taskId],
       });
     },
   });

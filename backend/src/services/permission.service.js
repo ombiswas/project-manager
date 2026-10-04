@@ -17,10 +17,11 @@ class PermissionService {
    */
   resolveUserRole(workspace, userId) {
     if (!workspace || !userId) return null;
-    const userIdStr = userId.toString();
+    const userIdStr = (userId._id || userId).toString();
 
     // Check workspace owner first
-    if (workspace.owner && workspace.owner.toString() === userIdStr) {
+    const ownerId = (workspace.owner?._id || workspace.owner)?.toString();
+    if (ownerId && ownerId === userIdStr) {
       return "owner";
     }
 
@@ -39,26 +40,23 @@ class PermissionService {
   }
 
   /**
-   * Evaluates if requester can modify/manage tasks based on workspace hierarchy.
-   * Owners and admins have full access.
-   * Viewers cannot modify.
-   * Members can modify unless the creator is an admin or owner.
+   * Evaluates if requester can modify/manage tasks in a workspace project.
+   * Owners, admins, and members have task collaboration access (create, edit, subtasks, comments).
+   * Viewers have read-only access and cannot modify tasks.
    *
    * @param {string} requesterRole
-   * @param {string} creatorRole
+   * @param {string} [creatorRole="member"]
    * @returns {boolean}
    */
   canManageTask(requesterRole, creatorRole = "member") {
     if (!requesterRole || requesterRole === "viewer") {
       return false;
     }
-    if (requesterRole === "owner" || requesterRole === "admin") {
-      return true;
-    }
-    if (requesterRole === "member") {
-      if (creatorRole === "admin" || creatorRole === "owner") {
-        return false;
-      }
+    if (
+      requesterRole === "owner" ||
+      requesterRole === "admin" ||
+      requesterRole === "member"
+    ) {
       return true;
     }
     return false;

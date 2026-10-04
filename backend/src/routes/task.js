@@ -31,7 +31,7 @@ import {
   deleteTask,
 } from "../controllers/task.controller.js";
 import authMiddleware from "../middleware/auth-middleware.js";
-import { checkTaskMember } from "../middleware/permission-middleware.js";
+import { checkTaskMember, checkProjectMember } from "../middleware/permission-middleware.js";
 
 const router = express.Router();
 
@@ -39,6 +39,7 @@ const router = express.Router();
 router.post(
   "/:projectId/create-task",
   authMiddleware,
+  checkProjectMember,
   validateRequest({
     params: z.object({
       projectId: objectIdSchema,

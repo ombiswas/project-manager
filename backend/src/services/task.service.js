@@ -117,7 +117,11 @@ class TaskService {
     if (!task) {
       throw new NotFoundError("Task not found");
     }
-    return task;
+    const project = await projectRepository.findById(task.project);
+    if (!project) {
+      throw new NotFoundError("Associated project not found");
+    }
+    return { task, project };
   }
 
   async updateTaskTitle(taskId, userId, title) {
@@ -210,6 +214,9 @@ class TaskService {
       createdAt: new Date(),
     };
 
+    if (!Array.isArray(task.subtasks)) {
+      task.subtasks = [];
+    }
     task.subtasks.push(newSubTask);
     await task.save();
 
@@ -217,7 +224,7 @@ class TaskService {
       description: `created subtask ${title}`,
     });
 
-    return task;
+    return await taskRepository.findById(taskId);
   }
 
   async updateSubTask(taskId, subTaskId, userId, completed) {
@@ -226,6 +233,9 @@ class TaskService {
       throw new NotFoundError("Task not found");
     }
 
+    if (!Array.isArray(task.subtasks)) {
+      task.subtasks = [];
+    }
     const subTask = task.subtasks.find((st) => st._id.toString() === subTaskId);
     if (!subTask) {
       throw new NotFoundError("Subtask not found");
@@ -238,7 +248,7 @@ class TaskService {
       description: `updated subtask ${subTask.title}`,
     });
 
-    return task;
+    return await taskRepository.findById(taskId);
   }
 
   async addComment(taskId, userId, text) {

@@ -261,7 +261,9 @@ describe("Invite Acceptance Logic", () => {
     assert.strictEqual(addedMember.wsId, workspaceId);
     assert.strictEqual(addedMember.memberData.user, authUser._id);
     assert.strictEqual(addedMember.memberData.role, "member");
-    assert.strictEqual(deletedInvitesQuery.user, authUser._id);
+    const deletedUser =
+      deletedInvitesQuery.user || deletedInvitesQuery.$or?.[0]?.user;
+    assert.strictEqual(deletedUser, authUser._id);
     assert.strictEqual(deletedInvitesQuery.workspaceId, workspaceId);
     assert.strictEqual(loggedActivity.action, "joined_workspace");
   });

@@ -4,6 +4,9 @@ class CommentRepository {
   async create(commentData, session = null) {
     const opts = session ? { session } : {};
     const [comment] = await Comment.create([commentData], opts);
+    if (comment) {
+      await comment.populate("author", "name email profilePicture");
+    }
     return comment;
   }
 

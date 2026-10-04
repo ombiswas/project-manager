@@ -128,7 +128,7 @@ const Profile = () => {
 
   const handleDeleteAccount = () => {
     deleteAccount(
-      { password: deletePassword || undefined },
+      deletePassword.trim() ? { password: deletePassword } : {},
       {
         onSuccess: async () => {
           toast.success("Account deleted successfully");
