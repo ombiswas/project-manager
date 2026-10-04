@@ -7,6 +7,7 @@ import {
   acceptInviteByToken,
   createWorkspace,
   getWorkspaceDetails,
+  getWorkspacePreview,
   getWorkspaceProjects,
   getWorkspaces,
   getWorkspaceStats,
@@ -119,6 +120,14 @@ router.get(
   authMiddleware,
   validateRequest({ query: paginationQuerySchema }),
   getWorkspaces
+);
+
+// Get workspace preview for invitations
+router.get(
+  "/:workspaceId/preview",
+  authMiddleware,
+  validateRequest({ params: z.object({ workspaceId: objectIdSchema }) }),
+  getWorkspacePreview
 );
 
 // Get workspace details

@@ -102,6 +102,15 @@ class WorkspaceRepository {
     );
   }
 
+  async updateMemberRoleByUser(workspaceId, userId, role, session = null) {
+    const opts = session ? { session, new: true } : { new: true };
+    return await Workspace.findOneAndUpdate(
+      { _id: workspaceId, "members.user": userId },
+      { $set: { "members.$.role": role } },
+      opts
+    );
+  }
+
   async transferOwnership(workspaceId, newOwnerId, session = null) {
     const opts = session ? { session, new: true } : { new: true };
     return await Workspace.findByIdAndUpdate(
@@ -148,6 +157,28 @@ class WorkspaceRepository {
   async deleteManyInvites(query, session = null) {
     const opts = session ? { session } : {};
     return await WorkspaceInvite.deleteMany(query, opts);
+  }
+
+  async findWorkspacesByOwner(ownerId) {
+    return await Workspace.find({ owner: ownerId });
+  }
+
+  async pullMemberFromAllWorkspaces(userId, session = null) {
+    const opts = session ? { session } : {};
+    return await Workspace.updateMany(
+      { "members.user": userId },
+      { $pull: { members: { user: userId } } },
+      opts
+    );
+  }
+
+  async deleteManyInvitesByUser(userId, email, session = null) {
+    const opts = session ? { session } : {};
+    const conditions = [{ user: userId }];
+    if (email) {
+      conditions.push({ email: email.toLowerCase().trim() });
+    }
+    return await WorkspaceInvite.deleteMany({ $or: conditions }, opts);
   }
 }
 

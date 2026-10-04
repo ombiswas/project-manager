@@ -93,6 +93,24 @@ class ProjectRepository {
       opts
     );
   }
+
+  async pullMemberFromAllProjects(userId, session = null) {
+    const opts = session ? { session } : {};
+    return await Project.updateMany(
+      { members: userId },
+      { $pull: { members: userId } },
+      opts
+    );
+  }
+
+  async reassignCreator(oldUserId, newUserId, session = null) {
+    const opts = session ? { session } : {};
+    return await Project.updateMany(
+      { createdBy: oldUserId },
+      { createdBy: newUserId },
+      opts
+    );
+  }
 }
 
 export default new ProjectRepository();

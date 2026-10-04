@@ -30,6 +30,13 @@ export const getWorkspaceDetails = asyncHandler(async (req, res) => {
   res.status(200).json(workspace);
 });
 
+export const getWorkspacePreview = asyncHandler(async (req, res) => {
+  const preview = await workspaceService.getWorkspacePreview(
+    req.params.workspaceId
+  );
+  res.status(200).json(preview);
+});
+
 export const getWorkspaceProjects = asyncHandler(async (req, res) => {
   const result = await workspaceService.getWorkspaceProjects(
     req.params.workspaceId,
@@ -133,6 +140,7 @@ export default {
   createWorkspace,
   getWorkspaces,
   getWorkspaceDetails,
+  getWorkspacePreview,
   getWorkspaceProjects,
   getWorkspaceStats,
   updateWorkspace,

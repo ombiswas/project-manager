@@ -183,6 +183,24 @@ class TaskRepository {
   async countByProject(projectId, filter = {}) {
     return await Task.countDocuments({ project: projectId, ...filter });
   }
+
+  async pullUserFromAllTasks(userId, session = null) {
+    const opts = session ? { session } : {};
+    return await Task.updateMany(
+      { $or: [{ assignees: userId }, { watchers: userId }] },
+      { $pull: { assignees: userId, watchers: userId } },
+      opts
+    );
+  }
+
+  async reassignCreator(oldUserId, newUserId, session = null) {
+    const opts = session ? { session } : {};
+    return await Task.updateMany(
+      { createdBy: oldUserId },
+      { createdBy: newUserId },
+      opts
+    );
+  }
 }
 
 export default new TaskRepository();

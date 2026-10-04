@@ -5,6 +5,7 @@ import { validateRequest } from "zod-express-middleware";
 import authenticateUser from "../middleware/auth-middleware.js";
 import {
   changePassword,
+  deleteUserAccount,
   getUserProfile,
   updateUserProfile,
 } from "../controllers/user.controller.js";
@@ -55,5 +56,20 @@ const changePasswordHandler = [
 ];
 router.patch("/change-password", ...changePasswordHandler);
 router.put("/change-password", ...changePasswordHandler);
+
+// Delete account: Supports DELETE /profile and DELETE /account
+const deleteAccountHandler = [
+  authenticateUser,
+  validateRequest({
+    body: z
+      .object({
+        password: z.string().optional(),
+      })
+      .optional(),
+  }),
+  deleteUserAccount,
+];
+router.delete("/profile", ...deleteAccountHandler);
+router.delete("/account", ...deleteAccountHandler);
 
 export default router;

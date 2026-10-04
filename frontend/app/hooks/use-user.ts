@@ -1,4 +1,4 @@
-import { fetchData, patchData } from "@/lib/fetch-util";
+import { deleteData, fetchData, patchData } from "@/lib/fetch-util";
 import type {
   ChangePasswordFormData,
   ProfileFormData,
@@ -34,6 +34,17 @@ export const useUpdateUserProfile = () => {
       patchData<User>("/users/profile", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
+    },
+  });
+};
+
+export const useDeleteAccountMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data?: { password?: string }) =>
+      deleteData<{ message: string }>("/users/profile", data),
+    onSuccess: () => {
+      queryClient.clear();
     },
   });
 };

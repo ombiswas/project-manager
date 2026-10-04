@@ -85,7 +85,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const message =
         customEvent.detail?.message || "Access denied or resource not found";
       toast.error(message);
-      navigate("/");
+      if (!window.location.pathname.startsWith("/workspace-invite")) {
+        navigate("/");
+      }
     };
 
     window.addEventListener("force-logout", handleLogout);

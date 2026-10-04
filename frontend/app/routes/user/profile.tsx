@@ -21,7 +21,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   useChangePassword,
+  useDeleteAccountMutation,
   useUpdateUserProfile,
   useUserProfileQuery,
 } from "@/hooks/use-user";
@@ -29,7 +40,8 @@ import { useAuth } from "@/provider/auth-context";
 import type { User } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader } from "@/components/loader";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -106,6 +118,30 @@ const Profile = () => {
     isPending: isChangingPassword,
     error: passwordError,
   } = useChangePassword();
+
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+
+  const { mutate: deleteAccount, isPending: isDeletingAccount } =
+    useDeleteAccountMutation();
+
+  const handleDeleteAccount = () => {
+    deleteAccount(
+      { password: deletePassword || undefined },
+      {
+        onSuccess: async () => {
+          toast.success("Account deleted successfully");
+          setIsDeleteDialogOpen(false);
+          await logout();
+          navigate("/sign-in");
+        },
+        onError: (err: unknown) => {
+          toast.error(getErrorMessage(err, "Failed to delete account"));
+        },
+      }
+    );
+  };
 
   const handlePasswordChange = (values: ChangePasswordFormData) => {
     changePassword(values, {
@@ -374,6 +410,132 @@ const Profile = () => {
               </Button>
             </form>
           </Form>
+        </CardContent>
+      </Card>
+
+      {/* Danger Zone: Delete Account */}
+      <Card className="rounded-[12px] bg-canvas-card border border-red-500/30 shadow-none">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="caption-mono text-xs text-red-400 font-semibold tracking-wider">
+              DANGER ZONE
+            </span>
+          </div>
+          <CardTitle className="text-base font-normal tracking-tight text-white">
+            Delete Account
+          </CardTitle>
+          <CardDescription className="text-xs text-secondary-text leading-relaxed">
+            Permanently delete your account and all associated data. Workspaces
+            where you are the sole member will be deleted, while multi-member
+            workspaces will safely have ownership transferred. This action is
+            irreversible.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-1">
+          <Dialog
+            open={isDeleteDialogOpen}
+            onOpenChange={(open) => {
+              setIsDeleteDialogOpen(open);
+              if (!open) {
+                setDeletePassword("");
+                setDeleteConfirmationText("");
+              }
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button
+                variant="destructive"
+                className="rounded-full font-mono text-xs bg-red-600/90 hover:bg-red-600 text-white"
+              >
+                <Trash2 className="mr-2 h-3.5 w-3.5" />
+                Delete Account
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md bg-canvas-card border-hairline text-white">
+              <DialogHeader>
+                <DialogTitle className="text-lg text-white">
+                  Delete Account Confirmation
+                </DialogTitle>
+                <DialogDescription className="text-xs text-secondary-text leading-relaxed">
+                  Are you sure you want to permanently delete your account? All
+                  your comments, activity logs, task assignments, and personal
+                  data will be removed without leaving any orphaned records.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 py-2">
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="delete-account-password"
+                    className="text-xs text-primary-text"
+                  >
+                    Password (if set)
+                  </Label>
+                  <Input
+                    id="delete-account-password"
+                    type="password"
+                    placeholder="Enter your current password"
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                    className="rounded-full bg-canvas-card border-hairline focus-visible:border-canvas-mid text-sm h-9"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="delete-account-confirm"
+                    className="text-xs text-primary-text"
+                  >
+                    Type{" "}
+                    <span className="font-mono text-red-400 font-semibold">
+                      DELETE
+                    </span>{" "}
+                    to confirm
+                  </Label>
+                  <Input
+                    id="delete-account-confirm"
+                    type="text"
+                    placeholder="DELETE"
+                    value={deleteConfirmationText}
+                    onChange={(e) => setDeleteConfirmationText(e.target.value)}
+                    className="rounded-full bg-canvas-card border-hairline focus-visible:border-canvas-mid text-sm h-9"
+                  />
+                </div>
+              </div>
+
+              <DialogFooter className="gap-2 sm:gap-0">
+                <DialogClose asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="rounded-full text-xs"
+                    disabled={isDeletingAccount}
+                  >
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="rounded-full font-mono text-xs bg-red-600 hover:bg-red-700 text-white"
+                  disabled={
+                    deleteConfirmationText.trim().toUpperCase() !== "DELETE" ||
+                    isDeletingAccount
+                  }
+                  onClick={handleDeleteAccount}
+                >
+                  {isDeletingAccount ? (
+                    <>
+                      <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    "Permanently Delete"
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </CardContent>
       </Card>
     </div>

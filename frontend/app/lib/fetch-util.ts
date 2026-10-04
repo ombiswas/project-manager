@@ -84,8 +84,8 @@ const patchData = async <T>(url: string, data?: unknown): Promise<T> => {
   return response.data;
 };
 
-const deleteData = async <T>(url: string): Promise<T> => {
-  const response = await api.delete(url);
+const deleteData = async <T>(url: string, data?: unknown): Promise<T> => {
+  const response = await api.delete(url, data ? { data } : undefined);
   return response.data;
 };
 

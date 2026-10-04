@@ -1,8 +1,10 @@
+import jwt from "jsonwebtoken";
 import workspaceRepository from "../repositories/workspace.repository.js";
 import projectRepository from "../repositories/project.repository.js";
 import taskRepository from "../repositories/task.repository.js";
 import permissionService from "../services/permission.service.js";
 import { ForbiddenError, NotFoundError } from "../utils/errors.js";
+import { env } from "../config/env.js";
 
 /**
  * Ensures requesting user is at least a member/owner of the workspace.
@@ -22,6 +24,45 @@ export const checkWorkspaceMember = async (req, res, next) => {
 
     const role = permissionService.resolveUserRole(workspace, req.user._id);
     if (!role) {
+      // For GET requests, check if user has a valid invite token or active invite in DB
+      if (req.method === "GET") {
+        let hasValidInvite = false;
+        if (req.query.tk) {
+          try {
+            const decoded = jwt.verify(req.query.tk, env.JWT_SECRET);
+            if (
+              decoded &&
+              decoded.workspaceId &&
+              decoded.workspaceId.toString() === workspaceId.toString()
+            ) {
+              hasValidInvite = true;
+            }
+          } catch {
+            // Ignore invalid/expired token and check DB
+          }
+        }
+
+        if (!hasValidInvite) {
+          const invite = await workspaceRepository.findInvite({
+            workspaceId,
+            $or: [
+              { user: req.user._id },
+              { email: req.user.email?.toLowerCase().trim() },
+            ],
+            expiresAt: { $gt: new Date() },
+          });
+          if (invite) {
+            hasValidInvite = true;
+          }
+        }
+
+        if (hasValidInvite) {
+          req.workspace = workspace;
+          req.userWorkspaceRole = "invited";
+          return next();
+        }
+      }
+
       throw new ForbiddenError("You no longer have access to this workspace");
     }
 

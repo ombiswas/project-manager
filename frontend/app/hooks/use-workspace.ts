@@ -67,10 +67,18 @@ export const useGetWorkspaceStatsQuery = (workspaceId: string) => {
   });
 };
 
-export const useGetWorkspaceDetailsQuery = (workspaceId: string) => {
+export const useGetWorkspaceDetailsQuery = (
+  workspaceId: string,
+  token?: string | null
+) => {
   return useQuery({
-    queryKey: ["workspace", workspaceId, "details"],
-    queryFn: async () => fetchData<Workspace>(`/workspaces/${workspaceId}`),
+    queryKey: ["workspace", workspaceId, "details", token || ""],
+    queryFn: async () => {
+      const url = token
+        ? `/workspaces/${workspaceId}?tk=${encodeURIComponent(token)}`
+        : `/workspaces/${workspaceId}`;
+      return fetchData<Workspace>(url);
+    },
     enabled: !!workspaceId && workspaceId !== "null",
   });
 };

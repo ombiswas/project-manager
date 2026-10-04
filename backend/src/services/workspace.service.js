@@ -83,6 +83,21 @@ class WorkspaceService {
     return workspace;
   }
 
+  async getWorkspacePreview(workspaceId) {
+    const workspace = await workspaceRepository.findById(workspaceId);
+    if (!workspace) {
+      throw new NotFoundError("Workspace not found");
+    }
+    return {
+      _id: workspace._id,
+      name: workspace.name,
+      description: workspace.description,
+      color: workspace.color,
+      owner: workspace.owner,
+      members: workspace.members,
+    };
+  }
+
   async getWorkspaceProjects(workspaceId, userId, query = {}) {
     const workspace = await workspaceRepository.findById(workspaceId);
     if (!workspace) {
@@ -348,6 +363,27 @@ class WorkspaceService {
     return updated;
   }
 
+  async cascadeDeleteWorkspace(workspaceId, session = null) {
+    const projectIds =
+      await projectRepository.findProjectIdsByWorkspace(workspaceId);
+
+    // Cascading deletion ordered from children to parent to prevent orphaned records
+    if (projectIds.length > 0) {
+      const taskIds = await taskRepository.findTaskIdsByProjects(projectIds);
+      if (taskIds.length > 0) {
+        await commentRepository.deleteManyByTasks(taskIds, session);
+        await activityRepository.deleteManyByResourceIds(taskIds, session);
+        await taskRepository.deleteManyByProjects(projectIds, session);
+      }
+      await activityRepository.deleteManyByResourceIds(projectIds, session);
+      await projectRepository.deleteManyByWorkspace(workspaceId, session);
+    }
+
+    await activityRepository.deleteManyByResourceIds([workspaceId], session);
+    await workspaceRepository.deleteManyInvites({ workspaceId }, session);
+    await workspaceRepository.deleteById(workspaceId, session);
+  }
+
   async deleteWorkspace(workspaceId, userId) {
     const workspace = await workspaceRepository.findById(workspaceId);
     if (!workspace) {
@@ -361,25 +397,7 @@ class WorkspaceService {
     }
 
     return await withTransaction(async (session) => {
-      const projectIds =
-        await projectRepository.findProjectIdsByWorkspace(workspaceId);
-
-      // Cascading deletion ordered from children to parent to prevent orphaned records
-      if (projectIds.length > 0) {
-        const taskIds = await taskRepository.findTaskIdsByProjects(projectIds);
-        if (taskIds.length > 0) {
-          await commentRepository.deleteManyByTasks(taskIds, session);
-          await activityRepository.deleteManyByResourceIds(taskIds, session);
-          await taskRepository.deleteManyByProjects(projectIds, session);
-        }
-        await activityRepository.deleteManyByResourceIds(projectIds, session);
-        await projectRepository.deleteManyByWorkspace(workspaceId, session);
-      }
-
-      await activityRepository.deleteManyByResourceIds([workspaceId], session);
-      await workspaceRepository.deleteManyInvites({ workspaceId }, session);
-      await workspaceRepository.deleteById(workspaceId, session);
-
+      await this.cascadeDeleteWorkspace(workspaceId, session);
       return { message: "Workspace deleted successfully" };
     });
   }
@@ -405,17 +423,13 @@ class WorkspaceService {
     }
 
     const isInvited = await workspaceRepository.findInvite({
-      user: existingUser._id,
-      workspaceId,
+      $or: [
+        { user: existingUser._id, workspaceId },
+        { email: existingUser.email.toLowerCase().trim(), workspaceId },
+      ],
     });
 
-    if (isInvited && isInvited.expiresAt > new Date()) {
-      throw new ConflictError(
-        "An active invitation has already been sent to this user"
-      );
-    }
-
-    if (isInvited && isInvited.expiresAt < new Date()) {
+    if (isInvited) {
       await workspaceRepository.deleteInvite({ _id: isInvited._id });
     }
 
@@ -520,7 +534,11 @@ class WorkspaceService {
     }
 
     const inviteInfo = await workspaceRepository.findInvite({
-      $or: [{ token }, { user: authUser._id, workspaceId }],
+      $or: [
+        { token },
+        { user: authUser._id, workspaceId },
+        { email: authUser.email.toLowerCase().trim(), workspaceId },
+      ],
     });
 
     if (!inviteInfo) {
@@ -540,7 +558,10 @@ class WorkspaceService {
       );
 
       await workspaceRepository.deleteManyInvites(
-        { user: authUser._id, workspaceId },
+        {
+          user: authUser._id,
+          workspaceId,
+        },
         session
       );
       await recordActivity(

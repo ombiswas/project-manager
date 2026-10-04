@@ -29,6 +29,11 @@ class ActivityRepository {
       opts
     );
   }
+
+  async deleteManyByUser(userId, session = null) {
+    const opts = session ? { session } : {};
+    return await ActivityLog.deleteMany({ user: userId }, opts);
+  }
 }
 
 export default new ActivityRepository();

@@ -31,6 +31,11 @@ class CommentRepository {
     const opts = session ? { session } : {};
     return await Comment.deleteMany({ task: taskId }, opts);
   }
+
+  async deleteManyByAuthor(authorId, session = null) {
+    const opts = session ? { session } : {};
+    return await Comment.deleteMany({ author: authorId }, opts);
+  }
 }
 
 export default new CommentRepository();
