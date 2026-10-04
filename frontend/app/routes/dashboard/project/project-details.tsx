@@ -1,5 +1,4 @@
 import { BackButton } from "@/components/back-button";
-import { Loader } from "@/components/loader";
 import { ErrorState } from "@/components/error-state";
 import { CreateTaskDialog } from "@/components/task/create-task-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
