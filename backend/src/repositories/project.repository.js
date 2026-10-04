@@ -61,6 +61,14 @@ class ProjectRepository {
     return projects.map((p) => p._id);
   }
 
+  async findByCreator(userId, session = null) {
+    const query = Project.find({ createdBy: userId });
+    if (session) {
+      query.session(session);
+    }
+    return await query;
+  }
+
   async updateById(id, updateData, session = null) {
     const opts = session ? { session, new: true } : { new: true };
     return await Project.findByIdAndUpdate(id, updateData, opts);

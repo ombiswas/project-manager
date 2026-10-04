@@ -92,12 +92,7 @@ class AuthService {
   }
 
   async _handleUnverifiedLogin(user, email) {
-    const existing = await verificationRepository.findByUserIdAndToken(
-      user._id,
-      {
-        $exists: true,
-      }
-    );
+    const existing = await verificationRepository.findByUserId(user._id);
 
     if (existing && existing.expiresAt > new Date()) {
       throw new BadRequestError(

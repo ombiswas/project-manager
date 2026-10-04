@@ -7,8 +7,6 @@ import commentRepository from "../repositories/comment.repository.js";
 import activityRepository from "../repositories/activity.repository.js";
 import verificationRepository from "../repositories/verification.repository.js";
 import workspaceService from "./workspace.service.js";
-import Project from "../models/project.js";
-import Task from "../models/task.js";
 import { withTransaction } from "../utils/transaction.js";
 import {
   BadRequestError,
@@ -140,16 +138,17 @@ class UserService {
       await projectRepository.pullMemberFromAllProjects(userId, session);
 
       // 4. Reassign any remaining projects created by this user in other workspaces
-      const orphanedProjects = await Project.find({
-        createdBy: userId,
-      }).session(session);
+      const orphanedProjects = await projectRepository.findByCreator(
+        userId,
+        session
+      );
       for (const proj of orphanedProjects) {
         const ws = await workspaceRepository.findById(proj.workspace);
         if (ws && ws.owner) {
-          await Project.findByIdAndUpdate(
+          await projectRepository.updateById(
             proj._id,
             { createdBy: ws.owner },
-            { session }
+            session
           );
         }
       }
@@ -158,26 +157,23 @@ class UserService {
       await taskRepository.pullUserFromAllTasks(userId, session);
 
       // 6. Reassign any remaining tasks created by this user to project creator
-      const orphanedTasks = await Task.find({ createdBy: userId }).session(
+      const orphanedTasks = await taskRepository.findByCreator(
+        userId,
         session
       );
       for (const t of orphanedTasks) {
         const proj = await projectRepository.findById(t.project);
         if (proj && proj.createdBy) {
-          await Task.findByIdAndUpdate(
+          await taskRepository.updateById(
             t._id,
             { createdBy: proj.createdBy },
-            { session }
+            session
           );
         }
       }
 
       // 7. Nullify uploadedBy on task attachments uploaded by this user
-      await Task.updateMany(
-        { "attachments.uploadedBy": userId },
-        { $unset: { "attachments.$[elem].uploadedBy": "" } },
-        { arrayFilters: [{ "elem.uploadedBy": userId }], session }
-      );
+      await taskRepository.nullifyAttachmentUploader(userId, session);
 
       // 8. Delete all comments authored by user
       await commentRepository.deleteManyByAuthor(userId, session);

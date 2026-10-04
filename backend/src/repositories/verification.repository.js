@@ -11,6 +11,10 @@ class VerificationRepository {
     return await Verification.findOne({ userId, token });
   }
 
+  async findByUserId(userId) {
+    return await Verification.findOne({ userId });
+  }
+
   async deleteByUserId(userId, session = null) {
     const opts = session ? { session } : {};
     return await Verification.deleteMany({ userId }, opts);

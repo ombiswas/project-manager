@@ -223,6 +223,25 @@ class TaskRepository {
       opts
     );
   }
+
+  async findByCreator(userId, session = null) {
+    const query = Task.find({ createdBy: userId });
+    if (session) {
+      query.session(session);
+    }
+    return await query;
+  }
+
+  async nullifyAttachmentUploader(userId, session = null) {
+    const opts = session
+      ? { arrayFilters: [{ "elem.uploadedBy": userId }], session }
+      : { arrayFilters: [{ "elem.uploadedBy": userId }] };
+    return await Task.updateMany(
+      { "attachments.uploadedBy": userId },
+      { $unset: { "attachments.$[elem].uploadedBy": "" } },
+      opts
+    );
+  }
 }
 
 export default new TaskRepository();

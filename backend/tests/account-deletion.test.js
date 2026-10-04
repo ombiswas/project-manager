@@ -9,8 +9,6 @@ import taskRepository from "../src/repositories/task.repository.js";
 import commentRepository from "../src/repositories/comment.repository.js";
 import activityRepository from "../src/repositories/activity.repository.js";
 import verificationRepository from "../src/repositories/verification.repository.js";
-import Project from "../src/models/project.js";
-import Task from "../src/models/task.js";
 import bcrypt from "bcrypt";
 import { ForbiddenError, NotFoundError } from "../src/utils/errors.js";
 
@@ -89,9 +87,9 @@ describe("Account Deletion & Zero-Orphan Cleanup", () => {
     mock.method(verificationRepository, "deleteByUserId", async () => true);
     mock.method(userRepository, "deleteById", async () => true);
 
-    mock.method(Project, "find", () => ({ session: async () => [] }));
-    mock.method(Task, "find", () => ({ session: async () => [] }));
-    mock.method(Task, "updateMany", async () => true);
+    mock.method(projectRepository, "findByCreator", async () => []);
+    mock.method(taskRepository, "findByCreator", async () => []);
+    mock.method(taskRepository, "nullifyAttachmentUploader", async () => true);
 
     const result = await userService.deleteAccount(userId, {
       password: "correct",
@@ -169,9 +167,9 @@ describe("Account Deletion & Zero-Orphan Cleanup", () => {
     mock.method(verificationRepository, "deleteByUserId", async () => true);
     mock.method(userRepository, "deleteById", async () => true);
 
-    mock.method(Project, "find", () => ({ session: async () => [] }));
-    mock.method(Task, "find", () => ({ session: async () => [] }));
-    mock.method(Task, "updateMany", async () => true);
+    mock.method(projectRepository, "findByCreator", async () => []);
+    mock.method(taskRepository, "findByCreator", async () => []);
+    mock.method(taskRepository, "nullifyAttachmentUploader", async () => true);
 
     const result = await userService.deleteAccount(userId);
 
