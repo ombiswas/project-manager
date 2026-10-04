@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 interface AuthContextType {
   user: User | null;
+  token?: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (data: AuthResponse) => Promise<void>;
@@ -14,58 +15,95 @@ interface AuthContextType {
   updateUser: (user: User) => void;
 }
 
+interface StoredAuth {
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+}
+
+const getStoredAuth = (): StoredAuth => {
+  if (typeof window === "undefined") {
+    return { user: null, token: null, isAuthenticated: false };
+  }
+
+  try {
+    const storedToken = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+
+    if (!storedToken || !storedUser) {
+      return { user: null, token: null, isAuthenticated: false };
+    }
+
+    const parsedUser = JSON.parse(storedUser);
+    if (!parsedUser || typeof parsedUser !== "object" || !parsedUser._id) {
+      throw new Error("Invalid user data in storage");
+    }
+
+    return {
+      user: parsedUser,
+      token: storedToken,
+      isAuthenticated: true,
+    };
+  } catch {
+    // Corrupt JSON or invalid data: clear stored keys and fall back to logged out
+    try {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+    } catch {
+      // Ignore storage errors
+    }
+    return { user: null, token: null, isAuthenticated: false };
+  }
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  // Synchronous lazy initializer reading localStorage on initial render
+  const [initialAuth] = useState<StoredAuth>(() => getStoredAuth());
+  const [user, setUser] = useState<User | null>(initialAuth.user);
+  const [token, setToken] = useState<string | null>(initialAuth.token);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
+    initialAuth.isAuthenticated
+  );
+  // isLoading is false immediately because storage was read synchronously
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const navigate = useNavigate();
   const currentPath = useLocation().pathname;
-  const isPublicRoute = publicRoutes.includes(currentPath);
+  const isPublicRoute = publicRoutes.some((route) =>
+    route === "*" ? false : currentPath.startsWith(route) || currentPath === route
+  );
 
   const updateUser = (updatedUser: User) => {
     if (!updatedUser || !updatedUser._id) {
       return;
     }
     setUser(updatedUser);
-    localStorage.setItem("user", JSON.stringify(updatedUser));
+    try {
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+    } catch {
+      // Ignore storage errors
+    }
   };
 
-  // check if user is authenticated
+  // Route protection redirect when not authenticated
   useEffect(() => {
-    const checkAuth = async () => {
-      setIsLoading(true);
-      try {
-        const storedUser = localStorage.getItem("user");
-
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
-          setIsAuthenticated(true);
-        } else {
-          setUser(null);
-          setIsAuthenticated(false);
-          if (!isPublicRoute) {
-            navigate("/sign-in");
-          }
-        }
-      } catch {
-        setUser(null);
-        setIsAuthenticated(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, []);
+    if (!isAuthenticated && !isPublicRoute) {
+      navigate("/sign-in");
+    }
+  }, [isAuthenticated, isPublicRoute, navigate]);
 
   const logout = async () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    try {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+    } catch {
+      // Ignore storage errors
+    }
 
     setUser(null);
+    setToken(null);
     setIsAuthenticated(false);
 
     queryClient.clear();
@@ -74,7 +112,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const handleLogout = () => {
       logout();
-      navigate("/sign-in");
+      const pathname = window.location.pathname;
+      const isAuthPage = [
+        "/sign-in",
+        "/sign-up",
+        "/forgot-password",
+        "/reset-password",
+        "/verify-email",
+      ].some((prefix) => pathname.startsWith(prefix));
+
+      if (!isAuthPage) {
+        navigate("/sign-in");
+      }
     };
 
     const handleAccessDenied = (event: Event) => {
@@ -97,18 +146,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       window.removeEventListener("force-logout", handleLogout);
       window.removeEventListener("access-denied", handleAccessDenied);
     };
-  }, []);
+  }, [navigate]);
 
   const login = async (data: AuthResponse) => {
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user));
+    try {
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+    } catch {
+      // Ignore storage errors
+    }
 
     setUser(data.user);
+    setToken(data.token);
     setIsAuthenticated(true);
+    setIsLoading(false);
   };
 
   const values = {
     user,
+    token,
     isAuthenticated,
     isLoading,
     login,

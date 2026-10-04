@@ -1,4 +1,5 @@
 import axios from "axios";
+import { queryClient } from "@/provider/react-query-provider";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api-v1";
 
@@ -10,9 +11,15 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token ?? ""}`;
+  if (typeof window !== "undefined") {
+    try {
+      const token = localStorage.getItem("token");
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch {
+      // Ignore storage errors
+    }
   }
   return config;
 });
@@ -24,23 +31,36 @@ api.interceptors.response.use(
     if (error.response) {
       if (error.response.status === 401) {
         // Clear token and user from localStorage globally
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+          } catch {
+            // Ignore storage errors
+          }
 
-        // Dispatch custom event to notify AuthProvider
-        window.dispatchEvent(new Event("force-logout"));
+          // Clear TanStack Query cache on 401
+          try {
+            queryClient?.clear();
+          } catch {
+            // Ignore if queryClient is not yet ready
+          }
 
-        // Redirect to login if currently on a protected route
-        const pathname = window.location.pathname;
-        const publicPrefixes = [
-          "/sign-in",
-          "/sign-up",
-          "/forgot-password",
-          "/reset-password",
-          "/verify-email",
-        ];
-        if (!publicPrefixes.some((prefix) => pathname.startsWith(prefix))) {
-          window.location.href = "/sign-in";
+          // Dispatch custom event to notify AuthProvider
+          window.dispatchEvent(new Event("force-logout"));
+
+          // Redirect to login if currently on a protected route (avoid loops on auth pages)
+          const pathname = window.location.pathname;
+          const authPrefixes = [
+            "/sign-in",
+            "/sign-up",
+            "/forgot-password",
+            "/reset-password",
+            "/verify-email",
+          ];
+          if (!authPrefixes.some((prefix) => pathname.startsWith(prefix))) {
+            window.location.href = "/sign-in";
+          }
         }
       } else if (
         error.response.status === 403 ||
