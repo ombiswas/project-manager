@@ -1,6 +1,6 @@
 import type { CreateTaskFormData } from "@/components/task/create-task-dialog";
 import { fetchData, postData, patchData, deleteData } from "@/lib/fetch-util";
-import { queryKeys } from "@/lib/query-keys";
+import { queryKeys, DETAIL_POLL_MS } from "@/lib/query-keys";
 import type {
   Task,
   TaskPriority,
@@ -51,7 +51,8 @@ export const useTaskByIdQuery = (taskId: string) => {
     queryKey: queryKeys.tasks.byId(taskId),
     queryFn: () => fetchData<TaskDetailResponse>(`/tasks/${taskId}`),
     enabled: !!taskId && taskId !== "null",
-    refetchInterval: 5000, // Poll every 5 seconds for real-time updates
+    refetchInterval: DETAIL_POLL_MS,
+    refetchIntervalInBackground: false,
   });
 };
 
@@ -316,7 +317,6 @@ export const useGetCommentsByTaskIdQuery = (taskId: string) => {
     queryKey: queryKeys.tasks.comments(taskId),
     queryFn: () => fetchData<Comment[]>(`/tasks/${taskId}/comments`),
     enabled: !!taskId && taskId !== "null",
-    refetchInterval: 5000, // Poll every 5 seconds for real-time updates
   });
 };
 

@@ -32,3 +32,6 @@ export const queryKeys = {
 } as const;
 
 export type QueryKeys = typeof queryKeys;
+
+/** Polling interval for detail views (tasks, projects) while tab is visible */
+export const DETAIL_POLL_MS = 30_000;

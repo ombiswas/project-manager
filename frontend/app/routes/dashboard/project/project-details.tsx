@@ -115,8 +115,8 @@ const ProjectDetails = () => {
   // Viewers have strictly read-only access and cannot add or edit tasks
   const isViewer = currentUserWorkspaceRole === "viewer";
 
-  let canDelete = isOwnerOrAdmin;
-  let canUpdate = isOwnerOrAdmin;
+  const canDelete = isOwnerOrAdmin;
+  const canUpdate = isOwnerOrAdmin;
 
   const canManage = canUpdate || canDelete;
   // Non-viewers who are admins, owners, project creator, or project members can add/edit tasks

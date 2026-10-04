@@ -53,7 +53,6 @@ export const useGetWorkspacesQuery = () => {
   return useQuery({
     queryKey: queryKeys.workspaces.all,
     queryFn: async () => fetchData<Workspace[]>("/workspaces"),
-    refetchInterval: 5000, // Poll every 5 seconds for real-time updates
   });
 };
 
@@ -65,7 +64,6 @@ export const useGetWorkspaceQuery = (workspaceId: string) => {
         `/workspaces/${workspaceId}/projects`
       ),
     enabled: !!workspaceId && workspaceId !== "null",
-    refetchInterval: 5000, // Poll every 5 seconds for real-time updates
   });
 };
 

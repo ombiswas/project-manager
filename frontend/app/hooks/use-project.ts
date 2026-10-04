@@ -1,6 +1,6 @@
 import type { CreateProjectFormData } from "@/components/project/create-project";
 import { fetchData, postData, patchData, deleteData } from "@/lib/fetch-util";
-import { queryKeys } from "@/lib/query-keys";
+import { queryKeys, DETAIL_POLL_MS } from "@/lib/query-keys";
 import type { Project, ProjectTasksResponse } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -50,7 +50,8 @@ export const UseProjectQuery = (projectId: string) => {
     queryFn: () =>
       fetchData<ProjectTasksResponse>(`/projects/${projectId}/tasks`),
     enabled: !!projectId && projectId !== "null",
-    refetchInterval: 5000, // Poll every 5 seconds for real-time updates
+    refetchInterval: DETAIL_POLL_MS,
+    refetchIntervalInBackground: false,
   });
 };
 
