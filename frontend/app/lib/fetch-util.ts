@@ -1,7 +1,11 @@
 import axios from "axios";
 import { queryClient } from "@/provider/react-query-provider";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api-v1";
+const rawBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api-v1";
+const cleanBaseUrl = rawBaseUrl.replace(/\/+$/, "");
+const BASE_URL = cleanBaseUrl.endsWith("/api-v1")
+  ? cleanBaseUrl
+  : `${cleanBaseUrl}/api-v1`;
 
 const api = axios.create({
   baseURL: BASE_URL,
