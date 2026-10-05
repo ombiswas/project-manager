@@ -25,6 +25,7 @@ TaskHub is a modern, high-performance, full-stack collaborative project manageme
   - [Prerequisites](#prerequisites)
   - [Backend Setup](#backend-setup)
   - [Frontend Setup](#frontend-setup)
+  - [Docker & Container Setup](#docker--container-setup)
 - [Running Tests & Quality Assurance](#running-tests--quality-assurance)
 - [Production Deployment](#production-deployment)
   - [Deploying Backend to Render](#deploying-backend-to-render)
@@ -186,8 +187,11 @@ TaskHub implements a two-tier permission system: **Workspace Roles** and **Proje
 
 ```text
 project-manager/
+├── docker-compose.yml            # Multi-container orchestration (MongoDB, backend, frontend)
 ├── README.md                     # Project documentation
 ├── backend/                      # Node.js Express REST API
+│   ├── Dockerfile                # Production multi-stage Docker container build
+│   ├── .dockerignore             # Docker build context exclusions
 │   ├── index.js                  # Application entry point & server setup
 │   ├── package.json              # Backend dependencies and scripts
 │   ├── src/
@@ -201,6 +205,9 @@ project-manager/
 │   │   └── utils/                # Logger (Winston), email templates, token generators
 │   └── tests/                    # Integration & unit test suites (73 tests)
 └── frontend/                     # React 19 Single Page Application
+    ├── Dockerfile                # Multi-stage build with Nginx Alpine static serving
+    ├── nginx.conf                # Nginx SPA reverse-proxy & routing fallback
+    ├── .dockerignore             # Docker build context exclusions
     ├── package.json              # Frontend dependencies and scripts
     ├── react-router.config.ts    # React Router v7 configuration (SPA mode)
     ├── vite.config.ts            # Vite build setup with chunk splitting
@@ -322,6 +329,59 @@ Authorization: Bearer <your_jwt_token>
    npm run dev
    ```
    The application will be accessible at `http://localhost:5173`.
+
+---
+
+### Docker & Container Setup
+
+You can run the full TaskHub stack (MongoDB, Express API, and Nginx-powered React SPA) locally or in containerized environments using Docker:
+
+#### 1. Full Stack via Docker Compose (Recommended)
+
+From the project root:
+
+```bash
+# Build and run MongoDB, backend, and frontend
+docker compose up --build
+```
+
+- **Frontend**: `http://localhost:3000`
+- **Backend API**: `http://localhost:5000/api-v1`
+- **MongoDB**: `localhost:27017`
+
+To shut down the stack:
+```bash
+docker compose down
+```
+
+#### 2. Standalone Container Builds
+
+##### Backend Container:
+```bash
+# Build the backend image
+docker build -t taskhub-backend ./backend
+
+# Run the container
+docker run -d -p 5000:5000 \
+  -e MONGODB_URI="mongodb://host.docker.internal:27017/project-manager" \
+  -e JWT_SECRET="your_secret_key_at_least_32_characters" \
+  -e FRONTEND_URL="http://localhost:3000,http://localhost:5173" \
+  -e SMTP_HOST="smtp.gmail.com" \
+  -e SMTP_PORT="587" \
+  -e SMTP_USER="your_email@gmail.com" \
+  -e SMTP_PASS="your_password" \
+  -e FROM_EMAIL="your_email@gmail.com" \
+  --name taskhub-backend taskhub-backend
+```
+
+##### Frontend Container:
+```bash
+# Build the frontend image (injects your API endpoint at build time)
+docker build -t taskhub-frontend --build-arg VITE_API_URL=http://localhost:5000/api-v1 ./frontend
+
+# Run frontend served by Nginx
+docker run -d -p 3000:80 --name taskhub-frontend taskhub-frontend
+```
 
 ---
 
