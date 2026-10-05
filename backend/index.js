@@ -30,8 +30,15 @@ app.use(
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
       const normalizedOrigin = origin.replace(/\/$/, "");
+      const isVercelOrigin =
+        /^https:\/\/[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\.vercel\.app$/.test(
+          normalizedOrigin
+        );
+
       if (
         allowedOrigins.includes(normalizedOrigin) ||
+        allowedOrigins.includes("*") ||
+        isVercelOrigin ||
         (env.NODE_ENV !== "production" &&
           normalizedOrigin.startsWith("http://localhost"))
       ) {
