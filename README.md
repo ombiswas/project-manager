@@ -186,7 +186,6 @@ TaskHub implements a two-tier permission system: **Workspace Roles** and **Proje
 
 ```text
 project-manager/
-├── render.yaml                   # Render Blueprint specification for backend deployment
 ├── README.md                     # Project documentation
 ├── backend/                      # Node.js Express REST API
 │   ├── index.js                  # Application entry point & server setup
@@ -369,29 +368,24 @@ npm run build
 
 ### Deploying Backend to Render
 
-1. **Option A — 1-Click Blueprint (Recommended)**:
-   - Log in to your [Render Dashboard](https://dashboard.render.com/).
-   - Click **New +** -> **Blueprint**.
-   - Select your repository. Render will automatically detect [`render.yaml`](./render.yaml).
-   - Fill in your `MONGODB_URI`, `FRONTEND_URL`, and SMTP credentials.
-
-2. **Option B — Manual Web Service Setup**:
-   - In Render, click **New +** -> **Web Service** and connect your repository.
-   - Configure the service settings:
-     - **Root Directory**: `backend` *(Required)*
-     - **Runtime**: `Node`
-     - **Build Command**: `npm install`
-     - **Start Command**: `npm start`
-     - **Plan**: `Free`
-     - **Health Check Path**: `/`
-   - Add environment variables in the Render dashboard:
-     - `NODE_ENV`: `production`
-     - `PORT`: `10000` (Render default)
-     - `MONGODB_URI`: Your MongoDB Atlas URI
-     - `JWT_SECRET`: Random 32+ character string
-     - `FRONTEND_URL`: `https://<your-app>.vercel.app,http://localhost:5173`
-     - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `FROM_EMAIL`: Your email credentials.
-   - Click **Deploy Web Service** and copy your live URL: `https://<your-backend>.onrender.com`.
+1. Log in to your [Render Dashboard](https://dashboard.render.com/).
+2. Click **New +** -> **Web Service** and connect your Git repository.
+3. Configure the service settings:
+   - **Name**: `project-manager-api` (or any custom name)
+   - **Root Directory**: `backend` *(Required)*
+   - **Runtime**: `Node`
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+   - **Plan**: `Free`
+   - **Health Check Path**: `/`
+4. Add the following **Environment Variables** in the Render dashboard:
+   - `NODE_ENV`: `production`
+   - `PORT`: `10000` (Render default)
+   - `MONGODB_URI`: Your MongoDB Atlas connection string
+   - `JWT_SECRET`: A secure random string (at least 32 characters)
+   - `FRONTEND_URL`: `https://<your-app>.vercel.app,http://localhost:5173`
+   - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `FROM_EMAIL`: Your SMTP email credentials
+5. Click **Deploy Web Service** and copy your live URL: `https://<your-backend>.onrender.com`.
 
 ---
 
