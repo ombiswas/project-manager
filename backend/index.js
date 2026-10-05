@@ -19,10 +19,26 @@ const app = express();
 // Security HTTP headers
 app.use(helmet());
 
-// CORS configuration driven by FRONTEND_URL
+// CORS configuration supporting comma-separated origins and trailing slash normalization
+const allowedOrigins = (env.FRONTEND_URL || "")
+  .split(",")
+  .map((origin) => origin.trim().replace(/\/$/, ""))
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: env.FRONTEND_URL,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const normalizedOrigin = origin.replace(/\/$/, "");
+      if (
+        allowedOrigins.includes(normalizedOrigin) ||
+        (env.NODE_ENV !== "production" &&
+          normalizedOrigin.startsWith("http://localhost"))
+      ) {
+        return callback(null, true);
+      }
+      return callback(new Error(`Origin ${origin} not allowed by CORS`));
+    },
     methods: ["GET", "POST", "DELETE", "PUT", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
