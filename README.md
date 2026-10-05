@@ -1,261 +1,418 @@
-# TaskHub — Project Manager
+# TaskHub — Collaborative Project & Workspace Manager
 
-A modern, full-stack collaborative project management platform designed for teams, workspaces, and task tracking. TaskHub provides workspace organization, granular role-based permissions, customizable project workflows, task assignment, subtasks, activity audits, and real-time dashboard analytics.
+[![Node.js](https://img.shields.io/badge/Node.js-v20+-68a063?style=flat-square&logo=node.js)](https://nodejs.org/)
+[![React](https://img.shields.io/badge/React-19.2-61dafb?style=flat-square&logo=react)](https://react.dev/)
+[![React Router](https://img.shields.io/badge/React_Router-v7-f44250?style=flat-square&logo=react-router)](https://reactrouter.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-06b6d4?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
+[![TanStack Query](https://img.shields.io/badge/TanStack_Query-v5-ff4154?style=flat-square&logo=react-query)](https://tanstack.com/query)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose_9-47a248?style=flat-square&logo=mongodb)](https://www.mongodb.com/)
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg?style=flat-square)](https://opensource.org/licenses/ISC)
+
+TaskHub is a modern, high-performance, full-stack collaborative project management platform designed for teams, agencies, and cross-functional organizations. It provides multi-tenant workspace isolation, granular role-based access control (RBAC), project privacy barriers, interactive task boards and lists, threaded discussions, subtasks, audit trails, and data visualization dashboards.
 
 ---
 
-## Architecture Diagram
+## Table of Contents
+
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [Architecture](#architecture)
+- [Role-Based Access Control (RBAC)](#role-based-access-control-rbac)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [API Reference](#api-reference)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Backend Setup](#backend-setup)
+  - [Frontend Setup](#frontend-setup)
+- [Running Tests & Quality Assurance](#running-tests--quality-assurance)
+- [Production Deployment](#production-deployment)
+  - [Deploying Backend to Render](#deploying-backend-to-render)
+  - [Deploying Frontend to Vercel](#deploying-frontend-to-vercel)
+- [License](#license)
+
+---
+
+## Overview
+
+TaskHub was built to address the challenges of team collaboration, task visibility, and workspace organization without unnecessary complexity. It features a responsive dark-mode interface built on React 19, paired with a resilient, layered Node.js REST API.
+
+Key design principles:
+- **Clean Layered Architecture**: Strict separation of concerns using the **Controller-Service-Repository** pattern. Services orchestrate business logic; repositories handle data queries; controllers handle HTTP requests and responses.
+- **Strict Data Privacy**: Granular project-level and workspace-level permission gates ensure users only read and mutate resources they are authorized to access.
+- **Unidirectional State Flow**: The browser URL acts as the single source of truth for all filters, sorting, and search states with debounced input, clean history management, and zero re-render loops.
+- **Smooth User Experience**: Zero layout-shift skeleton loading, optimistic cache updates via TanStack Query, and instant workspace context switching.
+
+---
+
+## Key Features
+
+- **Workspaces & Collaboration**:
+  - Multi-tenant workspace isolation with customized workspace branding (colors, names).
+  - Secure tokenized email invitations with JWT expiration and acceptance workflows.
+  - Workspace role management (`Owner`, `Admin`, `Member`, `Viewer`) and ownership transfer.
+- **Project Tracking & Privacy**:
+  - Projects scoped to workspaces with configurable timelines, priorities, statuses, and tags.
+  - Explicit project membership: workspace owners and admins maintain administrative oversight, while regular members only see projects they belong to or created.
+- **Task Management**:
+  - Create and manage tasks with statuses (`To Do`, `In Progress`, `Done`), priorities (`Low`, `Medium`, `High`), due dates, assignees, and watchers.
+  - Switch between interactive **List View** and visual **Board/Grid View**.
+  - URL-synchronized search with 300ms debounce, status filtering, and chronological sorting.
+- **Subtasks & Comments**:
+  - Break tasks into actionable subtasks with toggleable completion states.
+  - Threaded discussion comments with relative timestamps and author avatars.
+- **Audit Trails & Activity Logs**:
+  - Automatic audit logging for every major action (project creation, task updates, member invitations, description edits, attachment uploads).
+- **Interactive Dashboards**:
+  - Real-time productivity metrics and charts powered by Recharts (Task Trends, Project Status breakdown, Priority distribution, Workspace completion volume).
+- **Secure Authentication**:
+  - Email and password authentication with verification tokens via Nodemailer.
+  - Secure password reset flow, bcrypt hashing, and JWT authorization headers.
+
+---
+
+## Architecture
+
+TaskHub follows a modern, decoupled client-server architecture:
 
 ```mermaid
 flowchart TD
-    subgraph Client ["Frontend (React 19 + React Router v7)"]
+    subgraph Client ["Frontend (React 19 + React Router v7 SPA)"]
         UI["UI Layer (Radix UI + Tailwind CSS v4)"]
-        Forms["React Hook Form + Zod"]
-        RQ["TanStack React Query Cache"]
-        AxiosClient["Axios HTTP Client"]
+        Forms["React Hook Form + Zod Validation"]
+        State["URL State (useSearchParams Single Source of Truth)"]
+        RQ["TanStack React Query Cache (Query Key Factory)"]
+        AxiosClient["Axios HTTP Client (Bearer Auth Interceptor)"]
+        
         UI --> Forms
+        UI --> State
+        State --> RQ
         Forms --> RQ
         RQ --> AxiosClient
     end
 
     subgraph Server ["Backend (Node.js ESM + Express)"]
         Router["Express API Router (/api-v1)"]
-        SecurityMW["Helmet (Security Headers)"]
-        RateLimitMW["Express Rate Limit (Global & Auth Limiters)"]
-        AuthMW["Auth Middleware (JWT Verify)"]
-        PermMW["Permission Middleware (Role Guard)"]
+        SecurityMW["Helmet + CORS (Multi-Origin Normalization)"]
+        RateLimitMW["Express Rate Limiter"]
+        AuthMW["JWT Authentication Middleware"]
+        PermMW["Permission Service (RBAC & Project Privacy)"]
         
-        subgraph Controllers ["Controllers (MVC)"]
-            AuthCtrl["Auth Controller"]
-            UserCtrl["User Controller"]
-            WorkspaceCtrl["Workspace Controller"]
-            ProjectCtrl["Project Controller"]
-            TaskCtrl["Task Controller"]
+        subgraph Layers ["Layered Architecture"]
+            Controllers["Controllers (HTTP Request/Response)"]
+            Services["Services (Business Logic & Authorization)"]
+            Repositories["Repositories (Mongoose Data Access)"]
         end
-
+        
         Router --> SecurityMW
         SecurityMW --> RateLimitMW
         RateLimitMW --> AuthMW
         AuthMW --> PermMW
         PermMW --> Controllers
+        Controllers --> Services
+        Services --> Repositories
     end
 
-    subgraph Database ["Data Tier"]
-        Mongo[("MongoDB Database")]
+    subgraph DataTier ["Data Tier"]
         MongooseODM["Mongoose ODM Models"]
-        Controllers --> MongooseODM
+        Mongo[("MongoDB Database / Atlas")]
+        Repositories --> MongooseODM
         MongooseODM --> Mongo
     end
 
-    subgraph External ["External Services (Free Tier)"]
-        SMTPService["Nodemailer (Gmail SMTP / Free SMTP)"]
+    subgraph ExternalServices ["External Services"]
+        SMTPService["SMTP Server (Nodemailer - Verification & Invites)"]
     end
 
-    AxiosClient -->|"REST API Requests (JSON / Bearer Token)"| Router
-    AuthCtrl -.->|"Send Emails (Verification / Password Reset)"| SMTPService
+    AxiosClient -->|"REST API (JSON / Bearer Token)"| Router
+    Services -.->|"Send Emails"| SMTPService
 ```
+
+### Architecture Highlights
+
+1. **Frontend Architecture**:
+   - **React 19 & React Router v7** in SPA mode (`ssr: false`).
+   - **TanStack Query (v5)** with centralized query key factories (`queryKeys.*`) for predictable cache invalidation and background refetching.
+   - **URL as Single Source of Truth**: Search query, sort order, and status filters are derived directly from `useSearchParams`, supporting browser history (Back/Forward) and page reload state retention without re-render ping-pong loops.
+   - **Tailwind CSS v4 & Radix UI**: Fully custom accessible component system with zero third-party UI library bloat.
+
+2. **Backend Architecture**:
+   - **Layered Service-Repository Pattern**: Services never access MongoDB models directly; all database operations go through dedicated repositories (`projectRepository`, `taskRepository`, `workspaceRepository`, `userRepository`, `verificationRepository`).
+   - **Transactional Integrity**: Mongoose sessions are passed across repositories during multi-document operations (e.g. account deletion cascading across workspaces, projects, tasks, and invitations).
+   - **Permission Boundary**: Centralized `PermissionService` enforces workspace role hierarchies and project privacy boundaries.
 
 ---
 
-## Features
+## Role-Based Access Control (RBAC)
 
-- **Workspaces & Collaboration**: Create workspaces, invite teammates via email tokens or invite links, and assign workspace roles (`Admin`, `Member`, `Viewer`).
-- **Project Tracking**: Organize work into projects with dates, statuses, and assigned project members.
-- **Task Management**: Create tasks with priorities (`Low`, `Medium`, `High`), statuses (`To Do`, `In Progress`, `Review`, `Done`), assignees, watchers, and due dates.
-- **Subtasks & Comments**: Break complex tasks into subtasks and engage in threaded task-level discussions.
-- **Activity Logs**: Automatic audit trail for task creation, status updates, priority adjustments, description edits, and member assignments.
-- **Dashboard & Analytics**: Real-time project health statistics and progress charts using Recharts.
-- **Secure Authentication**: Email-based signup with verification tokens, password reset flows, bcrypt password hashing, and JWT session handling.
+TaskHub implements a two-tier permission system: **Workspace Roles** and **Project Membership**.
+
+| Permission / Action | Workspace Owner | Workspace Admin | Project Member | Workspace Viewer |
+| :--- | :---: | :---: | :---: | :---: |
+| **Workspace Settings & Deletion** | Yes | No | No | No |
+| **Manage Workspace Members & Invites** | Yes | Yes | No | No |
+| **Create Projects & Tasks** | Yes | Yes | Yes | No |
+| **View Any Workspace Project** | Yes | Yes | Only if assigned | No |
+| **View Project Tasks, Comments, Activity** | Yes | Yes | Only if in project | Only if in project (read-only) |
+| **Edit / Delete Projects** | Yes | Yes | No | No |
+| **Manage Tasks (Create, Edit, Delete)** | Yes | Yes | Yes | No |
+| **Add Comments & Toggle Subtasks** | Yes | Yes | Yes | No |
 
 ---
 
 ## Tech Stack
 
-The technology stack is extracted directly from project dependencies:
+### Frontend
+- **Framework**: React 19, React Router v7 (SPA Mode)
+- **State & Data Fetching**: TanStack React Query v5, Axios
+- **Styling**: Tailwind CSS v4, Radix UI Primitives, Lucide Icons, tw-animate-css
+- **Forms & Validation**: React Hook Form, Zod
+- **Visualizations**: Recharts
+- **Testing & Tools**: Vitest, TypeScript 5.4, Vite 7, ESLint 9
 
-### Backend (`backend/package.json`)
-- **Runtime & Architecture**: Node.js (ESM, `"type": "module"`)
-- **Framework**: Express (`^4.22.1`)
-- **Database & ODM**: MongoDB (`^7.1.0`), Mongoose (`^9.1.5`)
-- **Authentication & Security**:
-  - `bcrypt` (`^6.0.0`)
-  - `jsonwebtoken` (`^9.0.3`)
-  - `cors` (`^2.8.6`)
-  - `helmet` (`^8.0.0`)
-  - `express-rate-limit` (`^7.5.0`)
-- **Validation**:
-  - `zod` (`^3.25.76`)
-  - `zod-express-middleware` (`^1.4.0`)
-- **Email Service**: `nodemailer` (`^6.10.0`) via free SMTP (Gmail App Password / Resend)
-- **Utilities & Logging**: `winston` (`^3.17.0`), `morgan` (`^1.10.1`), `dotenv` (`^17.2.3`)
-- **Development**: `nodemon` (`^3.1.11`)
-
-### Frontend (`frontend/package.json`)
-- **Core Framework**: React (`^19.2.4`), React DOM (`^19.2.4`)
-- **Routing & Framework Engine**:
-  - `react-router` (`7.12.0`)
-  - `@react-router/node` (`7.12.0`)
-  - `@react-router/serve` (`7.12.0`)
-  - `@react-router/dev` (`7.12.0`)
-- **Build System**: Vite (`^7.1.7`), TypeScript (`5.4`), `vite-tsconfig-paths` (`^5.1.4`)
-- **Styling & Design System**:
-  - `tailwindcss` (`^4.1.13`)
-  - `@tailwindcss/vite` (`^4.1.13`)
-  - `tw-animate-css` (`^1.4.0`)
-  - `tailwind-merge` (`^3.4.0`)
-  - `clsx` (`^2.1.1`)
-  - `class-variance-authority` (`^0.7.1`)
-- **UI Components & Icons**:
-  - `radix-ui` (`^1.4.3`)
-  - `@radix-ui/react-avatar` (`^1.1.11`)
-  - `@radix-ui/react-label` (`^2.1.8`)
-  - `@radix-ui/react-slot` (`^1.2.4`)
-  - `lucide-react` (`^1.8.0`)
-  - `react-day-picker` (`^9.14.0`)
-- **Data Fetching & State**: `@tanstack/react-query` (`^5.90.21`), `axios` (`^1.13.5`)
-- **Forms & Validation**: `react-hook-form` (`^7.71.1`), `@hookform/resolvers` (`^5.2.2`), `zod` (`^4.3.6`)
-- **Data Visualization**: `recharts` (`^3.8.0`)
-- **Notifications**: `sonner` (`^2.0.7`), `sonne` (`^0.0.0`)
-- **Utilities**: `date-fns` (`^4.1.0`), `isbot` (`^5.1.31`)
+### Backend
+- **Runtime**: Node.js v20+ (ES Modules)
+- **Framework**: Express 4
+- **Database**: MongoDB with Mongoose 9
+- **Security**: Helmet, CORS, Express Rate Limit, bcrypt, JSON Web Tokens (JWT)
+- **Validation**: Zod, zod-express-middleware
+- **Email Delivery**: Nodemailer (SMTP)
+- **Logging & Monitoring**: Winston, Morgan
+- **Testing**: Node.js Native Test Runner (`node:test`, `node:assert`)
 
 ---
 
-## Folder Structure
+## Project Structure
 
-```
+```text
 project-manager/
-├── .gitignore                    # Root repository gitignore
+├── render.yaml                   # Render Blueprint specification for backend deployment
 ├── README.md                     # Project documentation
-├── backend/                      # Express.js REST API
-│   ├── config/                   # Database & application configurations
-│   ├── controllers/              # Business logic (auth, workspace, project, task, user)
-│   ├── libs/                     # Utilities (email sender, schema validators)
-│   ├── middleware/               # Auth, rate limiting, permissions, and error handling
-│   ├── models/                   # Mongoose schemas (User, Workspace, Project, Task, etc.)
-│   ├── routes/                   # Express route definitions
-│   ├── src/                      # Modular architecture (config, libs, middleware, utils)
-│   ├── index.js                  # Express entry point
+├── backend/                      # Node.js Express REST API
+│   ├── index.js                  # Application entry point & server setup
 │   ├── package.json              # Backend dependencies and scripts
-│   └── vercel.json               # Backend deployment configuration
-└── frontend/                     # React 19 + React Router v7 application
-    ├── app/
-    │   ├── components/           # UI components (Radix primitives, dashboard, tasks, workspaces)
-    │   ├── hooks/                # Custom React query hooks (auth, project, task, workspace)
-    │   ├── lib/                  # Axios instance, schema definitions, utility functions
-    │   ├── provider/             # Context providers (AuthContext, ReactQueryProvider)
-    │   ├── routes/               # Route components (auth, dashboard, projects, tasks)
-    │   ├── app.css               # Global styling and Tailwind tokens
-    │   ├── root.tsx              # Root HTML layout and error boundaries
-    │   └── routes.ts             # React Router v7 route tree
-    ├── public/                   # Static assets
+│   ├── src/
+│   │   ├── config/               # Database connection (connectDB) & validated env vars
+│   │   ├── controllers/          # HTTP request handlers (auth, workspace, project, task, user)
+│   │   ├── middleware/           # Auth guard, permission assertions, rate limiter, error handling
+│   │   ├── models/               # Mongoose schemas (User, Workspace, Project, Task, Activity, etc.)
+│   │   ├── repositories/         # Data access layer (project, task, workspace, user, verification)
+│   │   ├── routes/               # Express route endpoints (/api-v1)
+│   │   ├── services/             # Business logic & authorization services
+│   │   └── utils/                # Logger (Winston), email templates, token generators
+│   └── tests/                    # Integration & unit test suites (73 tests)
+└── frontend/                     # React 19 Single Page Application
     ├── package.json              # Frontend dependencies and scripts
-    ├── react-router.config.ts    # React Router framework configuration
-    ├── tsconfig.json             # TypeScript configuration
-    └── vite.config.ts            # Vite bundler configuration
+    ├── react-router.config.ts    # React Router v7 configuration (SPA mode)
+    ├── vite.config.ts            # Vite build setup with chunk splitting
+    ├── vercel.json               # Vercel deployment rewrites for SPA routing
+    └── app/
+        ├── components/           # UI components, layout, dashboard widgets, modal dialogs
+        ├── hooks/                # React Query custom hooks (useWorkspace, useTask, useProject)
+        ├── lib/                  # Fetch utilities (Axios), centralized query keys, schemas, tests
+        ├── provider/             # Context providers (AuthContext, ReactQueryProvider)
+        └── routes/               # Page routes (sign-in, dashboard, projects, tasks, members)
 ```
 
 ---
 
-## Prerequisites
+## API Reference
 
-Before running the application locally, ensure you have:
+The backend API is exposed under `/api-v1`. All endpoints (except public authentication routes) require a valid JWT Bearer token passed in the `Authorization` header:
+
+```http
+Authorization: Bearer <your_jwt_token>
+```
+
+### Core Endpoint Summary
+
+| Module | Method | Endpoint | Description |
+| :--- | :--- | :--- | :--- |
+| **Auth** | `POST` | `/api-v1/auth/register` | Register new account and send verification email |
+| | `POST` | `/api-v1/auth/login` | Authenticate user and receive JWT token |
+| | `POST` | `/api-v1/auth/verify-email` | Verify email token |
+| | `POST` | `/api-v1/auth/forgot-password` | Request password reset email |
+| | `POST` | `/api-v1/auth/reset-password` | Reset password using reset token |
+| **Workspaces** | `GET` | `/api-v1/workspaces` | Get all workspaces for the authenticated user |
+| | `POST` | `/api-v1/workspaces` | Create a new workspace |
+| | `GET` | `/api-v1/workspaces/:workspaceId` | Get workspace details, members, and projects |
+| | `POST` | `/api-v1/workspaces/:workspaceId/invite` | Send an email invite to join workspace |
+| | `POST` | `/api-v1/workspaces/accept-invite` | Accept a workspace invitation token |
+| | `GET` | `/api-v1/workspaces/:workspaceId/stats` | Get productivity and status statistics |
+| **Projects** | `GET` | `/api-v1/projects/:projectId` | Get project details (authorized members/admins) |
+| | `PUT` | `/api-v1/projects/:projectId` | Update project metadata (owner/admin only) |
+| | `DELETE` | `/api-v1/projects/:projectId` | Delete project (owner/admin only) |
+| | `GET` | `/api-v1/projects/:projectId/tasks` | Get paginated tasks for project |
+| **Tasks** | `POST` | `/api-v1/tasks` | Create a new task in a project |
+| | `GET` | `/api-v1/tasks/:taskId` | Get task details, subtasks, watchers |
+| | `PUT` | `/api-v1/tasks/:taskId` | Update task title, status, priority, due date |
+| | `POST` | `/api-v1/tasks/:taskId/comments` | Post a discussion comment |
+| | `GET` | `/api-v1/tasks/:taskId/activity` | Get audit activity log for task |
+| | `POST` | `/api-v1/tasks/:taskId/subtasks` | Add a subtask |
+| | `PATCH` | `/api-v1/tasks/:taskId/archive` | Toggle task archive state |
+| **Users** | `GET` | `/api-v1/users/profile` | Get current authenticated user profile |
+| | `PUT` | `/api-v1/users/profile` | Update profile details / avatar |
+| | `DELETE` | `/api-v1/users/account` | Permanently delete account and cascade data |
+
+---
+
+## Getting Started
+
+### Prerequisites
+
 - **Node.js**: v20.x or higher
-- **npm** (or compatible package manager such as pnpm or yarn)
-- **MongoDB**: A running local MongoDB instance or a cloud MongoDB Atlas connection URI
+- **npm** (or `pnpm` / `yarn`)
+- **MongoDB**: A local MongoDB database or a free [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) cluster
+- **SMTP Credentials**: Gmail App Password or an SMTP provider (Resend, Brevo, SendGrid)
 
 ---
 
-## Environment Variables
+### Backend Setup
 
-> **Note:** Never commit real secrets or credentials to source control. Create `.env` files locally based on the variable names below.
-
-### Backend (`backend/.env`)
-
-| Variable | Description |
-|---|---|
-| `PORT` | Port number the backend server listens on (e.g. `5000`) |
-| `NODE_ENV` | Environment mode (`development` \| `production` \| `test`) |
-| `MONGODB_URI` | MongoDB connection string |
-| `JWT_SECRET` | Secret key used for signing and verifying JWT tokens |
-| `FRONTEND_URL` | Base URL of the client app (for CORS, verification & reset links) |
-| `SMTP_HOST` | SMTP server host (e.g. `smtp.gmail.com`) |
-| `SMTP_PORT` | SMTP port (e.g. `587` for TLS or `465` for SSL) |
-| `SMTP_USER` | SMTP username / email address |
-| `SMTP_PASS` | SMTP password (e.g. 16-character Google App Password) |
-| `FROM_EMAIL` | Sender email address displayed to recipients |
-
-### Frontend (`frontend/.env`)
-
-| Variable | Description |
-|---|---|
-| `VITE_API_URL` | Base URL pointing to the backend API (defaults to `http://localhost:5000/api-v1`) |
-
----
-
-## Setup Steps
-
-### 1. Backend Setup
-
-1. Open your terminal and navigate to the backend directory:
+1. Open a terminal and navigate to the backend:
    ```bash
    cd backend
    ```
+
 2. Install dependencies:
    ```bash
    npm install
    ```
-3. Create a `.env` file in `backend/` and configure the environment variables:
-   ```bash
+
+3. Create a `.env` file in `backend/` based on the configuration below:
+   ```env
    PORT=5000
    NODE_ENV=development
    MONGODB_URI=mongodb://localhost:27017/project-manager
-   JWT_SECRET=your_jwt_secret_key_here
+   JWT_SECRET=your_super_secret_jwt_key_at_least_32_characters_long
    FRONTEND_URL=http://localhost:5173
    SMTP_HOST=smtp.gmail.com
    SMTP_PORT=587
    SMTP_USER=your_email@gmail.com
-   SMTP_PASS=your_16_char_google_app_password
+   SMTP_PASS=your_16_character_app_password
    FROM_EMAIL=your_email@gmail.com
    ```
+
 4. Start the backend development server:
    ```bash
    npm run dev
    ```
-   The backend API will be accessible at `http://localhost:5000`.
+   The backend API will start at `http://localhost:5000`.
 
 ---
 
-### 2. Frontend Setup
+### Frontend Setup
 
-1. Open a new terminal tab and navigate to the frontend directory:
+1. Open a second terminal and navigate to the frontend:
    ```bash
    cd frontend
    ```
+
 2. Install dependencies:
    ```bash
    npm install
    ```
-3. Create a `.env` file in `frontend/` (optional if using defaults):
-   ```bash
+
+3. Create a `.env` file in `frontend/`:
+   ```env
    VITE_API_URL=http://localhost:5000/api-v1
    ```
+
 4. Start the frontend development server:
    ```bash
    npm run dev
    ```
-   The frontend application will be accessible at `http://localhost:5173`.
+   The application will be accessible at `http://localhost:5173`.
 
 ---
 
-## Available NPM Scripts
+## Running Tests & Quality Assurance
 
-### Backend (`backend/`)
-- `npm run dev` — Starts the Express API server with `nodemon` for auto-reloading during development.
-- `npm start` — Runs the production Node.js server (`node index.js`).
-- `npm test` — Test runner script placeholder.
+TaskHub maintains strict code quality and comprehensive test coverage across both frontend and backend.
 
-### Frontend (`frontend/`)
-- `npm run dev` — Starts the React Router / Vite local development server.
-- `npm run build` — Compiles and builds the production bundle via `react-router build`.
-- `npm start` — Serves the compiled production build with `@react-router/serve`.
-- `npm run typecheck` — Generates React Router types (`react-router typegen`) and runs TypeScript type checking (`tsc`).
+### Backend Testing & Linting
+
+```bash
+cd backend
+
+# Run the backend test suite (73 tests across 27 suites)
+npm test
+
+# Run ESLint (0 errors, 0 warnings)
+npm run lint
+
+# Format code with Prettier
+npm run format
+```
+
+### Frontend Testing & Linting
+
+```bash
+cd frontend
+
+# Run unit tests via Vitest (13 tests)
+npm test
+
+# Run TypeScript type verification
+npx tsc --noEmit
+
+# Run ESLint (0 errors, 0 warnings)
+npm run lint
+
+# Compile and validate production build
+npm run build
+```
+
+---
+
+## Production Deployment
+
+### Deploying Backend to Render
+
+1. **Option A — 1-Click Blueprint (Recommended)**:
+   - Log in to your [Render Dashboard](https://dashboard.render.com/).
+   - Click **New +** -> **Blueprint**.
+   - Select your repository. Render will automatically detect [`render.yaml`](./render.yaml).
+   - Fill in your `MONGODB_URI`, `FRONTEND_URL`, and SMTP credentials.
+
+2. **Option B — Manual Web Service Setup**:
+   - In Render, click **New +** -> **Web Service** and connect your repository.
+   - Configure the service settings:
+     - **Root Directory**: `backend` *(Required)*
+     - **Runtime**: `Node`
+     - **Build Command**: `npm install`
+     - **Start Command**: `npm start`
+     - **Plan**: `Free`
+     - **Health Check Path**: `/`
+   - Add environment variables in the Render dashboard:
+     - `NODE_ENV`: `production`
+     - `PORT`: `10000` (Render default)
+     - `MONGODB_URI`: Your MongoDB Atlas URI
+     - `JWT_SECRET`: Random 32+ character string
+     - `FRONTEND_URL`: `https://<your-app>.vercel.app,http://localhost:5173`
+     - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `FROM_EMAIL`: Your email credentials.
+   - Click **Deploy Web Service** and copy your live URL: `https://<your-backend>.onrender.com`.
+
+---
+
+### Deploying Frontend to Vercel
+
+1. Log in to [Vercel](https://vercel.com/) and click **Add New...** -> **Project**.
+2. Import your Git repository.
+3. In the **Configure Project** screen:
+   - **Framework Preset**: `Vite` (or `Other`)
+   - **Root Directory**: Click **Edit** and select `frontend` *(Required)*
+   - **Build and Output Settings**:
+     - **Build Command**: `npm run build`
+     - **Output Directory**: Toggle the override switch ON and set to: `build/client` *(Required: React Router v7 SPA outputs here)*
+     - **Install Command**: `npm install`
+4. In **Environment Variables**, add:
+   - `VITE_API_URL`: `https://<your-backend>.onrender.com/api-v1`
+5. Click **Deploy**. Vercel will build the SPA and use [`frontend/vercel.json`](./frontend/vercel.json) to handle routing rewrites without 404 errors.
+6. Once deployed, copy your Vercel URL (e.g. `https://<your-app>.vercel.app`) and ensure it is listed under `FRONTEND_URL` on your Render backend.
+
+---
+
+## License
+
+This project is licensed under the [ISC License](https://opensource.org/licenses/ISC). See `package.json` for details.
